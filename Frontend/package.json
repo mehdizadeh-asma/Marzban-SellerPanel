@@ -9,27 +9,27 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@emotion/react": "^11.11.1",
-    "@emotion/styled": "^11.11.0",
-    "@mui/icons-material": "^5.14.1",
-    "@mui/joy": "^5.0.0-beta.21",
-    "@mui/material": "^5.14.1",
-    "@mui/x-data-grid": "^6.10.0",
-    "axios": "^1.4.0",
-    "bootstrap": "^5.3.0",
-    "next": "^14.2.5",
-    "react": "^18.2.0",
-    "react-bootstrap": "^2.8.0",
-    "react-dom": "^18.2.0",
-    "react-qr-code": "^2.0.12"
+    "@emotion/react": "^11",
+    "@emotion/styled": "^11",
+    "@mui/icons-material": "^5",
+    "@mui/joy": "^5.0.0-beta.48",
+    "@mui/material": "^5",
+    "@mui/x-data-grid": "^6",
+    "axios": "^1",
+    "bootstrap": "^5",
+    "next": "^14",
+    "react": "^18",
+    "react-bootstrap": "^2",
+    "react-dom": "^18",
+    "react-qr-code": "^2"
   },
   "devDependencies": {
-    "@types/node": "20.10.1",
-    "@types/react": "18.2.39",
-    "@types/react-dom": "^18.3.0",
-    "@types/react-transition-group": "^4.4.11",
-    "eslint": "8.54.0",
-    "eslint-config-next": "^13.4.10",
-    "typescript": "5.3.2"
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@types/react-transition-group": "^4",
+    "eslint": "^8",
+    "eslint-config-next": "^15",
+    "typescript": "^5"
   }
 }
