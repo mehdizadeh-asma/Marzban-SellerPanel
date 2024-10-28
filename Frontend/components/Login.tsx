@@ -6,7 +6,8 @@ import { Image } from "react-bootstrap";
 import Button from "react-bootstrap/Button";
 import Spinner from "react-bootstrap/Spinner";
 
-import { useMyContext } from "@/context/MyContext";
+import { JsonData, useMyContext } from "@/context/MyContext";
+import { decrypt } from "@/utils/Crypto";
 
 export default function Login() {
   const router = useRouter();
@@ -21,7 +22,9 @@ export default function Login() {
   useEffect(() => {
     const getConfig = async () => {
       const result = await axios("/api/getconfig");
-      setConfig(result.data);
+      const decText = decrypt(result.data);
+      const configData: JsonData = JSON.parse(decText);
+      setConfig(configData);
     };
     getConfig();
   }, [setConfig]);
