@@ -1,6 +1,5 @@
 import mongoose, { Document, Schema } from "mongoose";
 
-// Step 1: Define the ISeller interface
 export interface ISeller extends Document {
   Title: string;
   Username: string;
@@ -12,7 +11,6 @@ export interface ISeller extends Document {
   Status: "Active" | "Deactive";
 }
 
-// Step 2: Define the SellerSchema schema
 export const SellerSchema: Schema = new Schema({
   Title: { type: String, unique: true, required: [true, "Title is required"] },
   Username: {
@@ -39,6 +37,5 @@ export const SellerSchema: Schema = new Schema({
   },
 });
 
-// Step 3: Export the Seller model with the ISeller interface
 const Seller = mongoose.model<ISeller>("Seller", SellerSchema);
 export default Seller;

@@ -352,9 +352,9 @@ class MarzbanController {
 
       const account = new Account();
       account.Username = generateUsername;
-      account.Seller = seller._id;
+      account.Seller = seller._id as Types.ObjectId;
       account.Tariff = tariff.Title;
-      account.TariffId = tariff._id;
+      account.TariffId = tariff._id as Types.ObjectId;
       account.Payed = false;
 
       await account.save();
@@ -532,9 +532,9 @@ class MarzbanController {
 
       const account = new Account();
       account.Username = username;
-      account.Seller = seller._id;
+      account.Seller = seller._id as Types.ObjectId;
       account.Tariff = tariff.Title;
-      account.TariffId = tariff._id;
+      account.TariffId = tariff._id as Types.ObjectId;
       account.Payed = false;
       await account.save();
 
@@ -568,7 +568,7 @@ class MarzbanController {
           headers: { Authorization: req.headers.authorization },
         });
 
-        const account = await Account.findOneAndRemove({
+        const account = await Account.findOneAndDelete({
           Username: req.params.username,
           Payed: false,
         });

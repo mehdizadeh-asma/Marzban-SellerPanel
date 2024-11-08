@@ -1,17 +1,15 @@
 import mongoose, { Document, Schema } from "mongoose";
-import { ISeller } from "./Seller"; // Import Seller interface
-import { ITariff } from "./Tariff"; // Import Tariff interface
+import { ISeller } from "./Seller";
+import { ITariff } from "./Tariff";
 
-// Step 1: Define the IAccount interface
 export interface IAccount extends Document {
   Username: string;
   Tariff: string;
-  TariffId: mongoose.Types.ObjectId | ITariff; // Reference to Tariff model
-  Seller: mongoose.Types.ObjectId | ISeller; // Reference to Seller model
+  TariffId: mongoose.Types.ObjectId | ITariff;
+  Seller: mongoose.Types.ObjectId | ISeller;
   Payed: boolean;
 }
 
-// Step 2: Define the AccountSchema schema
 export const AccountSchema: Schema = new Schema({
   Username: {
     type: String,
@@ -34,6 +32,5 @@ export const AccountSchema: Schema = new Schema({
   Payed: { type: Boolean, default: false },
 });
 
-// Step 3: Export the Account model with the IAccount interface
 const Account = mongoose.model<IAccount>("Account", AccountSchema);
 export default Account;

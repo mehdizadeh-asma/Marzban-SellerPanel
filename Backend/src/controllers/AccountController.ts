@@ -114,7 +114,7 @@ class AccountController {
             (tariff) => tariff.Title == account.Tariff
           );
           if (tariff && !account.TariffId) {
-            account.TariffId = tariff?._id;
+            account.TariffId = tariff?._id as Types.ObjectId;
             await account.save();
             count++;
           }

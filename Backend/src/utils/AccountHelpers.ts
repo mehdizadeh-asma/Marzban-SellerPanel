@@ -88,7 +88,10 @@ class AccountHelpers {
     let condition = {};
 
     if (sellerTitle.toLowerCase() !== sellerUsername.toLowerCase())
-      condition = { ...condition, Seller: new Types.ObjectId(seller?._id) };
+      condition = {
+        ...condition,
+        Seller: seller?._id as Types.ObjectId,
+      };
 
     if (!IsAll) condition = { ...condition, Payed: false };
 
@@ -119,7 +122,9 @@ class AccountHelpers {
 
     accounts.map((account) => {
       const tariff = tariffs.find(
-        (tariff) => tariff._id.toString() === account.TariffId?.toString()
+        (tariff) =>
+          (tariff._id as Types.ObjectId).toString() ===
+          account.TariffId?.toString()
       );
       if (tariff) {
         totalPriceUnpaid += tariff.Price ?? 0;
