@@ -7,7 +7,7 @@ import ConfigFile from "./Config";
 
 class Mongoose {
   static ConnectionString =
-    "mongodb+srv://##USERNAME##:##PASSWORD##@##CLUSTER##.mongodb.net/##DB##?retryWrites=true&w=majority";
+    "mongodb+srv://##USERNAME##:##PASSWORD##@##CLUSTER##.mongodb.net/##DB##?retryWrites=true&w=majority&connectTimeoutMS=20000&socketTimeoutMS=20000";
 
   static DbWholeSalerConnectionString: string = "";
 
@@ -67,6 +67,8 @@ class Mongoose {
         MarzbanUrl: marzbanUrl,
         SN: sn,
       });
+
+      // console.log("wholeSaler", wholeSaler);
 
       if (wholeSaler && wholeSaler.ExpireDate >= new Date()) {
         this.SetDbWholeSalerConnectionString(
@@ -135,7 +137,44 @@ class Mongoose {
     const connection = await this.ConnectToDatabase(destinatioConnectionString);
 
     if (connection) {
-      //Copy Accounts
+      console.log("Start Copy Tariffs...");
+      const tariffs = await Tariff.find();
+      const TariffNew = connection.model("Tariff", TariffSchema);
+      if (tariffs && TariffNew)
+        for (const tariff of tariffs) {
+          console.log(tariff);
+
+          const tariffnew = new TariffNew();
+          tariffnew._id = tariff._id;
+          tariffnew.Title = tariff.Title;
+          tariffnew.DataLimit = tariff.DataLimit;
+          tariffnew.Duration = tariff.Duration;
+          tariffnew.Price = tariff.Price;
+          tariffnew.IsFree = tariff.IsFree;
+          tariffnew.IsVisible = tariff.IsVisible;
+          tariffnew.save();
+        }
+
+      console.log("Start Copy Sellers...");
+      const sellers = await Seller.find();
+      const SellerNew = connection.model("Seller", SellerSchema);
+      if (sellers && SellerNew)
+        for (const seller of sellers) {
+          console.log(seller);
+          const sellernew = new SellerNew();
+          sellernew._id = seller._id;
+          sellernew.Title = seller.Title;
+          sellernew.Username = seller.Username;
+          sellernew.Password = seller.Password;
+          sellernew.MarzbanUsername = seller.MarzbanUsername;
+          sellernew.MarzbanPassword = seller.MarzbanPassword;
+          sellernew.Counter = seller.Counter;
+          sellernew.Limit = seller.Limit;
+          seller.Status = seller.Status;
+          sellernew.save();
+        }
+
+      console.log("Start Copy Accounts...");
       const accounts = await Account.find();
       const AccountNew = connection.model("Account", AccountSchema);
       if (accounts && AccountNew)
@@ -148,35 +187,6 @@ class Mongoose {
           accountnew.TariffId = account.TariffId;
           accountnew.Payed = account.Payed;
           accountnew.save();
-        }
-      //Copy Sellers
-      const sellers = await Seller.find();
-      const SellerNew = connection.model("Seller", SellerSchema);
-      if (sellers && SellerNew)
-        for (const seller of sellers) {
-          const sellernew = new SellerNew();
-          sellernew._id = seller._id;
-          sellernew.Title = seller.Title;
-          sellernew.Username = seller.Username;
-          sellernew.Password = seller.Password;
-          sellernew.Counter = seller.Counter;
-          sellernew.Limit = seller.Limit;
-          seller.Status = seller.Status;
-          sellernew.save();
-        }
-      //Copy Tariffs
-      const tariffs = await Tariff.find();
-      const TariffNew = connection.model("Tariff", TariffSchema);
-      if (tariffs && TariffNew)
-        for (const tariff of tariffs) {
-          const tariffnew = new TariffNew();
-          tariffnew._id = tariff._id;
-          tariffnew.Title = tariff.Title;
-          tariffnew.DataLimit = tariff.DataLimit;
-          tariffnew.Duration = tariff.Duration;
-          tariffnew.IsFree = tariff.IsFree;
-          tariffnew.IsVisible = tariff.IsVisible;
-          tariffnew.save();
         }
     }
   }
