@@ -7,7 +7,7 @@ class TariffController {
     try {
       let condition = {};
       if (req.params.isall === "false") condition = { IsVisible: true };
-      const result = await Tariff.find(condition);
+      const result = await Tariff.find(condition).sort({ Title: "asc" });
       res.status(200).json(result);
     } catch (error) {
       next(error);
