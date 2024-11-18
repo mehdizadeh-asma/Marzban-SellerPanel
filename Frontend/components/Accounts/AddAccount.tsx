@@ -25,6 +25,12 @@ const AddAccount = forwardRef<HTMLSelectElement, PropsType>((props, ref) => {
       try {
         const url = new URL("api/tariffs/false", config.BACKEND_URL);
         const resultTariff = await axios.get(url.toString());
+        const sortedTarrif = (resultTariff.data as TariffType[]).sort(
+          (a, b) => {
+            if (a.Title > b.Title) return -1;
+            else return 1;
+          }
+        );
         setTariffList(resultTariff.data);
       } catch (error) {
         console.log(error);
