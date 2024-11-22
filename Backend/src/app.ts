@@ -13,6 +13,8 @@ import marzbanRouter from "./routes/MarzbanRouter";
 import sellerRouter from "./routes/SellerRouter";
 import tariffRouter from "./routes/TariffRouter";
 import accountRouter from "./routes/AccountRouter";
+import tariffSellerRouter from "./routes/TariffSellerRouter";
+
 import Certificate from "./utils/Certificate";
 import Mongoose from "./utils/Mongoose";
 
@@ -37,6 +39,8 @@ app.use("/api", cors(corsOptions), sellerRouter);
 app.use("/api", cors(corsOptions), tariffRouter);
 
 app.use("/api", cors(corsOptions), accountRouter);
+
+app.use("/api", cors(corsOptions), tariffSellerRouter);
 
 app.use(
   (
@@ -63,6 +67,11 @@ const Connecting = async () => {
     const isValidLicense = await Mongoose.CheckLicense();
 
     if (isValidLicense && (await Mongoose.ConnectDbWholeSaler())) {
+      // console.log("Copy Database....");
+      // await Mongoose.CopyDatabase(
+      //   "mongodb+srv://djabbas:fgghjh@cluster0.mhkwq.mongodb.net/Deejayabbas?retryWrites=true&w=majority&appName=Deejayabbas"
+      // );
+
       httpServer.listen(8080);
       httpsServer.listen(8443);
       console.log("Server is Startig at http://localhost:8080");

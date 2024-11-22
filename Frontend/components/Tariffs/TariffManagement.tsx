@@ -18,7 +18,7 @@ const TariffManagement = () => {
 
   const LaodTariff = useCallback(async () => {
     try {
-      const url = new URL("api/tariffs/true", config.BACKEND_URL);
+      const url = new URL("api/tariffs/true/Admin", config.BACKEND_URL);
       const resultTariff = await axios.get(url.toString(), {
         headers: { Authorization: "Bearer " + user.Token },
       });

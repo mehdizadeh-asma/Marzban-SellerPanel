@@ -1,7 +1,9 @@
 import { DataGrid, GridActionsCellItem } from "@mui/x-data-grid";
+import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ToggleOnIcon from "@mui/icons-material/ToggleOn";
 import ToggleOffIcon from "@mui/icons-material/ToggleOff";
+import AssignPackageIcon from "@mui/icons-material/MonetizationOn";
 
 import SellerType from "@/models/SellerType";
 
@@ -9,7 +11,9 @@ interface PropsType {
   Loading: boolean;
   Sellers: SellerType[];
   onDeleting: (seller: SellerType) => void;
+  onEditing: (seller: SellerType) => void;
   onDisableAccount: (seller: SellerType) => void;
+  onAssignPackages: (seller: SellerType) => void;
 }
 
 export default function SellerGrid(props: PropsType) {
@@ -86,6 +90,36 @@ export default function SellerGrid(props: PropsType) {
     },
     {
       headerClassName: "MUIGridHeader",
+      headerName: "Packages",
+      field: "AssignPackages",
+      type: "actions",
+      width: 100,
+      getActions: (params: { row: SellerType }) => [
+        <GridActionsCellItem
+          key="AssignPackages"
+          label="AssignPackages"
+          icon={<AssignPackageIcon className="text-info" />}
+          onClick={() => onAssignPackagesClick(params.row)}
+        />,
+      ],
+    },
+    {
+      headerClassName: "MUIGridHeader",
+      headerName: "",
+      field: "edit",
+      type: "actions",
+      width: 50,
+      getActions: (params: { row: SellerType }) => [
+        <GridActionsCellItem
+          key="edit"
+          label="Edit"
+          icon={<EditIcon className="text-primary" />}
+          onClick={() => onEditClick(params.row)}
+        />,
+      ],
+    },
+    {
+      headerClassName: "MUIGridHeader",
       headerName: "",
       field: "delete",
       type: "actions",
@@ -101,8 +135,14 @@ export default function SellerGrid(props: PropsType) {
     },
   ];
 
+  const onAssignPackagesClick = (seller: SellerType) => {
+    props.onAssignPackages(seller);
+  };
   const onDeleteClick = (seller: SellerType) => {
     props.onDeleting(seller);
+  };
+  const onEditClick = (seller: SellerType) => {
+    props.onEditing(seller);
   };
 
   const onDisableAccount = (seller: SellerType) => {

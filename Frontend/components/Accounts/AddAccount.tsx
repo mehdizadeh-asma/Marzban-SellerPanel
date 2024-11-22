@@ -23,14 +23,11 @@ const AddAccount = forwardRef<HTMLSelectElement, PropsType>((props, ref) => {
   useEffect(() => {
     const LaodTariff = async () => {
       try {
-        const url = new URL("api/tariffs/false", config.BACKEND_URL);
-        const resultTariff = await axios.get(url.toString());
-        const sortedTarrif = (resultTariff.data as TariffType[]).sort(
-          (a, b) => {
-            if (a.Title > b.Title) return -1;
-            else return 1;
-          }
+        const url = new URL(
+          `api/tariffs/false/${user.Username}`,
+          config.BACKEND_URL
         );
+        const resultTariff = await axios.get(url.toString());
         setTariffList(resultTariff.data);
       } catch (error) {
         console.log(error);
