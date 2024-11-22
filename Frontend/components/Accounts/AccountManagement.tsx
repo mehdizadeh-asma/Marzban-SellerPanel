@@ -3,6 +3,7 @@ import axios from "axios";
 import { ElementRef, useCallback, useEffect, useRef, useState } from "react";
 
 import FilterAltOffIcon from "@mui/icons-material/FilterAltOff";
+import PaymentsIcon from "@mui/icons-material/Payments";
 
 import { useMyContext } from "@/context/MyContext";
 import AddAccount from "./AddAccount";
@@ -13,10 +14,11 @@ import AccountType from "@/models/AccountType";
 import TariffType from "@/models/TariffType";
 import Messages from "../General/Messages";
 import { TextField } from "@mui/material";
+import { ForwardRefHandle } from "../Accounts/AccountGrid";
 
 export default function AccountManagement() {
   const { user, config, setUser } = useMyContext();
-
+  const gridRef = useRef<ForwardRefHandle>(null);
   const [loading, setLoading] = useState(false);
   const [accountList, setAccountList] = useState<AccountType[]>([]);
   const [selectedAccount, setSelectedAccount] = useState<AccountType>();
@@ -103,6 +105,38 @@ export default function AccountManagement() {
       }
   };
 
+  const onPayAllClick = async () => {
+    console.log("accountNames in mng", gridRef.current);
+    if (user.IsAdmin)
+      if (gridRef.current) {
+        const accountNames = gridRef.current.SendBackUsernames();
+        if (
+          !Array.isArray(accountNames) ||
+          !accountNames.every((name) => typeof name === "string")
+        ) {
+          console.error("Invalid account names. Expected an array of strings.");
+          return;
+        }
+
+        console.log("accountNames in mng", accountNames);
+        try {
+          StartLoading();
+          console.log("accountNames in mng", accountNames);
+          let url = new URL("api/payaccounts/", config.BACKEND_URL);
+          await axios.post(url.toString(), accountNames, {
+            headers: { Authorization: "Bearer " + user.Token },
+          });
+          refMessages.current?.Show(
+            "success",
+            "Payments Changed Successfully!"
+          );
+        } catch (error) {
+          console.log(error);
+        } finally {
+          LoadAccount();
+        }
+      }
+  };
   const OnAddClick = async (
     tariff: TariffType,
     note: string,
@@ -165,6 +199,10 @@ export default function AccountManagement() {
   }, [LoadAccount, user.Token]);
 
   const UnFilter_Click = () => {
+    LoadAccount(true);
+  };
+  const Payments_Click = () => {
+    //pay all
     LoadAccount(true);
   };
 
@@ -250,7 +288,7 @@ export default function AccountManagement() {
 
   return (
     <div className="container-fluid bg-primery">
-      <AddAccount onAdding={OnAddClick} Mode="Add" />
+      {user.IsAdmin ? "" : <AddAccount onAdding={OnAddClick} Mode="Add" />}
       <div className="row">
         <div className="col justify-content-start d-flex mt-1">
           <TextField
@@ -271,6 +309,19 @@ export default function AccountManagement() {
               className="text-success  "
             />
           </button>
+          {user.IsAdmin ? (
+            <button
+              className="btn border-2 border border-success px-1 py-1 mx-2"
+              onClick={onPayAllClick}
+            >
+              <PaymentsIcon
+                sx={{ fontSize: "28px" }}
+                className="text-success  "
+              />
+            </button>
+          ) : (
+            ""
+          )}
         </div>
       </div>
       <div className="row mt-1">
@@ -278,6 +329,7 @@ export default function AccountManagement() {
           <Messages ref={refMessages}></Messages>
           <div className="ContainerGrid">
             <AccountGrid
+              ref={gridRef}
               Accounts={filteredRows}
               Loading={loading}
               onDeleting={onDeleteClick}

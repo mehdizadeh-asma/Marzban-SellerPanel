@@ -1,5 +1,11 @@
 "use client";
-import { ElementRef, useRef, useState } from "react";
+import {
+  ElementRef,
+  forwardRef,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 
 import {
   DataGrid,
@@ -27,6 +33,7 @@ import QrCode2Icon from "@mui/icons-material/QrCode2";
 import AccountType from "@/models/AccountType";
 import { copyTextToClipboard } from "@/utils/Helper";
 import QRModal from "./QRModal";
+import { Checkbox } from "@mui/material";
 
 interface PropsType {
   Loading: boolean;
@@ -35,10 +42,17 @@ interface PropsType {
   onRenewing: (account: AccountType) => void;
   onDisabling: (account: AccountType) => void;
   onPaying: (account: AccountType) => void;
+  // onPayAll: (sellerIds: string[]) => void;
+}
+export interface ForwardRefHandle {
+  SendBackUsernames: () => string[];
 }
 
-const AccountGrid = (props: PropsType) => {
+const label = { inputProps: { "aria-label": "Checkbox demo" } };
+
+const AccountGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
   const [selectedLink, setSelectedLink] = useState("");
+  const [UsernamesToPay, setUsernamesToPay] = useState<string[]>([]);
 
   type QRModalHandle = ElementRef<typeof QRModal>;
   const refQRModal = useRef<QRModalHandle>(null);
@@ -49,8 +63,14 @@ const AccountGrid = (props: PropsType) => {
       headerName: "",
       field: "link",
       type: "actions",
-      width: 120,
+      width: 160,
       getActions: (params: { row: AccountType }) => [
+        <GridActionsCellItem
+          key="checkPay"
+          label="Check To Pay"
+          icon={<Checkbox {...label} />}
+          onClick={() => onCheckPay(params.row)}
+        />,
         <GridActionsCellItem
           key="link"
           label="Link"
@@ -86,13 +106,13 @@ const AccountGrid = (props: PropsType) => {
     {
       field: "note",
       headerName: "Note",
-      width: 120,
+      width: 100,
       headerClassName: "MUIGridHeader",
     },
     {
       field: "online",
       headerName: "",
-      width: 20,
+      width: 10,
       renderCell: (params: GridRenderCellParams<any, string>) =>
         RenderOnline(params.value),
       headerClassName: "MUIGridHeader",
@@ -112,19 +132,19 @@ const AccountGrid = (props: PropsType) => {
     {
       field: "price",
       headerName: "Price",
-      width: 80,
+      width: 50,
       headerClassName: "MUIGridHeader",
     },
     {
       field: "data_limit_string",
       headerName: "Limit",
-      width: 110,
+      width: 90,
       headerClassName: "MUIGridHeader",
     },
     {
       field: "used_traffic_string",
       headerName: "Usage",
-      width: 150,
+      width: 140,
       renderCell: (params: GridRenderCellParams<any, string>) =>
         RenderUsage(params.row),
       headerClassName: "MUIGridHeader",
@@ -132,7 +152,7 @@ const AccountGrid = (props: PropsType) => {
     {
       field: "expire_string",
       headerName: "Expire",
-      width: 120,
+      width: 110,
       headerClassName: "MUIGridHeader",
     },
     {
@@ -152,14 +172,14 @@ const AccountGrid = (props: PropsType) => {
     {
       field: "sub_last_user_agent",
       headerName: "Last App (Subscription)",
-      width: 140,
+      width: 100,
       headerClassName: "MUIGridHeader",
     },
     {
       headerName: "Payment",
       field: "payed",
       type: "actions",
-      width: 100,
+      width: 90,
       headerClassName: "MUIGridHeader",
       getActions: (params: { row: AccountType }) => [
         <GridActionsCellItem
@@ -174,7 +194,7 @@ const AccountGrid = (props: PropsType) => {
       headerName: "",
       field: "delete",
       type: "actions",
-      width: 80,
+      width: 140,
       headerClassName: "MUIGridHeader",
       getActions: (params: { row: AccountType }) => [
         <GridActionsCellItem
@@ -204,6 +224,28 @@ const AccountGrid = (props: PropsType) => {
       ],
     },
   ];
+
+  useImperativeHandle(ref, () => ({
+    SendBackUsernames: () => {
+      return [...UsernamesToPay];
+    },
+  }));
+
+  const onCheckPay = (account: AccountType) => {
+    console.log("in check Username", account.username);
+    if (account.username) {
+      setUsernamesToPay(
+        (prevUsernames) =>
+          prevUsernames.includes(account.username)
+            ? prevUsernames.filter((id) => id !== account.username) // Remove if it exists
+            : [...prevUsernames, account.username] // Add if it doesn't exist
+      );
+    }
+    console.log("in check Username", UsernamesToPay);
+  };
+  const onPaymentClick = (account: AccountType) => {
+    props.onPaying(account);
+  };
 
   const RenderOnline = (online: string | undefined) => {
     switch (online) {
@@ -267,12 +309,12 @@ const AccountGrid = (props: PropsType) => {
     return payment === "Paid" ? (
       <span className="text-success">
         <CreditScoreRoundedIcon></CreditScoreRoundedIcon>
-        Paid
+        {/* <text className="h6  ">Paid</text> */}
       </span>
     ) : (
       <span className="text-secondary">
         <CreditCardOffRoundedIcon></CreditCardOffRoundedIcon>
-        Unpaid
+        {/* <text className="h6 ">Unpaid</text> */}
       </span>
     );
   };
@@ -310,10 +352,6 @@ const AccountGrid = (props: PropsType) => {
     props.onDisabling(account);
   };
 
-  const onPaymentClick = (account: AccountType) => {
-    props.onPaying(account);
-  };
-
   return (
     <>
       <DataGrid
@@ -346,6 +384,8 @@ const AccountGrid = (props: PropsType) => {
       <QRModal ref={refQRModal}></QRModal>
     </>
   );
-};
+});
+
+AccountGrid.displayName = "AccountGrid";
 
 export default AccountGrid;
