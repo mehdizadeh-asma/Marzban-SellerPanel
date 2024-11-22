@@ -7,7 +7,7 @@ const router = Router();
 router.get("/sellers", SellerController.GetSellerList);
 // router.get("/seller/:id", SellerController.GetSeller);
 router.post("/seller", SellerController.AddSeller);
-// router.put("/seller/:id", SellerController.EditSeller);
+router.put("/seller/:id", SellerController.EditSeller);
 router.delete("/seller/:id", SellerController.RemoveSeller);
 router.post("/disableseller/:id", SellerController.DisableSeller);
 

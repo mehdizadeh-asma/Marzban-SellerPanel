@@ -66,7 +66,6 @@ class SellerController {
         MarzbanUsername: string | undefined;
         MarzbanPassword: string | undefined;
       };
-
       if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
         throw new Error("Invalid Token");
 
@@ -109,45 +108,113 @@ class SellerController {
 
   static EditSeller: RequestHandler = async (req, res, next) => {
     try {
-      const id: string = req.params.id;
+      const id = req.params.id;
 
       if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
         throw new Error("Invalid Token");
 
-      const { Title, Username, Password } = req.body as {
+      const {
+        Title,
+        Limit,
+        Username,
+        Password,
+        MarzbanUsername,
+        MarzbanPassword,
+      } = req.body as {
         Title: string | undefined;
+        Limit: number | undefined;
         Username: string | undefined;
         Password: string | undefined;
+        MarzbanUsername: string | undefined;
+        MarzbanPassword: string | undefined;
       };
 
-      const sellers = await Seller.find();
+      try {
+        const apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/admin/token";
 
-      const find = sellers.find((seller) =>
-        Title?.toLowerCase().includes(seller.Title.toLowerCase())
-      );
+        const config = {
+          headers: { "content-type": "application/x-www-form-urlencoded" },
+        };
 
-      if (find) {
-        throw new Error("Title Is Exists!");
+        const resultLogin = await axios.post(
+          apiURL,
+          {
+            username: MarzbanUsername,
+            password: MarzbanPassword,
+          },
+          config
+        );
+      } catch (AxiosError) {
+        res.status(404).json({ Message: "Invalid Account Information" });
+        return;
       }
-      const seller = new Seller({
-        Title: Title,
-        Username: Username,
-        Password: Password,
+      const existingSeller = await Seller.findOne({
+        $or: [
+          { Title: new RegExp(`^${Title}$`, "i") }, // Check if Title already exists (case-insensitive)
+          { Username: new RegExp(`^${Username}$`, "i") }, // Check if Username already exists (case-insensitive)
+        ],
+        _id: { $ne: id }, // Exclude the current seller by id when updating
       });
 
-      const error = seller.validateSync();
+      if (existingSeller) {
+        return res
+          .status(400)
+          .json({ error: "Title Or Username Already Exists!" });
+      }
 
-      if (error) throw new Error(error.message);
+      // Create a temporary seller instance to validate updates
+      const tempSeller = new Seller({
+        _id: id,
+        Title,
+        Limit,
+        Username,
+        Password,
+        MarzbanUsername,
+        MarzbanPassword,
+      });
 
-      await Seller.updateOne(
-        { _id: id },
-        {
-          Title: Title,
-          Username: Username,
-          Password: Password,
-        }
-      );
+      // Validate the temporary seller instance
+      const error = tempSeller.validateSync();
+
+      // if (
+      //   (Title && Title.length < 8) ||
+      //   (Username && Username.length < 8) ||
+      //   (Password && Password.length < 8)
+      // ) {
+      //   return res.json({
+      //     error:
+      //       "Title, Username, and Password Must Be Greater Than 8 Characters",
+      //   });
+      // } // Exit if there was an error
+      // if (Limit && (Limit < 0 || Limit.toString() === "")) {
+      //   return res
+      //     .status(404)
+      //     .json({ error: "Limit Must Be A positive Number" });
+      // }
+
+      const updateFields: Partial<typeof req.body> = {};
+      if (Title) updateFields.Title = Title;
+      if (Limit !== undefined) updateFields.Limit = Limit;
+      if (Username) updateFields.Username = Username;
+      if (Password) updateFields.Password = Password;
+      if (MarzbanUsername) updateFields.MarzbanUsername = MarzbanUsername;
+      if (MarzbanPassword) updateFields.MarzbanPassword = MarzbanPassword;
+
+      const updatedSeller = await Seller.findByIdAndUpdate(id, updateFields, {
+        new: true,
+        runValidators: true,
+      });
+
+      if (!updatedSeller) {
+        return res.status(404).json({ error: "Seller Not Found" });
+      }
+
+      res.status(200).json({
+        message: "Seller updated successfully",
+        seller: updatedSeller,
+      });
     } catch (error) {
+      res.status(500).json({ error: error });
       next(error);
     }
   };
