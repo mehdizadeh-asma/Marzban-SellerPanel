@@ -1,13 +1,38 @@
 import { RequestHandler } from "express";
 import Tariff from "../models/Tariff";
 import { Types } from "mongoose";
+import Seller, { ISeller } from "../models/Seller";
+import TariffSeller from "../models/TariffSeller";
 
 class TariffController {
   static GetTariffList: RequestHandler = async (req, res, next) => {
     try {
-      let condition = {};
-      if (req.params.isall === "false") condition = { IsVisible: true };
-      const result = await Tariff.find(condition).sort({ Title: "asc" });
+      if (req.params.isall === "false") {
+        if (!req.params.username) {
+          res.status(404).json({ result: "Seller Not Found!" });
+          return;
+        }
+
+        const seller = await Seller.findOne({ Username: req.params.username });
+
+        if (!seller) {
+          res.status(404).json({ result: "Seller Not Found!" });
+          return;
+        }
+
+        const tariffSellers = await TariffSeller.find({
+          SellerId: seller._id,
+        });
+
+        const tariffIds = tariffSellers.map((entry) => entry.TariffId);
+
+        const condition = { _id: { $in: tariffIds }, IsVisible: true };
+        const result = await Tariff.find(condition).sort({ Title: "asc" });
+
+        res.status(200).json(result);
+        return;
+      }
+      const result = await Tariff.find();
       res.status(200).json(result);
     } catch (error) {
       next(error);
