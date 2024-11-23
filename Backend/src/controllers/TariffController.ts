@@ -8,12 +8,12 @@ class TariffController {
   static GetTariffList: RequestHandler = async (req, res, next) => {
     try {
       if (req.params.isall === "false") {
-        if (!req.params.username) {
+        if (!req.params.title) {
           res.status(404).json({ result: "Seller Not Found!" });
           return;
         }
 
-        const seller = await Seller.findOne({ Username: req.params.username });
+        const seller = await Seller.findOne({ Title: req.params.title });
 
         if (!seller) {
           res.status(404).json({ result: "Seller Not Found!" });
