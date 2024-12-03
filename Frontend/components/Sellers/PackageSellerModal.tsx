@@ -1,8 +1,8 @@
-import SellerType from "@/models/SellerType";
-import TariffSellerType from "@/models/TariffSellerType";
-import { useState, forwardRef, useRef } from "react";
+import { useRef } from "react";
 import { Button, Modal } from "react-bootstrap";
+
 import PackagesGrid, { ForwardRefHandle } from "./PackagesGrid";
+import SellerType from "@/models/SellerType";
 
 interface PropsType {
   onAssign: (seller: SellerType, tariffIdList: string[]) => void;
@@ -11,20 +11,11 @@ interface PropsType {
   seller: SellerType | undefined;
 }
 
-const PackageSellerModal = forwardRef((props: PropsType, ref) => {
+const PackageSellerModal = (props: PropsType) => {
   const gridRef = useRef<ForwardRefHandle>(null);
-
-  const [packageListId, setPackageListId] = useState<string[]>([]);
-  const [tariffSellerList, setTariffSellerList] = useState<TariffSellerType[]>(
-    []
-  );
 
   const btnCancel_Click = () => {
     props.onClose();
-  };
-
-  const handleAssignTariffSeller = (tariffIds: string[]) => {
-    setPackageListId(tariffIds);
   };
 
   const btnSave_Click = () => {
@@ -43,9 +34,7 @@ const PackageSellerModal = forwardRef((props: PropsType, ref) => {
       onHide={btnCancel_Click}
     >
       <Modal.Header closeButton className=" text-white bg-success">
-        <Modal.Title>
-          Assigned Packages <label className="text-warning">{}</label>
-        </Modal.Title>
+        <Modal.Title>Assigned Packages</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <PackagesGrid ref={gridRef} seller={props.seller}></PackagesGrid>
@@ -60,7 +49,7 @@ const PackageSellerModal = forwardRef((props: PropsType, ref) => {
       </Modal.Footer>
     </Modal>
   );
-});
+};
 
 PackageSellerModal.displayName = "PackageSellerModal";
 

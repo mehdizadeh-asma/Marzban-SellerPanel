@@ -14,18 +14,20 @@ const SellerManagement = () => {
   const { user, config } = useMyContext();
   const [sellerList, setSellerList] = useState<SellerType[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedSeller, setSelectedSeller] = useState<SellerType | null>(null); // Track the seller being edited
+  const [selectedSeller, setSelectedSeller] = useState<SellerType | null>(null);
   const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [isAssignPackagesModalOpen, setAssignPackagesModalOpen] =
     useState(false);
 
   type MessagesHandle = ElementRef<typeof Messages>;
   const refMessages = useRef<MessagesHandle>(null);
+
   const addSellerRef = useRef<AddSellerHandle | null>(null);
 
   type AddSellerHandle = {
     resetFields: () => void;
   };
+
   const LaodSeller = useCallback(async () => {
     setLoading(true);
     try {
@@ -60,19 +62,18 @@ const SellerManagement = () => {
       LaodSeller();
     }
   };
+
   const resetAddSellerFields = () => {
     addSellerRef.current?.resetFields();
   };
+
   const onEditClick = (seller: SellerType) => {
     resetAddSellerFields();
-    setSelectedSeller(seller); // Set the selected seller for editing
-    setEditModalOpen(true); // Open modal
+    setSelectedSeller(seller);
+    setEditModalOpen(true);
   };
 
   const onUpdateClick = async (seller: SellerType) => {
-    console.log("seller in update");
-    console.log(seller);
-
     setLoading(true);
     try {
       const url = new URL("api/seller/" + seller._id, config.BACKEND_URL);
@@ -84,32 +85,29 @@ const SellerManagement = () => {
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
         const axiosError = error as AxiosError;
-        console.log(axiosError);
         if (axiosError.response) {
           const statusCode = axiosError.response.status;
 
           if (statusCode === 404) {
             refMessages.current?.Show(
               "error",
-              "Invalid Marzban Account Information"
+              "Invalid Marzban Account Information",
             );
           }
         } else {
           const errorMessage =
-            error.response?.data?.message || // Standard message
-            error.response?.data?.error || // Custom error field
+            error.response?.data?.message ||
+            error.response?.data?.error ||
             "Update Failed, An error occurred";
           refMessages.current?.Show("error", errorMessage);
-          console.log("No response received:", axiosError.message);
           refMessages.current?.Show("error", "No response from the server.");
         }
       } else {
-        console.log("Unknown error:", error);
         refMessages.current?.Show("error", "An unknown error occurred.");
       }
     } finally {
       setSelectedSeller(null);
-      setEditModalOpen(false); // Close modal after update
+      setEditModalOpen(false);
       LaodSeller();
     }
   };
@@ -134,21 +132,18 @@ const SellerManagement = () => {
           if (statusCode === 404) {
             refMessages.current?.Show(
               "error",
-              "Invalid Marzban Account Information"
+              "Invalid Marzban Account Information",
             );
           } else {
-            console.log("Internal Server Error : ", error);
             refMessages.current?.Show(
               "error",
-              "Internal Server Error! Please try again later."
+              "Internal Server Error! Please try again later.",
             );
           }
         } else {
-          console.log("No response received:", axiosError.message);
           refMessages.current?.Show("error", "No response from the server.");
         }
       } else {
-        console.log("Unknown error:", error);
         refMessages.current?.Show("error", "An unknown error occurred.");
       }
     } finally {
@@ -160,7 +155,7 @@ const SellerManagement = () => {
     try {
       const url = new URL(
         "api/disableseller/" + seller._id,
-        config.BACKEND_URL
+        config.BACKEND_URL,
       );
 
       await axios.post(
@@ -168,7 +163,7 @@ const SellerManagement = () => {
         {},
         {
           headers: { Authorization: "Bearer " + user.Token },
-        }
+        },
       );
       refMessages.current?.Show("success", "Agent Change Successful!");
     } catch (error) {
@@ -177,18 +172,17 @@ const SellerManagement = () => {
       LaodSeller();
     }
   };
+
   // #region AssignPackages
   const onAssignPackagesClick = async (seller: SellerType) => {
-    setSelectedSeller(seller); // Set the selected seller for editing
-    setAssignPackagesModalOpen(true); // Open modal
+    setSelectedSeller(seller);
+    setAssignPackagesModalOpen(true);
   };
 
   const onSavePackageClick = async (
     seller: SellerType,
-    packagesListIds: string[]
+    packagesListIds: string[],
   ) => {
-    console.log("packagesListIds in ");
-    console.log(packagesListIds);
     setLoading(true);
     try {
       const url = new URL("api/tariffSeller/" + seller._id, config.BACKEND_URL);
@@ -197,18 +191,18 @@ const SellerManagement = () => {
         { TariffIds: packagesListIds },
         {
           headers: { Authorization: "Bearer " + user.Token },
-        }
+        },
       );
 
       refMessages.current?.Show(
         "success",
-        "Packages Assigned to Seller Successfully!"
+        "Packages Assigned to Seller Successfully!",
       );
     } catch (error) {
-      console.error(error);
+      console.log(error);
       refMessages.current?.Show(
         "error",
-        "An error occurred while assigning packages to the seller."
+        "An error occurred while assigning packages to the seller ",
       );
     } finally {
       setLoading(false);

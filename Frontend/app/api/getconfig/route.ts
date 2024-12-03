@@ -13,7 +13,8 @@ export async function GET() {
     const encryptedContent = encrypt(fileContents);
 
     return new Response(encryptedContent);
-  } catch (Error) {
+  } catch (error) {
+    console.log(error);
     return new Response(null);
   }
 }

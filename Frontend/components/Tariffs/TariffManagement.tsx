@@ -56,7 +56,7 @@ const TariffManagement = () => {
     try {
       const url = new URL(
         "api/disabletariff/" + tariff._id,
-        config.BACKEND_URL
+        config.BACKEND_URL,
       );
 
       await axios.post(
@@ -64,7 +64,7 @@ const TariffManagement = () => {
         {},
         {
           headers: { Authorization: "Bearer " + user.Token },
-        }
+        },
       );
       refMessages.current?.Show("success", "Package Change Successful!");
     } catch (error) {
@@ -84,7 +84,7 @@ const TariffManagement = () => {
         {},
         {
           headers: { Authorization: "Bearer " + user.Token },
-        }
+        },
       );
       refMessages.current?.Show("success", "Package Change Successful!");
     } catch (error) {
@@ -97,9 +97,10 @@ const TariffManagement = () => {
   const onMessage = (messageType: string, message: string) => {
     refMessages.current?.Show(
       messageType == "success" ? "success" : "error",
-      message
+      message,
     );
   };
+
   return (
     <div className="row w-100 border border-solid-1 border-secondary.light rounded py-2">
       <div className="col-12">

@@ -8,8 +8,6 @@ const ivString = "Seller@Marzban@Panel@1401";
 const key = Buffer.from(keyString, "base64");
 const iv = Buffer.from(ivString, "base64");
 
-console.log(key.length, iv.length);
-
 // Ensure the key and IV are of the correct length
 if (key.length !== 32) {
   throw new Error("Key must be 32 bytes long");
@@ -20,7 +18,7 @@ if (iv.length !== 16) {
 
 // Function to encrypt data
 export function encrypt(text: string) {
-  let cipher = crypto.createCipheriv("aes-256-cbc", key, iv);
+  const cipher = crypto.createCipheriv("aes-256-cbc", key, iv);
   let encrypted = cipher.update(text, "utf8", "hex");
   encrypted += cipher.final("hex");
   return encrypted;
@@ -28,7 +26,7 @@ export function encrypt(text: string) {
 
 // Function to decrypt data
 export function decrypt(encryptedText: string) {
-  let decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
+  const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
   let decrypted = decipher.update(encryptedText, "hex", "utf8");
   decrypted += decipher.final("utf8");
   return decrypted;

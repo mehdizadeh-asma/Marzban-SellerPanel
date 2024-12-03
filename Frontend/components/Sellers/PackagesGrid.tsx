@@ -1,7 +1,3 @@
-import { DataGrid, GridActionsCellItem } from "@mui/x-data-grid";
-import ToggleOnIcon from "@mui/icons-material/ToggleOn";
-import ToggleOffIcon from "@mui/icons-material/ToggleOff";
-import TariffType from "@/models/TariffType";
 import {
   forwardRef,
   useCallback,
@@ -9,8 +5,11 @@ import {
   useImperativeHandle,
   useState,
 } from "react";
-import TariffSellerType from "@/models/TariffSellerType";
 import axios from "axios";
+import { DataGrid, GridActionsCellItem } from "@mui/x-data-grid";
+import ToggleOnIcon from "@mui/icons-material/ToggleOn";
+import ToggleOffIcon from "@mui/icons-material/ToggleOff";
+
 import { useMyContext } from "@/context/MyContext";
 import SellerType from "@/models/SellerType";
 
@@ -42,9 +41,8 @@ const PackagesGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
 
   const LaodTariff = useCallback(async () => {
     setLoading(true);
-    const tlist: string[] = [];
+    const tarifflist: string[] = [];
     try {
-      // Use seller ID from props
       const url = new URL(`api/tariffSeller/${sellerId}`, config.BACKEND_URL);
 
       const resultTariffSellers = await axios.get(url.toString(), {
@@ -54,27 +52,27 @@ const PackagesGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
       setTariffSellerList(resultTariffSellers.data);
 
       resultTariffSellers.data.map((item: TariffSellerGridType) => {
-        if (item.SellerId != "") tlist.push(item.TariffId);
+        if (item.SellerId != "") tarifflist.push(item.TariffId);
       });
-      setTariffListIds(tlist);
+      setTariffListIds(tarifflist);
     } catch (error) {
       console.log(error);
     } finally {
       setLoading(false);
     }
-  }, [config.BACKEND_URL, user.Token, props.seller?._id]);
+  }, [sellerId, config.BACKEND_URL, user.Token]);
 
   useEffect(() => {
     if (user.Token) LaodTariff();
   }, [LaodTariff, user.Token]);
 
   const handleAssignToggle = (tariffId?: string) => {
-    if (!tariffId) return; // Type guard to check if tariffId is defined
+    if (!tariffId) return;
 
     setTariffListIds((prevIds) =>
       prevIds.includes(tariffId)
         ? prevIds.filter((id) => id !== tariffId)
-        : [...prevIds, tariffId]
+        : [...prevIds, tariffId],
     );
     setTariffSellerList((prevList) =>
       prevList.map((item) =>
@@ -83,12 +81,12 @@ const PackagesGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
               ...item,
               SellerId: item.SellerId === "" ? sellerId! : "",
             }
-          : item
-      )
+          : item,
+      ),
     );
   };
 
-  const changeIcon = (SellerId: string): JSX.Element => {
+  const changeIcon = (SellerId: string) => {
     return SellerId != "" ? (
       <ToggleOnIcon sx={{ fontSize: "35px" }} className="text-success" />
     ) : (

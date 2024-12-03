@@ -25,7 +25,7 @@ const AddAccount = forwardRef<HTMLSelectElement, PropsType>((props, ref) => {
       try {
         const url = new URL(
           `api/tariffs/false/${user.Username}`,
-          config.BACKEND_URL
+          config.BACKEND_URL,
         );
         const resultTariff = await axios.get(url.toString());
         setTariffList(resultTariff.data);
@@ -34,7 +34,7 @@ const AddAccount = forwardRef<HTMLSelectElement, PropsType>((props, ref) => {
       }
     };
     if (user.Token !== "") LaodTariff();
-  }, [config.BACKEND_URL, user.Token]);
+  }, [config.BACKEND_URL, user.Token, user.Username]);
 
   const BtnAdd_Click = async () => {
     let note = "";

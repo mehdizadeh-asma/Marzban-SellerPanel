@@ -16,13 +16,15 @@ import TariffManagement from "@/components/Tariffs/TariffManagement";
 import SellerManagement from "@/components/Sellers/SellerManagement";
 
 export default function Dashboard() {
-  const [activeComponent, setActiveComponent] = useState<string>("accounts"); //packages-agents
+  const [activeComponent, setActiveComponent] = useState<string>("accounts");
   const [activeComponentName, setActiveComponentName] = useState<string>(
-    "My Accounts Management"
-  ); //packages-agents
+    "My Accounts Management",
+  );
 
   const router = useRouter();
+  const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
   const { user, setUser } = useMyContext();
+  const open = Boolean(anchorEl);
 
   useEffect(() => {
     if (user.Token === "") router.push("/seller");
@@ -38,23 +40,26 @@ export default function Dashboard() {
     });
     router.push("/seller");
   };
-  const [anchorEl, setAnchorEl] = React.useState(null);
-  const open = Boolean(anchorEl);
-  const handleClick = (e: any) => {
-    setAnchorEl(e.currentTarget);
+
+  const handleClick = (e: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(e.currentTarget as HTMLElement);
   };
-  const handlePackagesClick = (e: any) => {
+
+  const handlePackagesClick = () => {
     setActiveComponent("packages");
     setActiveComponentName("My Packages Management");
   };
-  const handleAgentsClick = (e: any) => {
+
+  const handleAgentsClick = () => {
     setActiveComponent("agents");
     setActiveComponentName("My Agents Management");
   };
-  const handleAccountsClick = (e: any) => {
+
+  const handleAccountsClick = () => {
     setActiveComponent("accounts");
     setActiveComponentName("My Accounts Management");
   };
+
   const handleClose = () => {
     setAnchorEl(null);
   };

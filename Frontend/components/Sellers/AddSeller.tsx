@@ -3,10 +3,9 @@ import {
   useEffect,
   useImperativeHandle,
   useRef,
-  useState,
   forwardRef,
+  RefObject,
 } from "react";
-
 import TextField from "@mui/material/TextField";
 
 import SellerType from "@/models/SellerType";
@@ -15,12 +14,12 @@ import Messages from "../General/Messages";
 interface PropsType {
   onAdding: (seller: SellerType) => void;
   onEditing: (seller: SellerType) => void;
-  mode: String; //add/edit
-  seller?: SellerType | null; // Seller data for editing
+  mode: string;
+  seller?: SellerType | null;
   onFieldChange: (field: keyof SellerType, value: string | number) => void;
 }
 const AddSeller = forwardRef(
-  ({ onAdding, onEditing, onFieldChange, mode, seller }: PropsType, ref) => {
+  ({ onAdding, onFieldChange, mode, seller }: PropsType, ref) => {
     const txtTitle = useRef<HTMLInputElement | null>(null);
     const txtUsername = useRef<HTMLInputElement | null>(null);
     const txtPassword = useRef<HTMLInputElement | null>(null);
@@ -30,7 +29,6 @@ const AddSeller = forwardRef(
 
     type MessagesHandle = ElementRef<typeof Messages>;
     const refMessages = useRef<MessagesHandle>(null);
-    const addSellerRef = useRef(null);
 
     useEffect(() => {
       if (seller && mode === "Edit") {
@@ -45,7 +43,7 @@ const AddSeller = forwardRef(
 
     const handleInputChange = (
       field: keyof SellerType,
-      ref: React.RefObject<HTMLInputElement>
+      ref: RefObject<HTMLInputElement>,
     ) => {
       if (ref.current) {
         onFieldChange(field, ref.current.value);
@@ -61,9 +59,8 @@ const AddSeller = forwardRef(
       if (txtTitle.current.value.length < 8) {
         refMessages.current?.Show(
           "error",
-          "Title Must Be Greater Than 8 Charecters!"
+          "Title Must Be Greater Than 8 Charecters!",
         );
-
         return;
       }
 
@@ -84,7 +81,7 @@ const AddSeller = forwardRef(
       if (txtUsername.current.value.length < 8) {
         refMessages.current?.Show(
           "error",
-          "Username Must Be Greater Then 8 Charecters!"
+          "Username Must Be Greater Then 8 Charecters!",
         );
         return;
       }
@@ -97,7 +94,7 @@ const AddSeller = forwardRef(
       if (txtPassword.current.value.length < 8) {
         refMessages.current?.Show(
           "error",
-          "Password Must Be Greater Then 8 Charecters!"
+          "Password Must Be Greater Then 8 Charecters!",
         );
         return;
       }
@@ -119,16 +116,9 @@ const AddSeller = forwardRef(
         MarzbanUsername: txtMarzbanUsername.current.value,
         MarzbanPassword: txtMarzbanPassword.current.value,
       };
-      // newseller.Title = txtTitle.current.value;
-      // newseller.Limit = +txtLimit.current.value;
-      // newseller.Username = txtUsername.current.value;
-      // newseller.Password = txtPassword.current.value;
-      // newseller.MarzbanUsername = txtMarzbanUsername.current.value;
-      // newseller.MarzbanPassword = txtMarzbanPassword.current.value;
 
       onAdding(newseller);
     };
-    // AddSeller component
     const resetFields = () => {
       txtTitle.current!.value = "";
       txtUsername.current!.value = "";
@@ -138,12 +128,12 @@ const AddSeller = forwardRef(
       txtMarzbanPassword.current!.value = "";
     };
 
-    // Then expose this function to be called externally
     useImperativeHandle(ref, () => ({
       resetFields,
     }));
 
-    let style = "container  moduleContainerStyle moduleContainer py-2  rounded";
+    const style =
+      "container  moduleContainerStyle moduleContainer py-2  rounded";
     return (
       <>
         <Messages ref={refMessages}></Messages>
@@ -274,7 +264,7 @@ const AddSeller = forwardRef(
         </div>
       </>
     );
-  }
+  },
 );
 AddSeller.displayName = "Addseller";
 

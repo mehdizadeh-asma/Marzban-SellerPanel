@@ -1,14 +1,14 @@
 "use client";
-import TariffType from "@/models/TariffType";
+import { useCallback, useEffect, useState } from "react";
+import { Button, Modal } from "react-bootstrap";
+import axios from "axios";
 import { DataGrid, GridActionsCellItem } from "@mui/x-data-grid";
 import ToggleOnIcon from "@mui/icons-material/ToggleOn";
 import ToggleOffIcon from "@mui/icons-material/ToggleOff";
 
-import { ElementRef, useCallback, useEffect, useRef, useState } from "react";
-import { Button, Modal } from "react-bootstrap";
 import { useMyContext } from "@/context/MyContext";
-import axios from "axios";
-import Messages from "../General/Messages";
+import TariffType from "@/models/TariffType";
+import TariffInboundType from "@/models/TariffInboundType";
 
 interface PropsType {
   isOpen: boolean;
@@ -17,15 +17,8 @@ interface PropsType {
   onAssign: (tariff: TariffType) => void;
   onMessage: (messageType: string, message: string) => void;
 }
-interface TariffInboundType {
-  TariffId: string;
-  InboundTag: string;
-  InboundType: string;
-}
-const TariffInboundModal = (props: PropsType) => {
-  type MessagesHandle = ElementRef<typeof Messages>;
-  const refMessages = useRef<MessagesHandle>(null);
 
+const TariffInboundModal = (props: PropsType) => {
   const [loading, setLoading] = useState(false);
   const { user, config } = useMyContext();
   const [assignedTariffInboundList, setAssignedTariffInboundList] = useState<
@@ -64,7 +57,7 @@ const TariffInboundModal = (props: PropsType) => {
       ],
     },
   ];
-  const changeIcon = (tariffId: string): JSX.Element => {
+  const changeIcon = (tariffId: string) => {
     return tariffId != "" ? (
       <ToggleOnIcon sx={{ fontSize: "35px" }} className="text-success" />
     ) : (
@@ -73,20 +66,17 @@ const TariffInboundModal = (props: PropsType) => {
   };
 
   const handleAssignToggle = (InboundTag: string) => {
-    if (!InboundTag) return; // Ensure valid tag
+    if (!InboundTag) return;
 
-    // Toggle the tag in the assigned list
     setAssignedTariffInboundList((prevList) => {
       const isAssigned = prevList.some(
-        (item) => item.InboundTag === InboundTag
+        (item) => item.InboundTag === InboundTag,
       );
-      if (isAssigned) {
-        // Remove from assigned list
+      if (isAssigned)
         return prevList.filter((item) => item.InboundTag !== InboundTag);
-      } else {
-        // Add to assigned list from raw list
+      else {
         const rawItem = rawTariffInboundList.find(
-          (item) => item.InboundTag === InboundTag
+          (item) => item.InboundTag === InboundTag,
         );
 
         if (rawItem) {
@@ -96,7 +86,6 @@ const TariffInboundModal = (props: PropsType) => {
       }
     });
 
-    // Update the raw list to toggle TariffId
     setRawTariffInboundList((prevList) =>
       prevList.map((item) =>
         item.InboundTag === InboundTag
@@ -104,8 +93,8 @@ const TariffInboundModal = (props: PropsType) => {
               ...item,
               TariffId: item.TariffId ? "" : props.tariff?._id || "",
             }
-          : item
-      )
+          : item,
+      ),
     );
   };
 
@@ -115,7 +104,7 @@ const TariffInboundModal = (props: PropsType) => {
     try {
       const url = new URL(
         "api/TariffInbound/" + props.tariff?._id,
-        config.BACKEND_URL
+        config.BACKEND_URL,
       );
 
       const resultInbounds = await axios.get(url.toString(), {
@@ -133,7 +122,7 @@ const TariffInboundModal = (props: PropsType) => {
     } finally {
       setLoading(false);
     }
-  }, [config.BACKEND_URL, user.Token, props.isOpen]);
+  }, [props.tariff?._id, config.BACKEND_URL, user.Token]);
   useEffect(() => {
     if (props.isOpen && user.Token !== "") {
       LaodTariffInbound();
@@ -149,7 +138,7 @@ const TariffInboundModal = (props: PropsType) => {
     try {
       const url = new URL(
         "api/TariffInbound/" + props.tariff._id,
-        config.BACKEND_URL
+        config.BACKEND_URL,
       );
 
       const payload = {
@@ -169,7 +158,7 @@ const TariffInboundModal = (props: PropsType) => {
     } catch (error) {
       props.onMessage(
         "error",
-        "An error occurred while assigning inbounds to the package:" + error
+        "An error occurred while assigning inbounds to the package:" + error,
       );
       props.onClose();
     } finally {

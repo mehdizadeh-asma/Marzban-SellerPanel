@@ -113,7 +113,7 @@ const AccountGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
       field: "online",
       headerName: "",
       width: 10,
-      renderCell: (params: GridRenderCellParams<any, string>) =>
+      renderCell: (params: GridRenderCellParams<AccountType, string>) =>
         RenderOnline(params.value),
       headerClassName: "MUIGridHeader",
     },
@@ -145,7 +145,7 @@ const AccountGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
       field: "used_traffic_string",
       headerName: "Usage",
       width: 140,
-      renderCell: (params: GridRenderCellParams<any, string>) =>
+      renderCell: (params: GridRenderCellParams<AccountType, string>) =>
         RenderUsage(params.row),
       headerClassName: "MUIGridHeader",
     },
@@ -159,7 +159,7 @@ const AccountGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
       field: "status",
       headerName: "Status",
       width: 110,
-      renderCell: (params: GridRenderCellParams<any, string>) =>
+      renderCell: (params: GridRenderCellParams<AccountType, string>) =>
         RenderStatus(params.value),
       headerClassName: "MUIGridHeader",
     },
@@ -232,16 +232,13 @@ const AccountGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
   }));
 
   const onCheckPay = (account: AccountType) => {
-    console.log("in check Username", account.username);
     if (account.username) {
-      setUsernamesToPay(
-        (prevUsernames) =>
-          prevUsernames.includes(account.username)
-            ? prevUsernames.filter((id) => id !== account.username) // Remove if it exists
-            : [...prevUsernames, account.username] // Add if it doesn't exist
+      setUsernamesToPay((prevUsernames) =>
+        prevUsernames.includes(account.username)
+          ? prevUsernames.filter((id) => id !== account.username)
+          : [...prevUsernames, account.username],
       );
     }
-    console.log("in check Username", UsernamesToPay);
   };
   const onPaymentClick = (account: AccountType) => {
     props.onPaying(account);

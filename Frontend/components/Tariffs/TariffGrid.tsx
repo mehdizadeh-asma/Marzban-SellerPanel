@@ -1,25 +1,21 @@
+import { useEffect, useState } from "react";
 import { DataGrid, GridActionsCellItem } from "@mui/x-data-grid";
 import ToggleOnIcon from "@mui/icons-material/ToggleOn";
 import ToggleOffIcon from "@mui/icons-material/ToggleOff";
-import TariffType from "@/models/TariffType";
 import AssignInboundIcon from "@mui/icons-material/AccountTree";
+
+import TariffType from "@/models/TariffType";
 import TariffInboundModal from "./TariffInboundModal";
-import { ElementRef, useEffect, useRef, useState } from "react";
-import Messages from "../General/Messages";
 
 interface PropsType {
   Loading: boolean;
   Tariffs: TariffType[];
   onDisableAccount: (tariff: TariffType) => void;
   onFreeChanged: (tariff: TariffType) => void;
-  // onAssignInbound: (tariff: TariffType) => void;
   onMessage: (messageType: string, message: string) => void;
 }
 
 export default function TariffGrid(props: PropsType) {
-  type MessagesHandle = ElementRef<typeof Messages>;
-  const refMessages = useRef<MessagesHandle>(null);
-
   const [isTariffInboundModalOpen, setIsTariffInboundModalOpen] =
     useState(false);
   const [selectedTariff, setSelectedTariff] = useState<TariffType>();
@@ -80,7 +76,6 @@ export default function TariffGrid(props: PropsType) {
           }
           onClick={() => onFreeEnable(params.row)}
         />,
-        ,
       ],
     },
 
@@ -124,7 +119,6 @@ export default function TariffGrid(props: PropsType) {
           }
           onClick={() => onDisableAccount(params.row)}
         />,
-        ,
       ],
     },
   ];
@@ -146,12 +140,12 @@ export default function TariffGrid(props: PropsType) {
   }, [selectedTariff]);
   const handleModalClose = () => {
     setIsTariffInboundModalOpen(false);
-    setSelectedTariff(undefined); // Reset selectedTariff when modal closes
+    setSelectedTariff(undefined);
   };
 
   const handleModalMessage = (messageType: string, message: string) => {
-    props.onMessage(messageType, message); // Pass the message to the parent
-    handleModalClose(); // Reset the state when operation finishes
+    props.onMessage(messageType, message);
+    handleModalClose();
   };
   return (
     <div className="container-fluid GridTariffContainer  my-3  ">
@@ -183,13 +177,6 @@ export default function TariffGrid(props: PropsType) {
           },
         }}
       />
-      {/* <TariffInboundModal
-        isOpen={isTariffInboundModalOpen}
-        onClose={() => setIsTariffInboundModalOpen(false)}
-        tariff={selectedTariff}
-        onAssign={onAssignInboundClick}
-        onMessage={props.onMessage}
-      /> */}
       <TariffInboundModal
         isOpen={isTariffInboundModalOpen}
         onClose={handleModalClose}

@@ -2,14 +2,12 @@ import { useImperativeHandle, useState, forwardRef } from "react";
 import { Button, Modal } from "react-bootstrap";
 import QRCode from "react-qr-code";
 
-interface PropsType {}
-
 interface ForwardRefHandle {
   Show: (subscriptionUrl: string, username: string) => void;
   Hide: () => void;
 }
 
-const DeleteModal = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
+const QRModal = forwardRef<ForwardRefHandle, object>((props, ref) => {
   const [subscriptionUrl, setSubscriptionUrl] = useState("");
   const [username, setUsername] = useState("");
 
@@ -63,6 +61,6 @@ const DeleteModal = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
   );
 });
 
-DeleteModal.displayName = "DeleteModal";
+QRModal.displayName = "QRModal";
 
-export default DeleteModal;
+export default QRModal;

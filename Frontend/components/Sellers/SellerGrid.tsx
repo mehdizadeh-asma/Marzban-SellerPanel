@@ -85,7 +85,6 @@ export default function SellerGrid(props: PropsType) {
           }
           onClick={() => onDisableAccount(params.row)}
         />,
-        ,
       ],
     },
     {

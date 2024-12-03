@@ -57,16 +57,38 @@ export default function Login() {
         Message.current.innerText = "BACKEND_URL doesn't exist!";
         setLoading(false);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.log(error);
-      if (Message.current) {
-        if (error.message == "Network Error")
-          Message.current.innerText = "Backend Is Not Available";
 
-        if (error.response.data.Message == "Invalid Account Information")
+      if (Message.current) {
+        // Check if the error is a network error
+        if (isAxiosError(error) && error.message === "Network Error") {
+          Message.current.innerText = "Backend Is Not Available";
+        }
+
+        // Check if the error contains a specific response structure
+        if (
+          isAxiosError(error) &&
+          error.response?.data &&
+          typeof error.response.data === "object" &&
+          "Message" in error.response.data &&
+          error.response.data.Message === "Invalid Account Information"
+        ) {
           Message.current.innerText = "Invalid Username or Password";
+        }
       }
+
       setLoading(false);
+    }
+
+    // Type guard to check if the error is an AxiosError
+    function isAxiosError(error: unknown): error is import("axios").AxiosError {
+      return (
+        typeof error === "object" &&
+        error !== null &&
+        "isAxiosError" in error &&
+        (error as Record<string, unknown>).isAxiosError === true
+      );
     }
   };
 
