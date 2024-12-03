@@ -57,15 +57,15 @@ class MarzbanController {
           );
 
           res.status(200).json({
-            Token: resultLogin.data.access_token,
+            Token: (resultLogin.data as { access_token: string }).access_token,
             Username: sellerUsername,
             IsAdmin: true,
             Limit: 0,
             TotalPrice: totalUnpaid.TotalPriceUnpaid,
           });
           return;
-        } catch (AxiosError) {
-          res.status(500).json({ Message: "Invalid Account Information" });
+        } catch (error) {
+          next(error);
           return;
         }
       }
@@ -94,14 +94,14 @@ class MarzbanController {
           );
 
           res.status(200).json({
-            Token: resultLogin.data.access_token,
+            Token: (resultLogin.data as { access_token: string }).access_token,
             Username: seller.Title,
             IsAdmin: false,
             Limit: seller.Limit - totalUnpaid.TotalLimitUnpaid,
             TotalPrice: totalUnpaid.TotalPriceUnpaid,
           });
-        } catch (AxiosError) {
-          res.status(500).json({ Message: "Invalid Account Information" });
+        } catch (error) {
+          next(error);
           return;
         }
       } else {
@@ -128,9 +128,9 @@ class MarzbanController {
       )
         await AccountHelpers.GetMarzbanAccountsAndStore(
           req.headers.authorization,
-          req.params.seller,
-          +req.params.offset,
-          +req.params.limit
+          req.params.seller
+          // +req.params.offset,
+          // +req.params.limit
         );
 
       const marzbanAccounts =
@@ -311,7 +311,7 @@ class MarzbanController {
       }
 
       if (getInbound.vless) {
-        let flow = await ConfigFile.GetMarzbanFlow();
+        const flow = await ConfigFile.GetMarzbanFlow();
         proxies = {
           ...proxies,
           vless: {
@@ -522,7 +522,7 @@ class MarzbanController {
 
       apiURL =
         (await ConfigFile.GetMarzbanURL()) + "/api/user/" + username + "/reset";
-      const resultReset = await axios.post(
+      await axios.post(
         apiURL,
         {},
         {

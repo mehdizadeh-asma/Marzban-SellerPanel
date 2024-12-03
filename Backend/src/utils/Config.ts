@@ -19,7 +19,9 @@ class ConfigFile {
   static async GetConfigFromFile() {
     const filepath = path.join(process.cwd(), "data", "config.json");
     const fileContents = await fs.readFile(filepath, "utf8");
-    this.config = JSON.parse(fileContents);
+    if (fileContents) {
+      this.config = JSON.parse(fileContents) as ConfigType;
+    }
   }
 
   static async GetMarzbanURL() {

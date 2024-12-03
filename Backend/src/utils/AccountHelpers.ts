@@ -1,5 +1,5 @@
 import { Document, Types } from "mongoose";
-import axios, { AxiosResponse } from "axios";
+import axios from "axios";
 
 import MarzbanAccount from "../models/MarzbanAccount";
 import Seller, { ISeller } from "../models/Seller";
@@ -38,9 +38,9 @@ class AccountHelpers {
   };
 
   static GetMarzbanAccounts = async (
-    authorization: string | undefined,
-    offset: number,
-    limit: number
+    authorization: string | undefined
+    // offset: number,
+    // limit: number
   ) => {
     const apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/users";
 
@@ -60,19 +60,20 @@ class AccountHelpers {
 
   static GetMarzbanAccountsAndStore = async (
     authorization: string | undefined,
-    seller: string,
-    offset: number = 0,
-    limit: number = 0
+    seller: string
+    // offset: number = 0,
+    // limit: number = 0
   ) => {
     const resultMarzban = await this.GetMarzbanAccounts(
-      authorization,
-      offset,
-      limit
+      authorization
+      // offset,
+      // limit
     );
-
+    const sellerUsers = (resultMarzban.data as { users: MarzbanAccount[] })
+      .users;
     this.MarzbanAccountsList = {
       ...this.MarzbanAccountsList,
-      [seller]: resultMarzban.data.users,
+      [seller]: sellerUsers,
     };
 
     // console.log("MarzbanAccountList Filled!!!!");
@@ -121,11 +122,7 @@ class AccountHelpers {
     const tariffs = await Tariff.find({ IsFree: false });
 
     accounts.map((account) => {
-      const tariff = tariffs.find(
-        (tariff) =>
-          (tariff._id as Types.ObjectId).toString() ===
-          account.TariffId?.toString()
-      );
+      const tariff = tariffs.find((tariff) => tariff._id === account.TariffId);
       if (tariff) {
         totalPriceUnpaid += tariff.Price ?? 0;
         totalLimitUnpaid += tariff.DataLimit ?? 0;
@@ -145,8 +142,7 @@ class AccountHelpers {
     authorization: string | undefined
   ) => {
     const apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/user/";
-    let result: AxiosResponse;
-    let generateUsername: string = "";
+    let generateUsername = "";
 
     try {
       do {
@@ -154,11 +150,13 @@ class AccountHelpers {
         generateUsername =
           username + seller.Counter.toString().padStart(3, "0");
 
-        result = await axios.get(apiURL + generateUsername, {
+        await axios.get(apiURL + generateUsername, {
           headers: { Authorization: authorization },
         });
-      } while (true);
-    } catch (AxiosError) {}
+      } while (seller.Counter > 10000000);
+    } catch {
+      // empty
+    }
 
     if (generateUsername != "") return generateUsername;
 
@@ -191,7 +189,9 @@ class AccountHelpers {
       const resultMarzban = await axios.get(apiURL, config);
 
       return resultMarzban.status === 200;
-    } catch (err) {}
+    } catch (error) {
+      console.log(error);
+    }
   };
 }
 

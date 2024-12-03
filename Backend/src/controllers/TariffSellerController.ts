@@ -3,7 +3,6 @@ import { Types } from "mongoose";
 
 import TariffSeller from "../models/TariffSeller";
 import Tariff from "../models/Tariff";
-import { title } from "process";
 
 class TariffSellerController {
   static GetTariffSellerListBySellerId: RequestHandler = async (
@@ -17,14 +16,16 @@ class TariffSellerController {
         SellerId: new Types.ObjectId(sellerId),
       });
       const sellerTariffIds = new Set(
-        sellerTariffs.map((ts) => ts.TariffId.toString())
+        sellerTariffs.map((ts) => (ts.TariffId as Types.ObjectId).toString())
       );
 
       const allTariffs = await Tariff.find();
 
       const tariffList = [
         ...allTariffs
-          .filter((tariff) => sellerTariffIds.has(tariff.id.toString()))
+          .filter((tariff) =>
+            sellerTariffIds.has((tariff.id as Types.ObjectId).toString())
+          )
           .map((tariff) => ({
             TariffId: tariff._id,
             Title: tariff.Title,
@@ -32,7 +33,10 @@ class TariffSellerController {
             Price: tariff.Price,
           })),
         ...allTariffs
-          .filter((tariff) => !sellerTariffIds.has(tariff.id.toString()))
+          .filter(
+            (tariff) =>
+              !sellerTariffIds.has((tariff.id as Types.ObjectId).toString())
+          )
           .map((tariff) => ({
             TariffId: tariff._id,
             Title: tariff.Title,
@@ -82,7 +86,7 @@ class TariffSellerController {
   static AssignTariffSeller: RequestHandler = async (req, res, next) => {
     try {
       const sellerId: string = req.params.sellerid;
-      const tariffIds: string[] = req.body.TariffIds;
+      const tariffIds = (req.body as { TariffIds: string[] }).TariffIds;
 
       await TariffSeller.deleteMany({
         SellerId: new Types.ObjectId(sellerId),

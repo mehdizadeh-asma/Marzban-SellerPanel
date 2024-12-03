@@ -62,7 +62,7 @@ class AccountController {
 
   static PayAccounts: RequestHandler = async (req, res, next) => {
     try {
-      const accountNames = req.body;
+      const accountNames = req.body as string[];
       for (const username of accountNames) {
         const accounts = await Account.find({
           Username: username,

@@ -1,7 +1,7 @@
 import { RequestHandler } from "express";
 import Tariff from "../models/Tariff";
 import { Types } from "mongoose";
-import Seller, { ISeller } from "../models/Seller";
+import Seller from "../models/Seller";
 import TariffSeller from "../models/TariffSeller";
 
 class TariffController {

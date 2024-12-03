@@ -1,9 +1,4 @@
-import express, {
-  NextFunction,
-  Request,
-  Response,
-  ErrorRequestHandler,
-} from "express";
+import express, { NextFunction, Request, Response } from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
 import http from "http";
@@ -45,21 +40,14 @@ app.use("/api", cors(corsOptions), tariffSellerRouter);
 
 app.use("/api", cors(corsOptions), tariffInboundRouter);
 
-app.use(
-  (
-    err: ErrorRequestHandler,
-    _req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    console.log(err); //replace with logger later
-    if (res.headersSent) {
-      return next(err);
-    }
-    res.status(500);
-    res.json(err.toString());
+app.use((err: Error, _req: Request, res: Response, next: NextFunction) => {
+  console.log(err.message); //replace with logger later
+  if (res.headersSent) {
+    return next(err);
   }
-);
+  res.status(500);
+  res.json(err.toString());
+});
 
 app.get("/", (req: Request, res: Response) => {
   res.status(200).json({ message: "app is running!" });
@@ -81,8 +69,8 @@ const Connecting = async () => {
       console.log("Server is Startig at https://localhost:8443");
     } else console.log("License is not Available or Expired!");
   } catch (err) {
-    console.log(`MongoDb Connection :  ${err}`);
+    console.log(`MongoDb Connection :  ${(err as Error).message}`);
   }
 };
 
-Connecting();
+void Connecting();

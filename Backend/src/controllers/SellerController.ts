@@ -76,7 +76,7 @@ class SellerController {
           headers: { "content-type": "application/x-www-form-urlencoded" },
         };
 
-        const resultLogin = await axios.post(
+        await axios.post(
           apiURL,
           {
             username: MarzbanUsername,
@@ -84,8 +84,11 @@ class SellerController {
           },
           config
         );
-      } catch (AxiosError) {
-        res.status(404).json({ Message: "Invalid Account Information" });
+      } catch (error) {
+        res
+          .status(404)
+          .json({ Message: "Invalid Marzban Account Information" });
+        next(error);
         return;
       }
 
@@ -136,7 +139,7 @@ class SellerController {
           headers: { "content-type": "application/x-www-form-urlencoded" },
         };
 
-        const resultLogin = await axios.post(
+        await axios.post(
           apiURL,
           {
             username: MarzbanUsername,
@@ -144,16 +147,19 @@ class SellerController {
           },
           config
         );
-      } catch (AxiosError) {
-        res.status(404).json({ Message: "Invalid Account Information" });
+      } catch (error) {
+        res
+          .status(404)
+          .json({ Message: "Invalid Marzban Account Information" });
+        next(error);
         return;
       }
       const existingSeller = await Seller.findOne({
         $or: [
-          { Title: new RegExp(`^${Title}$`, "i") }, // Check if Title already exists (case-insensitive)
-          { Username: new RegExp(`^${Username}$`, "i") }, // Check if Username already exists (case-insensitive)
+          { Title: new RegExp(`^${Title}$`, "i") },
+          { Username: new RegExp(`^${Username}$`, "i") },
         ],
-        _id: { $ne: id }, // Exclude the current seller by id when updating
+        _id: { $ne: id },
       });
 
       if (existingSeller) {
@@ -162,7 +168,6 @@ class SellerController {
           .json({ error: "Title Or Username Already Exists!" });
       }
 
-      // Create a temporary seller instance to validate updates
       const tempSeller = new Seller({
         _id: id,
         Title,
@@ -173,24 +178,7 @@ class SellerController {
         MarzbanPassword,
       });
 
-      // Validate the temporary seller instance
-      const error = tempSeller.validateSync();
-
-      // if (
-      //   (Title && Title.length < 8) ||
-      //   (Username && Username.length < 8) ||
-      //   (Password && Password.length < 8)
-      // ) {
-      //   return res.json({
-      //     error:
-      //       "Title, Username, and Password Must Be Greater Than 8 Characters",
-      //   });
-      // } // Exit if there was an error
-      // if (Limit && (Limit < 0 || Limit.toString() === "")) {
-      //   return res
-      //     .status(404)
-      //     .json({ error: "Limit Must Be A positive Number" });
-      // }
+      tempSeller.validateSync();
 
       const updateFields: Partial<typeof req.body> = {};
       if (Title) updateFields.Title = Title;
@@ -214,7 +202,6 @@ class SellerController {
         seller: updatedSeller,
       });
     } catch (error) {
-      res.status(500).json({ error: error });
       next(error);
     }
   };

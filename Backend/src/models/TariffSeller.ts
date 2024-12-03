@@ -9,7 +9,6 @@ export interface ITariffSeller extends Document {
 }
 
 export const TariffSellerSchema: Schema = new Schema({
-  // Tariff: { type: String, required: [true, "Tariff is required"] },
   TariffId: {
     type: mongoose.Schema.Types.ObjectId,
     required: [true, "Tariff is required"],
