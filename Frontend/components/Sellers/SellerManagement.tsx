@@ -6,7 +6,6 @@ import { useMyContext } from "@/context/MyContext";
 import AddSeller from "./AddSeller";
 import SellerGrid from "./SellerGrid";
 import SellerType from "@/models/SellerType";
-import TariffSellerType from "@/models/TariffSellerType";
 import Messages from "../General/Messages";
 import EditModal from "./EditModal";
 import PackageSellerModal from "./PackageSellerModal";

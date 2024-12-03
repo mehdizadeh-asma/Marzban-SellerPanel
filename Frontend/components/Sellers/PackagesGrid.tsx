@@ -25,6 +25,7 @@ interface TariffSellerGridType {
   SellerId: string;
   Title: string;
   TariffId: string;
+  Price: string;
 }
 const PackagesGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
   const [tariffSellerList, setTariffSellerList] = useState<
@@ -99,7 +100,13 @@ const PackagesGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
     {
       field: "Title",
       headerName: "Title",
-      width: 300,
+      width: 200,
+      headerClassName: "MUIGridHeader",
+    },
+    {
+      field: "Price",
+      headerName: "Price",
+      width: 50,
       headerClassName: "MUIGridHeader",
     },
     {

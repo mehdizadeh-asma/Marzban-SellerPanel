@@ -21,6 +21,7 @@ class TariffSellerController {
       );
 
       const allTariffs = await Tariff.find();
+
       const tariffList = [
         ...allTariffs
           .filter((tariff) => sellerTariffIds.has(tariff.id.toString()))
@@ -28,6 +29,7 @@ class TariffSellerController {
             TariffId: tariff._id,
             Title: tariff.Title,
             SellerId: sellerId,
+            Price: tariff.Price,
           })),
         ...allTariffs
           .filter((tariff) => !sellerTariffIds.has(tariff.id.toString()))
@@ -35,6 +37,7 @@ class TariffSellerController {
             TariffId: tariff._id,
             Title: tariff.Title,
             SellerId: "",
+            Price: tariff.Price,
           })),
       ];
 
