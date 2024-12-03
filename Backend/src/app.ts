@@ -14,6 +14,7 @@ import sellerRouter from "./routes/SellerRouter";
 import tariffRouter from "./routes/TariffRouter";
 import accountRouter from "./routes/AccountRouter";
 import tariffSellerRouter from "./routes/TariffSellerRouter";
+import tariffInboundRouter from "./routes/TariffInboundRouter";
 
 import Certificate from "./utils/Certificate";
 import Mongoose from "./utils/Mongoose";
@@ -41,6 +42,8 @@ app.use("/api", cors(corsOptions), tariffRouter);
 app.use("/api", cors(corsOptions), accountRouter);
 
 app.use("/api", cors(corsOptions), tariffSellerRouter);
+
+app.use("/api", cors(corsOptions), tariffInboundRouter);
 
 app.use(
   (

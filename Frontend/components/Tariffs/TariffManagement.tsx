@@ -22,6 +22,7 @@ const TariffManagement = () => {
       const resultTariff = await axios.get(url.toString(), {
         headers: { Authorization: "Bearer " + user.Token },
       });
+
       setTariffList(resultTariff.data);
     } catch (error) {
       console.log(error);
@@ -93,6 +94,12 @@ const TariffManagement = () => {
     }
   };
 
+  const onMessage = (messageType: string, message: string) => {
+    refMessages.current?.Show(
+      messageType == "success" ? "success" : "error",
+      message
+    );
+  };
   return (
     <div className="row w-100 border border-solid-1 border-secondary.light rounded py-2">
       <div className="col-12">
@@ -103,10 +110,10 @@ const TariffManagement = () => {
           Loading={loading}
           onDisableAccount={onDisableAccountClick}
           onFreeChanged={onFreeChangedClick}
+          onMessage={onMessage}
         />
       </div>
     </div>
   );
 };
-
 export default TariffManagement;

@@ -2,15 +2,34 @@ import { DataGrid, GridActionsCellItem } from "@mui/x-data-grid";
 import ToggleOnIcon from "@mui/icons-material/ToggleOn";
 import ToggleOffIcon from "@mui/icons-material/ToggleOff";
 import TariffType from "@/models/TariffType";
+import AssignInboundIcon from "@mui/icons-material/AccountTree";
+import TariffInboundModal from "./TariffInboundModal";
+import { ElementRef, useEffect, useRef, useState } from "react";
+import Messages from "../General/Messages";
 
 interface PropsType {
   Loading: boolean;
   Tariffs: TariffType[];
   onDisableAccount: (tariff: TariffType) => void;
   onFreeChanged: (tariff: TariffType) => void;
+  // onAssignInbound: (tariff: TariffType) => void;
+  onMessage: (messageType: string, message: string) => void;
 }
 
 export default function TariffGrid(props: PropsType) {
+  type MessagesHandle = ElementRef<typeof Messages>;
+  const refMessages = useRef<MessagesHandle>(null);
+
+  const [isTariffInboundModalOpen, setIsTariffInboundModalOpen] =
+    useState(false);
+  const [selectedTariff, setSelectedTariff] = useState<TariffType>();
+
+  useEffect(() => {
+    if (selectedTariff) {
+      setIsTariffInboundModalOpen(true);
+    }
+  }, [selectedTariff]);
+
   const columns = [
     {
       field: "Title",
@@ -33,7 +52,7 @@ export default function TariffGrid(props: PropsType) {
     {
       field: "Price",
       headerName: "Price(IRT)",
-      width: 140,
+      width: 100,
       headerClassName: "MUIGridHeader",
     },
     {
@@ -62,6 +81,22 @@ export default function TariffGrid(props: PropsType) {
           onClick={() => onFreeEnable(params.row)}
         />,
         ,
+      ],
+    },
+
+    {
+      headerClassName: "MUIGridHeader",
+      headerName: "Inbounds",
+      field: "AssignInbounds",
+      type: "actions",
+      width: 100,
+      getActions: (params: { row: TariffType }) => [
+        <GridActionsCellItem
+          key="AssignInbounds"
+          label="AssignInbounds"
+          icon={<AssignInboundIcon className="text-info" />}
+          onClick={() => onAssignInboundClick(params.row)}
+        />,
       ],
     },
     {
@@ -101,11 +136,27 @@ export default function TariffGrid(props: PropsType) {
   const onFreeEnable = (tariff: TariffType) => {
     props.onFreeChanged(tariff);
   };
+  const onAssignInboundClick = (tariff: TariffType) => {
+    setSelectedTariff(tariff);
+  };
+  useEffect(() => {
+    if (selectedTariff) {
+      setIsTariffInboundModalOpen(true);
+    }
+  }, [selectedTariff]);
+  const handleModalClose = () => {
+    setIsTariffInboundModalOpen(false);
+    setSelectedTariff(undefined); // Reset selectedTariff when modal closes
+  };
 
+  const handleModalMessage = (messageType: string, message: string) => {
+    props.onMessage(messageType, message); // Pass the message to the parent
+    handleModalClose(); // Reset the state when operation finishes
+  };
   return (
     <div className="container-fluid GridTariffContainer  my-3  ">
       <DataGrid
-        getRowId={(row) => row.Title}
+        getRowId={(row) => row._id!}
         initialState={{
           pagination: { paginationModel: { pageSize: 10 } },
         }}
@@ -131,6 +182,20 @@ export default function TariffGrid(props: PropsType) {
             textAlign: "center",
           },
         }}
+      />
+      {/* <TariffInboundModal
+        isOpen={isTariffInboundModalOpen}
+        onClose={() => setIsTariffInboundModalOpen(false)}
+        tariff={selectedTariff}
+        onAssign={onAssignInboundClick}
+        onMessage={props.onMessage}
+      /> */}
+      <TariffInboundModal
+        isOpen={isTariffInboundModalOpen}
+        onClose={handleModalClose}
+        tariff={selectedTariff}
+        onAssign={onAssignInboundClick}
+        onMessage={handleModalMessage}
       />
     </div>
   );
