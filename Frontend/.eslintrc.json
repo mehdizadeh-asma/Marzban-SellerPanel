@@ -1,3 +1,52 @@
 {
-  "extends": "next/core-web-vitals"
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 2020,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true
+    }
+  },
+  "extends": [
+    "next/core-web-vitals", // Next.js-specific rules
+    "eslint:recommended", // Core ESLint recommendations
+    "plugin:@typescript-eslint/recommended", // TypeScript recommendations
+    "plugin:prettier/recommended" // Prettier integration
+  ],
+  "plugins": ["@typescript-eslint", "unused-imports"],
+  "rules": {
+    "no-unused-vars": "off", // Disable base rule as it can report false positives with TypeScript
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      {
+        "vars": "all",
+        "args": "after-used",
+        "varsIgnorePattern": "^_",
+        "argsIgnorePattern": "^_"
+      }
+    ],
+    "unused-imports/no-unused-imports": "warn", // Warn about unused imports
+    "unused-imports/no-unused-vars": [
+      "warn",
+      {
+        "vars": "all",
+        "varsIgnorePattern": "^_",
+        "args": "after-used",
+        "argsIgnorePattern": "^_"
+      }
+    ],
+    "react/react-in-jsx-scope": "off", // Not needed in Next.js
+    "prettier/prettier": "warn" // Ensure Prettier formatting consistency
+  },
+  "settings": {
+    "react": {
+      "version": "detect" // Automatically detect React version
+    }
+  },
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "node": true
+  }
 }

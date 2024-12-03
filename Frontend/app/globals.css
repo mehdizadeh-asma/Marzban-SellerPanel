@@ -400,7 +400,8 @@ a {
 }
 
 .BoxShadowLightPurple {
-  box-shadow: 0 2px 2px 0 rgba(130, 133, 139, 0.2),
+  box-shadow:
+    0 2px 2px 0 rgba(130, 133, 139, 0.2),
     0 2px 2px 0 rgba(201, 200, 239, 0.19);
 }
 
@@ -450,14 +451,14 @@ a {
   border-radius: 3px;
 }
 
-.ContainerGrid{
+.ContainerGrid {
   height: 635px;
   width: "100%";
-  background-color: "#eff1fa" ;
+  background-color: "#eff1fa";
 }
 
-.Grid{
-  background-color: "white"
+.Grid {
+  background-color: "white";
 }
 
 .MainBox {
@@ -472,18 +473,18 @@ a {
   border-color: rgb(224, 136, 21);
   color: rgb(187, 84, 0);
 }
-.MUIGridHeader{
+.MUIGridHeader {
   background-color: #66366f;
   color: white;
   font-size: 1rem;
   text-align: center;
 }
-.MUIGridHeader:hover{
+.MUIGridHeader:hover {
   background-color: #ebdaf6;
   color: black;
   font-size: 0.9rem;
 }
-.ActiveComponentName{
+.ActiveComponentName {
   color: purple;
   font-weight: 500;
   padding-top: 1rem;
@@ -491,8 +492,8 @@ a {
   vertical-align: middle;
   padding-right: 2px;
 }
-.ActiveComponentNameRow{
- background: linear-gradient(rgba(253, 183, 54, 0.471),rgb(246, 241, 215));
+.ActiveComponentNameRow {
+  background: linear-gradient(rgba(253, 183, 54, 0.471), rgb(246, 241, 215));
 }
 @media screen and (min-width: 768px) {
   #divHeader .flex-container {
@@ -510,7 +511,6 @@ a {
 }
 #divProfile {
   height: 300px;
-  
 }
 @media screen and (max-width: 577px) {
   #divDrop .tariffDrop {
@@ -519,33 +519,33 @@ a {
   .divButton {
     display: flex;
     justify-content: center;
-    height:100%;
+    height: 100%;
   }
-  .btnAdd{
+  .btnAdd {
     width: 100%;
   }
 }
-@media screen and (min-width: 577px) and (max-width:768px) {
+@media screen and (min-width: 577px) and (max-width: 768px) {
   #divDrop .tariffDrop {
     width: 100%;
   }
   .divButton {
     display: flex;
     justify-content: center;
-    height:100%;
+    height: 100%;
     align-items: center;
   }
-  .btnAdd{
+  .btnAdd {
     width: 100px;
   }
 }
 @media screen and (min-width: 768px) {
-    .divButton {
+  .divButton {
     display: flex;
     justify-content: left;
-    height:100%;
+    height: 100%;
   }
-  .btnAdd{
+  .btnAdd {
     width: 100px;
   }
 }
@@ -553,7 +553,6 @@ a {
   background-color: red;
   color: red;
 }
-
 
 @media screen and (max-width: 768px) {
   #divHeader .flex-container {
@@ -1300,47 +1299,56 @@ a {
   }
 }
 
-@media (min-width:1000px) {
-  .moduleContainer  {
+@media (min-width: 1000px) {
+  .moduleContainer {
     width: 35%;
-  }}
-@media (min-width: 850px) and (max-width:1000px){
-  .moduleContainer  {
-    width: 35%;
-  }}
-@media (min-width: 600px) and ( max-width:850px) {
-  .moduleContainer  {
-    width: 70%;
-  }}
-  @media (min-width: 400px) and (max-width:600px) {
-    .moduleContainer  {
-      width: 95%;
-          
-    }}
-    @media (max-width: 400px) {
-      .moduleContainer  {
-        width: 100%;
-      }}
-.moduleContainerStyle{ border: solid 2px purple;}
-
-@media (min-width:800px) {
-  .GridSellerContainer  {
-    width: 1130px;
-  }}
-@media (min-width: 300px) and (max-width:800px){
-  .GridSellerContainer  {
-    width: 100%;
-  }}
-  @media (min-width:1000px) {
-    .GridTariffContainer  {
-      width: 1000px;
-    }}
-  @media (min-width: 300px) and (max-width:1000px){
-    .GridTariffContainer  {
-      width: 100%;
-    }}
-
-  .text-purple {
-      color: #6f42c1; 
   }
-  
+}
+@media (min-width: 850px) and (max-width: 1000px) {
+  .moduleContainer {
+    width: 35%;
+  }
+}
+@media (min-width: 600px) and (max-width: 850px) {
+  .moduleContainer {
+    width: 70%;
+  }
+}
+@media (min-width: 400px) and (max-width: 600px) {
+  .moduleContainer {
+    width: 95%;
+  }
+}
+@media (max-width: 400px) {
+  .moduleContainer {
+    width: 100%;
+  }
+}
+.moduleContainerStyle {
+  border: solid 2px purple;
+}
+
+@media (min-width: 800px) {
+  .GridSellerContainer {
+    width: 1130px;
+  }
+}
+@media (min-width: 300px) and (max-width: 800px) {
+  .GridSellerContainer {
+    width: 100%;
+  }
+}
+@media (min-width: 1000px) {
+  .GridTariffContainer {
+    width: 1000px;
+  }
+}
+@media (min-width: 300px) and (max-width: 1000px) {
+  .GridTariffContainer {
+    width: 100%;
+  }
+}
+
+.text-purple {
+  color: #6f42c1;
+}
