@@ -18,7 +18,7 @@ const AddAccount = forwardRef<HTMLSelectElement, PropsType>((props, ref) => {
   const [tariffList, setTariffList] = useState<TariffType[]>([]);
   const selectTariff = useRef<HTMLSelectElement | null>(null);
   const txtNote = useRef<HTMLInputElement | null>(null);
-  const chkOnHold = useRef<HTMLInputElement | null>(null); // Reference for the checkbox
+  const chkOnHold = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     const LaodTariff = async () => {
@@ -54,7 +54,7 @@ const AddAccount = forwardRef<HTMLSelectElement, PropsType>((props, ref) => {
 
       const tariff = tariffList.filter((t) => t._id == tariffId)[0];
 
-      if (props.onAdding) props.onAdding(tariff, note, onHold); // Pass the onHold value to the onAdding function
+      if (props.onAdding) props.onAdding(tariff, note, onHold);
     }
   };
 

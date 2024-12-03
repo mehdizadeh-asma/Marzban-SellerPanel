@@ -39,12 +39,7 @@ const Messages = forwardRef<ForwardRefHandle, object>((_props, ref) => {
           setMessage({ ...message, Open: false });
         }}
       >
-        <Alert
-          variant="filled"
-          severity={message.Severity}
-          // icon={<CheckIcon fontSize="inherit" />}
-        >
-          {/* <AlertTitle>Warning</AlertTitle> */}
+        <Alert variant="filled" severity={message.Severity}>
           {message.Text}
         </Alert>
       </Snackbar>

@@ -61,12 +61,10 @@ export default function Login() {
       console.log(error);
 
       if (Message.current) {
-        // Check if the error is a network error
         if (isAxiosError(error) && error.message === "Network Error") {
           Message.current.innerText = "Backend Is Not Available";
         }
 
-        // Check if the error contains a specific response structure
         if (
           isAxiosError(error) &&
           error.response?.data &&
@@ -81,7 +79,6 @@ export default function Login() {
       setLoading(false);
     }
 
-    // Type guard to check if the error is an AxiosError
     function isAxiosError(error: unknown): error is import("axios").AxiosError {
       return (
         typeof error === "object" &&

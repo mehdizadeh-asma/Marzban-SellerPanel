@@ -206,7 +206,7 @@ const SellerManagement = () => {
       );
     } finally {
       setLoading(false);
-      LaodSeller(); // Reloads the seller data
+      LaodSeller();
     }
   };
   //#endregion

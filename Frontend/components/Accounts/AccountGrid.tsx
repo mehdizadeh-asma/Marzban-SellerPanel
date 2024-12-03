@@ -42,7 +42,6 @@ interface PropsType {
   onRenewing: (account: AccountType) => void;
   onDisabling: (account: AccountType) => void;
   onPaying: (account: AccountType) => void;
-  // onPayAll: (sellerIds: string[]) => void;
 }
 export interface ForwardRefHandle {
   SendBackUsernames: () => string[];

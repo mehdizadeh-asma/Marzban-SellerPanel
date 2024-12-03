@@ -9,7 +9,6 @@ export async function GET() {
     const filepath = path.join(process.cwd(), "data", "config.json");
     const fileContents = await fs.readFile(filepath, "utf8");
 
-    // Encrypt the file content
     const encryptedContent = encrypt(fileContents);
 
     return new Response(encryptedContent);
