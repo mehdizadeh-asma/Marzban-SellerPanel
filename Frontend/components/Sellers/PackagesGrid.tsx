@@ -135,6 +135,7 @@ const PackagesGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
         className="Grid"
         rows={tariffSellerList}
         columns={columns}
+        loading={loading}
         sx={{
           boxShadow: 2,
           border: 2,

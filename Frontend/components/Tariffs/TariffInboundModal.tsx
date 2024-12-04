@@ -19,7 +19,6 @@ interface PropsType {
 }
 
 const TariffInboundModal = (props: PropsType) => {
-  const [loading, setLoading] = useState(false);
   const { user, config } = useMyContext();
   const [assignedTariffInboundList, setAssignedTariffInboundList] = useState<
     TariffInboundType[]
@@ -99,8 +98,6 @@ const TariffInboundModal = (props: PropsType) => {
   };
 
   const LaodTariffInbound = useCallback(async () => {
-    setLoading(true);
-
     try {
       const url = new URL(
         "api/TariffInbound/" + props.tariff?._id,
@@ -119,8 +116,6 @@ const TariffInboundModal = (props: PropsType) => {
       setAssignedTariffInboundList(tlist);
     } catch (error) {
       console.log(error);
-    } finally {
-      setLoading(false);
     }
   }, [props.tariff?._id, config.BACKEND_URL, user.Token]);
   useEffect(() => {
@@ -141,12 +136,10 @@ const TariffInboundModal = (props: PropsType) => {
         config.BACKEND_URL,
       );
 
-      const payload = {
-        InboundList: assignedTariffInboundList.map((item) => ({
-          InboundTag: item.InboundTag,
-          InboundType: item.InboundType,
-        })),
-      };
+      const payload = assignedTariffInboundList.map((item) => ({
+        InboundTag: item.InboundTag,
+        InboundType: item.InboundType,
+      }));
 
       await axios.put(url.toString(), payload, {
         headers: { Authorization: "Bearer " + user.Token },
@@ -162,7 +155,6 @@ const TariffInboundModal = (props: PropsType) => {
       );
       props.onClose();
     } finally {
-      setLoading(false);
       LaodTariffInbound();
     }
   };
