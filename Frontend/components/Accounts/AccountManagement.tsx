@@ -1,6 +1,13 @@
 "use client";
 import axios from "axios";
-import { ElementRef, useCallback, useEffect, useRef, useState } from "react";
+import {
+  ChangeEvent,
+  ElementRef,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import FilterAltOffIcon from "@mui/icons-material/FilterAltOff";
 import PaymentsIcon from "@mui/icons-material/Payments";
@@ -36,7 +43,7 @@ export default function AccountManagement() {
   const onRenewClick = (account: AccountType) => {
     const paid =
       accountList.filter(
-        (acc) => acc.username == account.username && acc.payed === "Unpaid"
+        (acc) => acc.username == account.username && acc.payed === "Unpaid",
       ).length == 0;
     if (
       (paid || config.RENEW_FORCE_TO_PAID?.toUpperCase() !== "YES") &&
@@ -69,9 +76,9 @@ export default function AccountManagement() {
       try {
         StartLoading();
 
-        let url = new URL(
+        const url = new URL(
           "api/marzban/disableaccount/" + account.username,
-          config.BACKEND_URL
+          config.BACKEND_URL,
         );
         await axios.post(
           url.toString(),
@@ -80,7 +87,7 @@ export default function AccountManagement() {
           },
           {
             headers: { Authorization: "Bearer " + user.Token },
-          }
+          },
         );
       } catch (error) {
         console.log(error);
@@ -94,7 +101,7 @@ export default function AccountManagement() {
       try {
         StartLoading();
 
-        let url = new URL("api/payaccount/" + account.id, config.BACKEND_URL);
+        const url = new URL("api/payaccount/" + account.id, config.BACKEND_URL);
         await axios.post(url.toString(), {
           headers: { Authorization: "Bearer " + user.Token },
         });
@@ -106,29 +113,24 @@ export default function AccountManagement() {
   };
 
   const onPayAllClick = async () => {
-    console.log("accountNames in mng", gridRef.current);
     if (user.IsAdmin)
       if (gridRef.current) {
         const accountNames = gridRef.current.SendBackUsernames();
         if (
           !Array.isArray(accountNames) ||
           !accountNames.every((name) => typeof name === "string")
-        ) {
-          console.error("Invalid account names. Expected an array of strings.");
+        )
           return;
-        }
 
-        console.log("accountNames in mng", accountNames);
         try {
           StartLoading();
-          console.log("accountNames in mng", accountNames);
-          let url = new URL("api/payaccounts/", config.BACKEND_URL);
+          const url = new URL("api/payaccounts/", config.BACKEND_URL);
           await axios.post(url.toString(), accountNames, {
             headers: { Authorization: "Bearer " + user.Token },
           });
           refMessages.current?.Show(
             "success",
-            "Payments Changed Successfully!"
+            "Payments Changed Successfully!",
           );
         } catch (error) {
           console.log(error);
@@ -140,7 +142,7 @@ export default function AccountManagement() {
   const OnAddClick = async (
     tariff: TariffType,
     note: string,
-    onHold: boolean
+    onHold: boolean,
   ) => {
     if (user.Limit >= tariff.DataLimit)
       try {
@@ -157,7 +159,7 @@ export default function AccountManagement() {
           },
           {
             headers: { Authorization: "Bearer " + user.Token },
-          }
+          },
         );
         if (!tariff.IsFree) {
           user.Limit -= tariff.DataLimit;
@@ -176,9 +178,9 @@ export default function AccountManagement() {
     async (IsAll: boolean = false) => {
       try {
         StartLoading();
-        let url = new URL(
+        const url = new URL(
           `api/marzban/accounts/${user.Username}/${IsAll}/${0}/${10}`,
-          config.BACKEND_URL
+          config.BACKEND_URL,
         );
         const resultAccounts = await axios.get(url.toString(), {
           headers: { Authorization: "Bearer " + user.Token },
@@ -191,7 +193,7 @@ export default function AccountManagement() {
         setLoading(false);
       }
     },
-    [config.BACKEND_URL, user.Token, user.Username]
+    [config.BACKEND_URL, user.Token, user.Username],
   );
 
   useEffect(() => {
@@ -199,10 +201,6 @@ export default function AccountManagement() {
   }, [LoadAccount, user.Token]);
 
   const UnFilter_Click = () => {
-    LoadAccount(true);
-  };
-  const Payments_Click = () => {
-    //pay all
     LoadAccount(true);
   };
 
@@ -213,7 +211,7 @@ export default function AccountManagement() {
 
         const url = new URL(
           "api/marzban/account/" + selectedAccount?.username,
-          config.BACKEND_URL
+          config.BACKEND_URL,
         );
 
         await axios.delete(url.toString(), {
@@ -237,7 +235,7 @@ export default function AccountManagement() {
 
         const url = new URL(
           "api/marzban/renewaccount/" + user.Username,
-          config.BACKEND_URL
+          config.BACKEND_URL,
         );
 
         await axios.post(
@@ -248,7 +246,7 @@ export default function AccountManagement() {
           },
           {
             headers: { Authorization: "Bearer " + user.Token },
-          }
+          },
         );
 
         user.Limit -= selectedAccount?.data_limit / (1024 * 1024 * 1024);
@@ -265,7 +263,7 @@ export default function AccountManagement() {
     setLoading(true);
   };
 
-  const SearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const SearchChange = (event: ChangeEvent<HTMLInputElement>) => {
     setSearchText(event.target.value);
   };
 

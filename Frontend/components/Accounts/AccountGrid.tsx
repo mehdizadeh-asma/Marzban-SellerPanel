@@ -11,6 +11,8 @@ import {
   DataGrid,
   GridActionsCellItem,
   GridRenderCellParams,
+  GridToolbarColumnsButton,
+  GridToolbarFilterButton,
 } from "@mui/x-data-grid";
 import LinearProgress from "@mui/material/LinearProgress";
 import Box from "@mui/material/Box";
@@ -60,9 +62,12 @@ const AccountGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
     {
       headerClassName: "MUIGridHeader",
       headerName: "",
-      field: "link",
+      field: "toolbox",
       type: "actions",
       width: 160,
+      minWidth: 50,
+      maxWidth: 250,
+      resizable: true,
       getActions: (params: { row: AccountType }) => [
         <GridActionsCellItem
           key="checkPay"
@@ -99,13 +104,18 @@ const AccountGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
     {
       field: "username",
       headerName: "Username",
-      width: 150,
-      headerClassName: "MUIGridHeader",
+      width: 120,
+      minWidth: 50,
+      maxWidth: 160,
+      resizable: true,
     },
     {
       field: "note",
       headerName: "Note",
-      width: 100,
+      width: 90,
+      minWidth: 50,
+      maxWidth: 120,
+      resizable: true,
       headerClassName: "MUIGridHeader",
     },
     {
@@ -119,31 +129,57 @@ const AccountGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
     {
       field: "online_at",
       headerName: "Online",
-      width: 120,
+      width: 100,
+      minWidth: 50,
+      maxWidth: 120,
+      resizable: true,
+      headerClassName: "MUIGridHeader",
+    },
+    {
+      field: "status",
+      headerName: "Status",
+      width: 40,
+      minWidth: 50,
+      maxWidth: 120,
+      resizable: true,
+      renderCell: (params: GridRenderCellParams<AccountType, string>) =>
+        RenderStatus(params.value),
       headerClassName: "MUIGridHeader",
     },
     {
       field: "package",
       headerName: "Package",
-      width: 170,
+      width: 100,
+      minWidth: 50,
+      maxWidth: 120,
+      resizable: true,
       headerClassName: "MUIGridHeader",
     },
     {
       field: "price",
       headerName: "Price",
       width: 50,
+      minWidth: 50,
+      maxWidth: 120,
+      resizable: true,
       headerClassName: "MUIGridHeader",
     },
     {
       field: "data_limit_string",
       headerName: "Limit",
       width: 90,
+      minWidth: 50,
+      maxWidth: 120,
+      resizable: true,
       headerClassName: "MUIGridHeader",
     },
     {
       field: "used_traffic_string",
       headerName: "Usage",
       width: 140,
+      minWidth: 50,
+      maxWidth: 170,
+      resizable: true,
       renderCell: (params: GridRenderCellParams<AccountType, string>) =>
         RenderUsage(params.row),
       headerClassName: "MUIGridHeader",
@@ -152,33 +188,38 @@ const AccountGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
       field: "expire_string",
       headerName: "Expire",
       width: 110,
+      minWidth: 50,
+      maxWidth: 120,
+      resizable: true,
       headerClassName: "MUIGridHeader",
     },
-    {
-      field: "status",
-      headerName: "Status",
-      width: 110,
-      renderCell: (params: GridRenderCellParams<AccountType, string>) =>
-        RenderStatus(params.value),
-      headerClassName: "MUIGridHeader",
-    },
+
     {
       field: "sub_updated_at",
       headerName: "Last Update (Subscription)",
       width: 110,
+      minWidth: 50,
+      maxWidth: 170,
+      resizable: true,
       headerClassName: "MUIGridHeader",
     },
     {
       field: "sub_last_user_agent",
       headerName: "Last App (Subscription)",
       width: 100,
+      minWidth: 50,
+      maxWidth: 150,
+      resizable: true,
       headerClassName: "MUIGridHeader",
     },
     {
-      headerName: "Payment",
-      field: "payed",
+      headerName: "",
+      field: "tools",
       type: "actions",
-      width: 90,
+      width: 120,
+      minWidth: 50,
+      maxWidth: 120,
+      resizable: true,
       headerClassName: "MUIGridHeader",
       getActions: (params: { row: AccountType }) => [
         <GridActionsCellItem
@@ -187,15 +228,6 @@ const AccountGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
           icon={RenderPayment(params.row.payed)}
           onClick={() => onPaymentClick(params.row)}
         />,
-      ],
-    },
-    {
-      headerName: "",
-      field: "delete",
-      type: "actions",
-      width: 140,
-      headerClassName: "MUIGridHeader",
-      getActions: (params: { row: AccountType }) => [
         <GridActionsCellItem
           key="delete"
           label="Delete"
@@ -239,6 +271,7 @@ const AccountGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
       );
     }
   };
+
   const onPaymentClick = (account: AccountType) => {
     props.onPaying(account);
   };
@@ -271,31 +304,31 @@ const AccountGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
       case "active":
         return (
           <span className="text-success">
-            <GppGoodRoundedIcon></GppGoodRoundedIcon>Active
+            <GppGoodRoundedIcon></GppGoodRoundedIcon>
           </span>
         );
       case "on_hold":
         return (
           <span className="text-purple">
-            <WatchLaterIcon></WatchLaterIcon>On Hold
+            <WatchLaterIcon></WatchLaterIcon>
           </span>
         );
       case "disabled":
         return (
           <span className="text-secondary">
-            <GppBadRoundedIcon></GppBadRoundedIcon>Disabled
+            <GppBadRoundedIcon></GppBadRoundedIcon>
           </span>
         );
       case "expired":
         return (
           <span className="text-primary">
-            <SafetyCheckRoundedIcon></SafetyCheckRoundedIcon>Expired
+            <SafetyCheckRoundedIcon></SafetyCheckRoundedIcon>
           </span>
         );
       case "limited":
         return (
           <span className="text-danger">
-            <GppMaybeRoundedIcon></GppMaybeRoundedIcon>Limited
+            <GppMaybeRoundedIcon></GppMaybeRoundedIcon>
           </span>
         );
     }
@@ -305,12 +338,10 @@ const AccountGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
     return payment === "Paid" ? (
       <span className="text-success">
         <CreditScoreRoundedIcon></CreditScoreRoundedIcon>
-        {/* <text className="h6  ">Paid</text> */}
       </span>
     ) : (
       <span className="text-secondary">
         <CreditCardOffRoundedIcon></CreditCardOffRoundedIcon>
-        {/* <text className="h6 ">Unpaid</text> */}
       </span>
     );
   };
@@ -356,9 +387,25 @@ const AccountGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
         }}
         pageSizeOptions={[10, 25, 50, 100]}
         className="Grid"
+        autoHeight
         rows={props.Accounts}
         columns={columns}
         loading={props.Loading}
+        slots={{
+          toolbar: () => (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                padding: 1,
+              }}
+            >
+              <GridToolbarFilterButton />
+              <GridToolbarColumnsButton />
+            </Box>
+          ),
+        }}
+        sortingOrder={["asc", "desc"]}
         sx={{
           boxShadow: 2,
           border: 2,
@@ -374,6 +421,9 @@ const AccountGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
           },
           "& .MuiDataGrid-cell": {
             textAlign: "center",
+          },
+          "& .MuiDataGrid-columnHeaders": {
+            cursor: "col-resize",
           },
         }}
       />
