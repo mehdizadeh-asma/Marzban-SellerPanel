@@ -27,7 +27,7 @@ class TariffController {
         const tariffIds = tariffSellers.map((entry) => entry.TariffId);
 
         const condition = { _id: { $in: tariffIds }, IsVisible: true };
-        const result = await Tariff.find(condition).sort({ Title: "asc" });
+        const result = await Tariff.find(condition); //.sort({ Title: "asc" });
 
         res.status(200).json(result);
         return;
