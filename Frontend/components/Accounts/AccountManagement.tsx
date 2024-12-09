@@ -16,12 +16,13 @@ import { useMyContext } from "@/context/MyContext";
 import AddAccount from "./AddAccount";
 import DeleteModal from "./DeleteModal";
 import RenewModal from "./RenewModal";
-import AccountGrid from "./AccountGrid";
+// import AccountGrid from "./AccountGrid";
 import AccountType from "@/models/AccountType";
 import TariffType from "@/models/TariffType";
 import Messages from "../General/Messages";
 import { TextField } from "@mui/material";
 import { ForwardRefHandle } from "../Accounts/AccountGrid";
+import ExpandableAccountGrid from "./ExpandableAccountGrid";
 
 export default function AccountManagement() {
   const { user, config, setUser } = useMyContext();
@@ -100,8 +101,10 @@ export default function AccountManagement() {
     if (user.IsAdmin)
       try {
         StartLoading();
-
-        const url = new URL("api/payaccount/" + account.id, config.BACKEND_URL);
+        const url = new URL(
+          "api/payaccount/" + account.username,
+          config.BACKEND_URL,
+        );
         await axios.post(url.toString(), {
           headers: { Authorization: "Bearer " + user.Token },
         });
@@ -285,7 +288,7 @@ export default function AccountManagement() {
   });
 
   return (
-    <div className="container-fluid bg-primery">
+    <div className="container-fluid bg-primery  ">
       {user.IsAdmin ? "" : <AddAccount onAdding={OnAddClick} Mode="Add" />}
       <div className="row">
         <div className="col justify-content-start d-flex mt-1">
@@ -326,7 +329,17 @@ export default function AccountManagement() {
         <div className="col-12">
           <Messages ref={refMessages}></Messages>
           <div className="ContainerGrid">
-            <AccountGrid
+            {/* <AccountGrid
+              ref={gridRef}
+              Accounts={filteredRows}
+              Loading={loading}
+              onDeleting={onDeleteClick}
+              onDisabling={onDisabledClick}
+              onRenewing={onRenewClick}
+              onPaying={onPaymentClick}
+            /> */}
+
+            <ExpandableAccountGrid
               ref={gridRef}
               Accounts={filteredRows}
               Loading={loading}
@@ -343,6 +356,9 @@ export default function AccountManagement() {
         ref={refDeleteModal}
       ></DeleteModal>
       <RenewModal RenewHandler={RenewAccount} ref={refRenewModal}></RenewModal>
+      <div className="my-3">
+        <br />
+      </div>
     </div>
   );
 }

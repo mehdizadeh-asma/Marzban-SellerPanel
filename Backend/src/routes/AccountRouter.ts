@@ -9,7 +9,7 @@ const router = Router();
 // router.post("/account", AccountController.AddAccount);
 // router.put("/account/:id", AccountController.EditAccount);
 // router.delete("/account/:id", AccountController.RemoveAccount);
-router.post("/payaccount/:id", AccountController.PayAccount);
+router.post("/payaccount/:username", AccountController.PayAccount);
 router.post("/payaccounts", AccountController.PayAccounts);
 // router.post("/converttariff", AccountController.ConvertTariff);
 

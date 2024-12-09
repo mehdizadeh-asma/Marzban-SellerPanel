@@ -84,12 +84,13 @@ class AccountController {
 
   static PayAccount: RequestHandler = async (req, res, next) => {
     try {
-      const id: string = req.params.id;
-
-      const account = await Account.findOne({ _id: id });
-
+      const username: string = req.params.username;
+      const account = await Account.findOne({
+        Username: username,
+        Payed: false,
+      });
       if (account) {
-        account.Payed = !account.Payed;
+        account.Payed = true;
         await account.save();
       }
 
