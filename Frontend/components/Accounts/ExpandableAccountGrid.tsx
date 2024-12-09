@@ -50,6 +50,10 @@ export interface ForwardRefHandle {
   SendBackUsernames: () => string[];
 }
 
+interface GridRowData extends AccountType {
+  isParent: boolean;
+}
+
 const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
   (props, ref) => {
     const [selectedLink, setSelectedLink] = useState("");
@@ -71,7 +75,7 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
         headerClassName: "MUIGridHeader",
         width: 10,
         resizable: true,
-        renderCell: (params: GridRenderCellParams<any, string>) => {
+        renderCell: (params: GridRenderCellParams<GridRowData, string>) => {
           const { username } = params.row;
           if (params.row.isParent) {
             return (
@@ -93,7 +97,7 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
         field: "link",
         type: "actions",
         width: 160,
-        getActions: (params: { row: any }) => {
+        getActions: (params: { row: GridRowData }) => {
           const isParentRow = params.row.isParent;
 
           return isParentRow
@@ -121,7 +125,6 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
                   label="QR"
                   icon={<QrCode2Icon className="text-primary" />}
                   onClick={() => {
-                    console.log("params.row in qr", params.row);
                     onQRClick(params.row);
                   }}
                 />,
@@ -138,7 +141,6 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
                   label="Paid"
                   icon={RenderPayment(params.row.payed)}
                   onClick={() => {
-                    console.log("params.row.payed", params.row);
                     onPaymentClick(params.row);
                   }}
                 />,
@@ -159,7 +161,6 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
                     )
                   }
                   onClick={() => {
-                    console.log("params.row in dis", params.row);
                     onDisableAccount(params.row);
                   }}
                 />,
@@ -181,7 +182,7 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
         maxWidth: 160,
         resizable: true,
         headerClassName: "MUIGridHeader",
-        renderCell: (params: GridRenderCellParams<any, string>) => {
+        renderCell: (params: GridRenderCellParams<GridRowData, string>) => {
           if (params.row.isParent) {
             return params.row.username;
           } else {
@@ -214,7 +215,9 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
                     whiteSpace: "normal",
                   }}
                 >
-                  {params.row.lastapp ? `${params.row.lastapp}` : "N/A"}
+                  {params.row.sub_last_user_agent
+                    ? `${params.row.sub_last_user_agent}`
+                    : "N/A"}
                 </p>
               </Box>
             );
@@ -227,7 +230,7 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
         headerName: "Note",
         width: 100,
         headerClassName: "MUIGridHeader",
-        renderCell: (params: GridRenderCellParams<any, string>) => {
+        renderCell: (params: GridRenderCellParams<GridRowData, string>) => {
           return params.row.isParent ? params.row.note : "";
         },
       },
@@ -236,7 +239,7 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
         headerName: "Status",
         width: 110,
         headerClassName: "MUIGridHeader",
-        renderCell: (params: GridRenderCellParams<any, string>) => {
+        renderCell: (params: GridRenderCellParams<GridRowData, string>) => {
           if (params.row.isParent) {
             return RenderStatus(params.value);
           } else {
@@ -272,7 +275,9 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
                     whiteSpace: "normal",
                   }}
                 >
-                  {params.row.lastUpdate ? `${params.row.lastUpdate}` : "N/A"}
+                  {params.row.sub_updated_at
+                    ? `${params.row.sub_updated_at}`
+                    : "N/A"}
                 </p>
               </Box>
             );
@@ -283,7 +288,7 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
         field: "online",
         headerName: "Online",
         width: 10,
-        renderCell: (params: GridRenderCellParams<any, string>) => {
+        renderCell: (params: GridRenderCellParams<GridRowData, string>) => {
           return params.row.isParent ? RenderOnline(params.value) : "";
         },
 
@@ -294,7 +299,7 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
         headerName: "Usage",
         width: 140,
         headerClassName: "MUIGridHeader",
-        renderCell: (params: GridRenderCellParams<any, string>) => {
+        renderCell: (params: GridRenderCellParams<GridRowData, string>) => {
           if (params.row.isParent) {
             return RenderUsage(params.row);
           } else {
@@ -317,7 +322,7 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
                     whiteSpace: "normal",
                   }}
                 >
-                  {params.row.lastonline ? `${params.row.lastonline}` : "N/A"}
+                  {params.row.online_at ? `${params.row.online_at}` : "N/A"}
                 </p>
               </Box>
             );
@@ -329,7 +334,7 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
         headerName: "Expire",
         width: 110,
         headerClassName: "MUIGridHeader",
-        renderCell: (params: GridRenderCellParams<any, string>) => {
+        renderCell: (params: GridRenderCellParams<GridRowData, string>) => {
           if (params.row.isParent) {
             return params.value;
           } else {
@@ -364,7 +369,7 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
         headerName: "Limit",
         width: 90,
         headerClassName: "MUIGridHeader",
-        renderCell: (params: GridRenderCellParams<any, string>) => {
+        renderCell: (params: GridRenderCellParams<GridRowData, string>) => {
           if (params.row.isParent) {
             return params.value;
           } else {
@@ -413,7 +418,7 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
               lastonline: account.online_at,
             }
           : null,
-      ].filter(Boolean);
+      ].filter(Boolean) as GridRowData[];
     });
 
     const toggleRowExpansion = (username: string) => {
@@ -435,7 +440,6 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
       }
     };
     const onPaymentClick = (account: AccountType) => {
-      console.log("m in payment", account);
       props.onPaying(account);
     };
 
@@ -463,7 +467,6 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
     };
 
     const RenderStatus = (status: string | undefined) => {
-      console.log("status", status);
       switch (status) {
         case "active":
           return (
@@ -574,7 +577,7 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
           getRowClassName={(params) =>
             params.row.id.includes("-detail") ? "expanded-row" : ""
           }
-          // autoHeight
+          autoHeight
           getRowHeight={(params) =>
             params.id.toString().includes("-detail") ? 100 : null
           }
