@@ -9,7 +9,7 @@ class Mongoose {
   static ConnectionString =
     "mongodb+srv://##USERNAME##:##PASSWORD##@##CLUSTER##.mongodb.net/##DB##?retryWrites=true&w=majority&connectTimeoutMS=20000&socketTimeoutMS=20000";
 
-  static DbWholeSalerConnectionString: string = "";
+  static DbWholeSalerConnectionString = "";
 
   static GetDbPanelConnectionString() {
     return this.ConnectionString.replace(

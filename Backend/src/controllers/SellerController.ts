@@ -124,12 +124,12 @@ class SellerController {
         MarzbanUsername,
         MarzbanPassword,
       } = req.body as {
-        Title: string | undefined;
-        Limit: number | undefined;
-        Username: string | undefined;
-        Password: string | undefined;
-        MarzbanUsername: string | undefined;
-        MarzbanPassword: string | undefined;
+        Title: string;
+        Limit: number;
+        Username: string;
+        Password: string;
+        MarzbanUsername: string;
+        MarzbanPassword: string;
       };
 
       try {
