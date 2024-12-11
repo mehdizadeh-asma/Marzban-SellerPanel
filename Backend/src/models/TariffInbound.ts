@@ -1,8 +1,9 @@
-import mongoose, { Document, Schema } from "mongoose";
+import mongoose, { Document, ObjectId, Schema } from "mongoose";
 import { ITariff } from "./Tariff";
 
 export interface ITariffInbound extends Document {
-  TariffId: mongoose.Types.ObjectId | ITariff;
+  _id: ObjectId;
+  TariffId: ObjectId | ITariff;
   InboundTag: string;
   InboundType: "vmess" | "vless" | "trojan";
   Status: "Active" | "Deactive";

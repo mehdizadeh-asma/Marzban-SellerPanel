@@ -1,10 +1,11 @@
-import mongoose, { Document, Schema } from "mongoose";
+import mongoose, { Document, ObjectId, Schema } from "mongoose";
 import { ITariff } from "./Tariff";
 import { ISeller } from "./Seller";
 
 export interface ITariffSeller extends Document {
-  TariffId: mongoose.Types.ObjectId | ITariff;
-  SellerId: mongoose.Types.ObjectId | ISeller;
+  _id: ObjectId;
+  TariffId: ObjectId | ITariff;
+  SellerId: ObjectId | ISeller;
   Status: "Active" | "Deactive";
 }
 

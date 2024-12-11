@@ -16,7 +16,7 @@ class TariffSellerController {
         SellerId: new Types.ObjectId(sellerId),
       });
       const sellerTariffIds = new Set(
-        sellerTariffs.map((ts) => (ts.TariffId as Types.ObjectId).toString())
+        sellerTariffs.map((ts) => ts.TariffId.toString())
       );
 
       const allTariffs = await Tariff.find();

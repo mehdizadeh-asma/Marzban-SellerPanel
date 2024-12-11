@@ -1,4 +1,4 @@
-import { Document, Types } from "mongoose";
+import { Document } from "mongoose";
 import axios from "axios";
 
 import MarzbanAccount from "../models/MarzbanAccount";
@@ -80,7 +80,7 @@ class AccountHelpers {
     if (sellerTitle.toLowerCase() !== sellerUsername.toLowerCase())
       condition = {
         ...condition,
-        Seller: seller?._id as Types.ObjectId,
+        Seller: seller?._id,
       };
 
     if (!IsAll) condition = { ...condition, Payed: false };
@@ -109,7 +109,9 @@ class AccountHelpers {
     const tariffs = await Tariff.find({ IsFree: false });
 
     accounts.map((account) => {
-      const tariff = tariffs.find((tariff) => tariff._id === account.TariffId);
+      const tariff = tariffs.find(
+        (tariff) => tariff._id.toString() == account.TariffId._id.toString()
+      );
       if (tariff) {
         totalPriceUnpaid += tariff.Price ?? 0;
         totalLimitUnpaid += tariff.DataLimit ?? 0;

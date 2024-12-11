@@ -1,8 +1,9 @@
-import mongoose, { Document, Schema } from "mongoose";
+import mongoose, { Document, ObjectId, Schema } from "mongoose";
 import { ISeller } from "./Seller";
 import { ITariff } from "./Tariff";
 
 export interface IAccount extends Document {
+  _id: ObjectId;
   Username: string;
   Tariff: string;
   TariffId: mongoose.Types.ObjectId | ITariff;
@@ -19,7 +20,7 @@ export const AccountSchema: Schema = new Schema({
   Tariff: { type: String, required: [true, "Tariff is required"] },
   TariffId: {
     type: mongoose.Schema.Types.ObjectId,
-    required: [true, "Tariff is required"],
+    required: [true, "Tariff Document is required"],
     ref: "Tariff",
     index: true,
   },

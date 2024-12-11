@@ -24,16 +24,16 @@ class Helper {
       const diffTime = new Date().getTime() - new Date(online_at).getTime();
       const remainMinutes = Math.ceil(diffTime / (1000 * 60)) - 1;
       if (remainMinutes > 1440)
-        return Math.floor(remainMinutes / 1440) + " Days ago";
+        return Math.floor(remainMinutes / 1440).toString() + " Days ago";
       else if (remainMinutes < 3) return "Online";
       else if (remainMinutes > 60)
         return (
-          Math.floor(remainMinutes / 60) +
+          Math.floor(remainMinutes / 60).toString() +
           " Hours " +
-          (remainMinutes % 60) +
+          (remainMinutes % 60).toString() +
           " Minutes ago"
         );
-      return remainMinutes + " Minutes ago";
+      return remainMinutes.toString() + " Minutes ago";
     }
     return "Never";
   }
@@ -43,15 +43,15 @@ class Helper {
       const diffTime = new Date().getTime() - new Date(online_at).getTime();
       const remainMinutes = Math.ceil(diffTime / (1000 * 60)) - 1;
       if (remainMinutes > 1440)
-        return Math.floor(remainMinutes / 1440) + " Days ago";
+        return Math.floor(remainMinutes / 1440).toString() + " Days ago";
       else if (remainMinutes > 60)
         return (
-          Math.floor(remainMinutes / 60) +
+          Math.floor(remainMinutes / 60).toString() +
           " Hours " +
-          (remainMinutes % 60) +
+          (remainMinutes % 60).toString() +
           " Minutes ago"
         );
-      return remainMinutes + " Minutes ago";
+      return remainMinutes.toString() + " Minutes ago";
     }
     return "Never";
   }

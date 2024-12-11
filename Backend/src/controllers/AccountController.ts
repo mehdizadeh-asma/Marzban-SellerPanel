@@ -2,7 +2,6 @@ import { RequestHandler } from "express";
 import { Types } from "mongoose";
 
 import Account from "../models/Account";
-import Tariff from "../models/Tariff";
 
 class AccountController {
   static GetAccountList: RequestHandler = async (req, res, next) => {
@@ -100,28 +99,28 @@ class AccountController {
     }
   };
 
-  static ConvertTariff: RequestHandler = async (req, res, next) => {
-    try {
-      let count = 0;
-      const tariffs = await Tariff.find();
-      const accounts = await Account.find();
+  // static ConvertTariff: RequestHandler = async (req, res, next) => {
+  //   try {
+  //     let count = 0;
+  //     const tariffs = await Tariff.find();
+  //     const accounts = await Account.find();
 
-      if (accounts)
-        for (const account of accounts) {
-          const tariff = tariffs.find(
-            (tariff) => tariff.Title == account.Tariff
-          );
-          if (tariff && !account.TariffId) {
-            account.TariffId = tariff?._id as Types.ObjectId;
-            await account.save();
-            count++;
-          }
-        }
+  //     if (accounts)
+  //       for (const account of accounts) {
+  //         const tariff = tariffs.find(
+  //           (tariff) => tariff.Title == account.Tariff
+  //         );
+  //         if (tariff && !account.TariffId) {
+  //           account.TariffId = tariff?._id;
+  //           await account.save();
+  //           count++;
+  //         }
+  //       }
 
-      res.status(200).json(`${count} Accounts Converted!`);
-    } catch (error) {
-      next(error);
-    }
-  };
+  //     res.status(200).json(`${count} Accounts Converted!`);
+  //   } catch (error) {
+  //     next(error);
+  //   }
+  // };
 }
 export default AccountController;

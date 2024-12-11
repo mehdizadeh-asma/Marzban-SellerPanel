@@ -311,9 +311,9 @@ class MarzbanController {
 
       const account = new Account();
       account.Username = generateUsername;
-      account.Seller = seller._id as Types.ObjectId;
+      account.Seller = seller;
       account.Tariff = tariff.Title;
-      account.TariffId = tariff._id as Types.ObjectId;
+      account.TariffId = tariff;
       account.Payed = false;
 
       await account.save();
@@ -491,9 +491,9 @@ class MarzbanController {
 
       const account = new Account();
       account.Username = username;
-      account.Seller = seller._id as Types.ObjectId;
+      account.Seller = seller;
       account.Tariff = tariff.Title;
-      account.TariffId = tariff._id as Types.ObjectId;
+      account.TariffId = tariff;
       account.Payed = false;
       await account.save();
 
