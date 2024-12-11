@@ -1,28 +1,21 @@
 "use client";
 import axios from "axios";
-import {
-  ChangeEvent,
-  ElementRef,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-
+import { ElementRef, useCallback, useEffect, useRef, useState } from "react";
+import { TextField } from "@mui/material";
 import FilterAltOffIcon from "@mui/icons-material/FilterAltOff";
+import SearchRounded from "@mui/icons-material/SearchRounded";
 import PaymentsIcon from "@mui/icons-material/Payments";
 
 import { useMyContext } from "@/context/MyContext";
 import AddAccount from "./AddAccount";
 import DeleteModal from "./DeleteModal";
 import RenewModal from "./RenewModal";
-// import AccountGrid from "./AccountGrid";
 import AccountType from "@/models/AccountType";
 import TariffType from "@/models/TariffType";
 import Messages from "../General/Messages";
-import { TextField } from "@mui/material";
-import { ForwardRefHandle } from "../Accounts/AccountGrid";
-import ExpandableAccountGrid from "./ExpandableAccountGrid";
+import ExpandableAccountGrid, {
+  ForwardRefHandle,
+} from "./ExpandableAccountGrid";
 
 export default function AccountManagement() {
   const { user, config, setUser } = useMyContext();
@@ -40,6 +33,8 @@ export default function AccountManagement() {
 
   type MessagesHandle = ElementRef<typeof Messages>;
   const refMessages = useRef<MessagesHandle>(null);
+
+  const txtSearch = useRef<HTMLInputElement | null>(null);
 
   const onRenewClick = (account: AccountType) => {
     const paid =
@@ -142,6 +137,7 @@ export default function AccountManagement() {
         }
       }
   };
+
   const OnAddClick = async (
     tariff: TariffType,
     note: string,
@@ -182,7 +178,7 @@ export default function AccountManagement() {
       try {
         StartLoading();
         const url = new URL(
-          `api/marzban/accounts/${user.Username}/${IsAll}/${0}/${10}`,
+          `api/marzban/accounts/${user.Username}/${IsAll}`,
           config.BACKEND_URL,
         );
         const resultAccounts = await axios.get(url.toString(), {
@@ -193,7 +189,7 @@ export default function AccountManagement() {
       } catch (error) {
         console.log(error);
       } finally {
-        setLoading(false);
+        EndLoading();
       }
     },
     [config.BACKEND_URL, user.Token, user.Username],
@@ -202,6 +198,28 @@ export default function AccountManagement() {
   useEffect(() => {
     if (user.Token !== "") LoadAccount();
   }, [LoadAccount, user.Token]);
+
+  useEffect(() => {
+    const LoadAccount = async () => {
+      try {
+        StartLoading();
+        const url = new URL(
+          `api/marzban/account/${user.Username}/${searchText}`,
+          config.BACKEND_URL,
+        );
+        const resultAccounts = await axios.get(url.toString(), {
+          headers: { Authorization: "Bearer " + user.Token },
+        });
+        const accounts = resultAccounts.data;
+        setAccountList(accounts);
+      } catch (error) {
+        console.log(error);
+      } finally {
+        EndLoading();
+      }
+    };
+    if (user.Token !== "" && searchText != "") LoadAccount();
+  }, [config.BACKEND_URL, searchText, user.Token, user.Username]);
 
   const UnFilter_Click = () => {
     LoadAccount(true);
@@ -266,39 +284,36 @@ export default function AccountManagement() {
     setLoading(true);
   };
 
-  const SearchChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setSearchText(event.target.value);
+  const EndLoading = () => {
+    setLoading(false);
   };
 
-  const filteredRows = accountList.filter((row) => {
-    return (
-      row.username.toLowerCase().includes(searchText.toLowerCase()) ||
-      row.note?.toLowerCase().includes(searchText.toLowerCase()) ||
-      row.package.toLowerCase().includes(searchText.toLowerCase()) ||
-      row.price.toString().includes(searchText) ||
-      row.data_limit_string.toLowerCase().includes(searchText.toLowerCase()) ||
-      row.used_traffic_string
-        .toLowerCase()
-        .includes(searchText.toLowerCase()) ||
-      row.expire_string.toLowerCase().includes(searchText.toLowerCase()) ||
-      row.status.toLowerCase().includes(searchText.toLowerCase()) ||
-      row.sub_updated_at?.toLowerCase().includes(searchText.toLowerCase()) ||
-      row.sub_last_user_agent?.toLowerCase().includes(searchText.toLowerCase())
-    );
-  });
+  const Search_Click = () => {
+    if (txtSearch.current && txtSearch.current?.value != "")
+      setSearchText(txtSearch.current.value);
+    else if (searchText != "") {
+      LoadAccount();
+      setSearchText("");
+    } else setSearchText("");
+  };
 
   return (
     <div className="container-fluid bg-primery  ">
       {user.IsAdmin ? "" : <AddAccount onAdding={OnAddClick} Mode="Add" />}
       <div className="row">
-        <div className="col justify-content-start d-flex mt-1">
+        <div className="col justify-content-start d-flex mt-1  w-100">
           <TextField
             variant="outlined"
-            label="Search Everything"
-            value={searchText}
-            onChange={SearchChange}
-            sx={{ width: 350 }}
+            label="Search Username Or Note"
+            inputRef={txtSearch}
+            sx={{ minWidth: 250, width: 300 }}
           />
+          <button
+            onClick={Search_Click}
+            className="btn btnAdd  BgGrdColorizePurple text-white border-1 BorderPurple h-75   my-auto mx-1 SearchButton w-sx-25 w-md-100"
+          >
+            <SearchRounded />
+          </button>
         </div>
         <div className="col justify-content-end d-flex mt-1">
           <button
@@ -329,19 +344,9 @@ export default function AccountManagement() {
         <div className="col-12">
           <Messages ref={refMessages}></Messages>
           <div className="ContainerGrid">
-            {/* <AccountGrid
-              ref={gridRef}
-              Accounts={filteredRows}
-              Loading={loading}
-              onDeleting={onDeleteClick}
-              onDisabling={onDisabledClick}
-              onRenewing={onRenewClick}
-              onPaying={onPaymentClick}
-            /> */}
-
             <ExpandableAccountGrid
               ref={gridRef}
-              Accounts={filteredRows}
+              Accounts={accountList}
               Loading={loading}
               onDeleting={onDeleteClick}
               onDisabling={onDisabledClick}

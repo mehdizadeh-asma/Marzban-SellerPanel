@@ -4,11 +4,9 @@ import MarzbanController from "../controllers/MarzbanController";
 
 const router = Router();
 
-router.post("/logintomarzban", MarzbanController.LoginToMarzbanAPI);
-router.get(
-  "/accounts/:seller/:isall/:offset/:limit",
-  MarzbanController.GetAccounts
-);
+router.post("/logintomarzban", MarzbanController.Login);
+router.get("/accounts/:seller/:isall", MarzbanController.GetAccounts);
+router.get("/account/:seller/:search", MarzbanController.GetAccount);
 router.post("/account", MarzbanController.AddAccount);
 // router.put("/account", MarzbanController.EditAccount);
 router.post("/disableaccount/:username", MarzbanController.DisableAccount);

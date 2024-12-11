@@ -3,10 +3,11 @@ import axios from "axios";
 
 import MarzbanAccount from "../models/MarzbanAccount";
 import Seller, { ISeller } from "../models/Seller";
-import Account from "../models/Account";
+import Account, { IAccount } from "../models/Account";
 import Tariff from "../models/Tariff";
 
 import ConfigFile from "./Config";
+import Helper from "./Helper";
 
 class AccountHelpers {
   static MarzbanAccountsList: Record<string, MarzbanAccount[]> = {};
@@ -38,20 +39,18 @@ class AccountHelpers {
   };
 
   static GetMarzbanAccounts = async (
-    authorization: string | undefined
-    // offset: number,
-    // limit: number
+    authorization: string | undefined,
+    username: string
   ) => {
     const apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/users";
 
-    // const params = {
-    //   offset: offset,
-    //   limit: limit,
-    // };
+    const params = {
+      search: username,
+    };
 
     const config = {
       headers: { Authorization: authorization },
-      // params: params,
+      params: params,
       timeout: 120000,
     };
 
@@ -61,27 +60,17 @@ class AccountHelpers {
   static GetMarzbanAccountsAndStore = async (
     authorization: string | undefined,
     seller: string
-    // offset: number = 0,
-    // limit: number = 0
   ) => {
-    const resultMarzban = await this.GetMarzbanAccounts(
-      authorization
-      // offset,
-      // limit
-    );
+    const resultMarzban = await this.GetMarzbanAccounts(authorization, "");
     const sellerUsers = (resultMarzban.data as { users: MarzbanAccount[] })
       .users;
     this.MarzbanAccountsList = {
       ...this.MarzbanAccountsList,
       [seller]: sellerUsers,
     };
-
-    // console.log("MarzbanAccountList Filled!!!!");
   };
 
   static GetSellerAccounts = async (sellerTitle: string, IsAll: boolean) => {
-    // console.log("Start Getting From MongoDB ## " + sellerTitle);
-
     const sellerUsername = await ConfigFile.GetSellerAdminUsername();
 
     const seller = await Seller.findOne({ Title: sellerTitle });
@@ -98,7 +87,6 @@ class AccountHelpers {
 
     const accounts = await Account.find(condition);
 
-    // console.log("End Getting From MongoDB -- Count : " + accounts.length);
     return accounts;
   };
 
@@ -109,7 +97,6 @@ class AccountHelpers {
     let totalLimitUnpaid = 0;
     let totalPriceUnpaid = 0;
 
-    // console.log("Start Calculate totalUnpaid ## " + seller.Title);
     const accounts = IsAdmin
       ? await Account.find({
           Payed: false,
@@ -129,7 +116,6 @@ class AccountHelpers {
       }
     });
 
-    // console.log("End Calculate totalUnpaid -- " + totalUnpaid);
     return {
       TotalLimitUnpaid: totalLimitUnpaid,
       TotalPriceUnpaid: totalPriceUnpaid,
@@ -192,6 +178,79 @@ class AccountHelpers {
     } catch (error) {
       console.log(error);
     }
+  };
+
+  static GetMixedAccount = async (
+    marzbanAccounts: MarzbanAccount[],
+    sellerAccounts: IAccount[],
+    sellername: string,
+    sellerSubscriptionUrl: string
+  ) => {
+    const accounts = await Promise.all(
+      sellerAccounts.map(async (item) => {
+        const marzbanAccount = marzbanAccounts.filter(
+          (account) => account.username == item.Username
+        )[0];
+
+        const tarrif = await Tariff.findOne({ _id: item.TariffId });
+
+        if (!marzbanAccount)
+          return {
+            id: item._id,
+            username: item.Username,
+            tarif: item.Tariff,
+            payed: item.Payed ? "Paid" : "Unpaid",
+          };
+
+        return {
+          id: item._id,
+          counter: +marzbanAccount.username.replace(sellername, ""),
+          username: marzbanAccount.username,
+          package: item.Tariff,
+          price: tarrif?.Price,
+          data_limit: marzbanAccount.data_limit,
+          data_limit_string: Helper.CalculateTraffic(marzbanAccount.data_limit),
+          used_traffic: marzbanAccount.used_traffic,
+          used_traffic_string: Helper.CalculateTraffic(
+            marzbanAccount.used_traffic
+          ),
+          expire: marzbanAccount.expire,
+          expire_string: Helper.CalculateRemainDate(marzbanAccount.expire),
+          status: marzbanAccount.status,
+          subscription_url: AccountHelpers.GetSubscriptionUrl(
+            marzbanAccount.subscription_url,
+            sellerSubscriptionUrl
+          ),
+          online: Helper.IsOnline(marzbanAccount.online_at),
+          online_at: Helper.CalculateOnlineDate(marzbanAccount.online_at),
+          sub_updated_at: Helper.CalculateUpdateSubscriptionDate(
+            marzbanAccount.sub_updated_at
+          ),
+          sub_last_user_agent: marzbanAccount.sub_last_user_agent,
+          payed: item.Payed ? "Paid" : "Unpaid",
+          note: marzbanAccount.note,
+        };
+      })
+    );
+    return accounts.filter((acc) => acc.data_limit).reverse();
+  };
+
+  static LoginToMarzban = async (username: string, password: string) => {
+    const apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/admin/token";
+
+    const config = {
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+    };
+
+    const resultLogin = await axios.post(
+      apiURL,
+      {
+        username: username,
+        password: password,
+      },
+      config
+    );
+    return (resultLogin.data as { access_token: string }).access_token;
   };
 }
 

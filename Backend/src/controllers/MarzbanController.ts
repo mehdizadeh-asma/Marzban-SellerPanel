@@ -14,16 +14,8 @@ import Mongoose from "../utils/Mongoose";
 import AccountHelpers from "../utils/AccountHelpers";
 
 class MarzbanController {
-  static LoginToMarzbanAPI: RequestHandler = async (req, res, next) => {
+  static Login: RequestHandler = async (req, res, next) => {
     try {
-      // console.log("Start Login to Marzban ", new Date().toLocaleTimeString());
-
-      const apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/admin/token";
-
-      const config = {
-        headers: { "content-type": "application/x-www-form-urlencoded" },
-      };
-
       let { username, password } = req.body as {
         username: string;
         password: string;
@@ -42,13 +34,11 @@ class MarzbanController {
           return;
         }
         try {
-          const resultLogin = await axios.post(
-            apiURL,
-            {
-              username: await ConfigFile.GetMarzbanUsername(),
-              password: await ConfigFile.GetMarzbanPassword(),
-            },
-            config
+          const marzbanUsername = await ConfigFile.GetMarzbanUsername();
+          const marzbanPassword = await ConfigFile.GetMarzbanPassword();
+          const token = await AccountHelpers.LoginToMarzban(
+            marzbanUsername,
+            marzbanPassword
           );
 
           const totalUnpaid = await AccountHelpers.GetTotalUnpaid(
@@ -57,7 +47,7 @@ class MarzbanController {
           );
 
           res.status(200).json({
-            Token: (resultLogin.data as { access_token: string }).access_token,
+            Token: token,
             Username: sellerUsername,
             IsAdmin: true,
             Limit: 0,
@@ -79,13 +69,9 @@ class MarzbanController {
 
       if (seller) {
         try {
-          const resultLogin = await axios.post(
-            apiURL,
-            {
-              username: seller.MarzbanUsername,
-              password: seller.MarzbanPassword,
-            },
-            config
+          const token = await AccountHelpers.LoginToMarzban(
+            seller.MarzbanUsername,
+            seller.MarzbanPassword
           );
 
           const totalUnpaid = await AccountHelpers.GetTotalUnpaid(
@@ -94,7 +80,7 @@ class MarzbanController {
           );
 
           res.status(200).json({
-            Token: (resultLogin.data as { access_token: string }).access_token,
+            Token: token,
             Username: seller.Title,
             IsAdmin: false,
             Limit: seller.Limit - totalUnpaid.TotalLimitUnpaid,
@@ -110,102 +96,75 @@ class MarzbanController {
     } catch (error) {
       next(error);
     }
-    // finally {
-    //   console.log("End Login to Marzban ", new Date().toLocaleTimeString());
-    // }
   };
 
   static GetAccounts: RequestHandler = async (req, res, next) => {
     try {
-      // console.log("Start GetAccounts ", new Date().toLocaleTimeString());
+      const isAll = req.params.isall === "true";
+      const seller = req.params.seller;
 
-      // console.log("Start Getting From Marzban ## " + req.params.seller);
-      // console.log(Accounts.MarzbanAccountsList[req.params.seller]);
+      const sellerSubscriptionUrl = await ConfigFile.GetSubscriptionURL();
+      const adminUsername = await ConfigFile.GetSellerAdminUsername();
 
       if (
-        !AccountHelpers.MarzbanAccountsList[req.params.seller] ||
-        req.params.seller !== (await ConfigFile.GetSellerAdminUsername())
+        !AccountHelpers.MarzbanAccountsList[seller] ||
+        seller !== adminUsername
       )
         await AccountHelpers.GetMarzbanAccountsAndStore(
           req.headers.authorization,
-          req.params.seller
-          // +req.params.offset,
-          // +req.params.limit
+          seller
         );
 
-      const marzbanAccounts =
-        AccountHelpers.MarzbanAccountsList[req.params.seller];
-
-      // console.log("End Getting From Marzban -- " + marzbanAccounts.length);
-
-      const isAll = req.params.isall === "true";
+      const marzbanAccounts = AccountHelpers.MarzbanAccountsList[seller];
 
       const sellerAccounts = await AccountHelpers.GetSellerAccounts(
-        req.params.seller,
+        seller,
         isAll
+      );
+
+      const accounts = await AccountHelpers.GetMixedAccount(
+        marzbanAccounts,
+        sellerAccounts,
+        seller,
+        sellerSubscriptionUrl
+      );
+
+      res.status(200).json(accounts);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  static GetAccount: RequestHandler = async (req, res, next) => {
+    try {
+      const seller = req.params.seller;
+
+      const resultAccount = await AccountHelpers.GetMarzbanAccounts(
+        req.headers.authorization,
+        req.params.search
+      );
+
+      const marzbanAccounts = (
+        resultAccount.data as { users: MarzbanAccount[] }
+      ).users;
+
+      const sellerAccounts = await AccountHelpers.GetSellerAccounts(
+        seller,
+        true
       );
 
       const sellerSubscriptionUrl = await ConfigFile.GetSubscriptionURL();
 
-      const accounts = await Promise.all(
-        sellerAccounts.map(async (item) => {
-          const marzbanAccount = marzbanAccounts.filter(
-            (account: MarzbanAccount) => account.username == item.Username
-          )[0];
-
-          const tarrif = await Tariff.findOne({ _id: item.TariffId });
-
-          if (!marzbanAccount)
-            return {
-              id: item._id,
-              username: item.Username,
-              tarif: item.Tariff,
-              payed: item.Payed ? "Paid" : "Unpaid",
-            };
-
-          return {
-            id: item._id,
-            counter: +marzbanAccount.username.replace(req.params.seller, ""),
-            username: marzbanAccount.username,
-            package: item.Tariff,
-            price: tarrif?.Price,
-            data_limit: marzbanAccount.data_limit,
-            data_limit_string: Helper.CalculateTraffic(
-              marzbanAccount.data_limit
-            ),
-            used_traffic: marzbanAccount.used_traffic,
-            used_traffic_string: Helper.CalculateTraffic(
-              marzbanAccount.used_traffic
-            ),
-            expire: marzbanAccount.expire,
-            expire_string: Helper.CalculateRemainDate(marzbanAccount.expire),
-            status: marzbanAccount.status,
-            subscription_url: AccountHelpers.GetSubscriptionUrl(
-              marzbanAccount.subscription_url,
-              sellerSubscriptionUrl
-            ),
-            online: Helper.IsOnline(marzbanAccount.online_at),
-            online_at: Helper.CalculateOnlineDate(marzbanAccount.online_at),
-            sub_updated_at: Helper.CalculateUpdateSubscriptionDate(
-              marzbanAccount.sub_updated_at
-            ),
-            sub_last_user_agent: marzbanAccount.sub_last_user_agent,
-            payed: item.Payed ? "Paid" : "Unpaid",
-            note: marzbanAccount.note,
-          };
-        })
+      const accounts = await AccountHelpers.GetMixedAccount(
+        marzbanAccounts,
+        sellerAccounts,
+        seller,
+        sellerSubscriptionUrl
       );
 
-      const filteredAccounts = accounts
-        .filter((acc) => acc.data_limit)
-        .reverse();
-
-      // console.log(`End Getting All for ${req.params.seller}`);
-      res.status(200).json(filteredAccounts);
+      res.status(200).json(accounts);
     } catch (error) {
       next(error);
-    } finally {
-      // console.log("End GetAccounts ", new Date().toLocaleTimeString());
     }
   };
 
