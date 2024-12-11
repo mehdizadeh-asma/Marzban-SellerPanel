@@ -37,6 +37,7 @@ import AccountType from "@/models/AccountType";
 import { copyTextToClipboard } from "@/utils/Helper";
 import QRModal from "./QRModal";
 import { Button, Checkbox } from "@mui/material";
+import Footer from "../General/Footer";
 
 interface PropsType {
   Loading: boolean;
@@ -547,7 +548,7 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
     };
 
     return (
-      <div className=" bg-info  ">
+      <div>
         <QRModal ref={refQRModal}></QRModal>
         <DataGrid
           initialState={{
@@ -599,6 +600,7 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
             },
           }}
         />
+        <Footer></Footer>
       </div>
     );
   },

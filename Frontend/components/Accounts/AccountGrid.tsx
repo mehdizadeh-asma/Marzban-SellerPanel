@@ -36,6 +36,7 @@ import AccountType from "@/models/AccountType";
 import { copyTextToClipboard } from "@/utils/Helper";
 import QRModal from "./QRModal";
 import { Checkbox } from "@mui/material";
+import Footer from "../General/Footer";
 
 interface PropsType {
   Loading: boolean;
@@ -427,6 +428,7 @@ const AccountGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
           },
         }}
       />
+      <Footer></Footer>
       <QRModal ref={refQRModal}></QRModal>
     </>
   );

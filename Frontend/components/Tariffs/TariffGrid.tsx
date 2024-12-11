@@ -6,6 +6,7 @@ import AssignInboundIcon from "@mui/icons-material/AccountTree";
 
 import TariffType from "@/models/TariffType";
 import TariffInboundModal from "./TariffInboundModal";
+import Footer from "../General/Footer";
 
 interface PropsType {
   Loading: boolean;
@@ -30,32 +31,32 @@ export default function TariffGrid(props: PropsType) {
     {
       field: "Title",
       headerName: "Title",
-      width: 300,
+      width: 200,
       headerClassName: "MUIGridHeader",
     },
     {
       field: "Duration",
       headerName: "Duration(Days)",
-      width: 140,
+      width: 120,
       headerClassName: "MUIGridHeader",
     },
     {
       field: "DataLimit",
       headerName: "DataLimit(GB)",
-      width: 140,
+      width: 100,
       headerClassName: "MUIGridHeader",
     },
     {
       field: "Price",
       headerName: "Price(IRT)",
-      width: 100,
+      width: 80,
       headerClassName: "MUIGridHeader",
     },
     {
       headerName: "Free",
       field: "free",
       type: "actions",
-      width: 100,
+      width: 80,
       headerClassName: "MUIGridHeader",
       getActions: (params: { row: TariffType }) => [
         <GridActionsCellItem
@@ -84,7 +85,7 @@ export default function TariffGrid(props: PropsType) {
       headerName: "Inbounds",
       field: "AssignInbounds",
       type: "actions",
-      width: 100,
+      width: 120,
       getActions: (params: { row: TariffType }) => [
         <GridActionsCellItem
           key="AssignInbounds"
@@ -148,7 +149,7 @@ export default function TariffGrid(props: PropsType) {
     handleModalClose();
   };
   return (
-    <div className="container-fluid GridTariffContainer  my-3  ">
+    <div className="container-fluid my-3  ">
       <DataGrid
         getRowId={(row) => row._id!}
         initialState={{
@@ -177,6 +178,7 @@ export default function TariffGrid(props: PropsType) {
           },
         }}
       />
+      <Footer></Footer>
       <TariffInboundModal
         isOpen={isTariffInboundModalOpen}
         onClose={handleModalClose}

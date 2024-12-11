@@ -64,11 +64,11 @@ export default function Dashboard() {
     setAnchorEl(null);
   };
   return (
-    <div className="container-fluid ">
-      <div className="row BgGrdColorizePurple justify-content-end d-flex">
+    <div className="container-fluid pageContainer">
+      <div className="row BgGrdColorizePurple justify-content-end d-flex bg-primary">
         <div className="col-10 container d-inline-flex align-items-start py-1 ">
-          <div className="row">
-            <div className="col-12">
+          <div className="row flex-wrap">
+            <div className="col-12 columnFlex">
               <h6 className="text-white mx-3 py-1 ">Welcome {user.Username}</h6>
             </div>
           </div>
@@ -99,8 +99,8 @@ export default function Dashboard() {
           </button>
         </div>
       </div>
-      <div className="row">
-        <div className="col-12">
+      <div className="row  flex-wrap">
+        <div className="col-12 columnFlex  " id="mydiv">
           {user.IsAdmin && (
             <React.Fragment>
               <div className="row ActiveComponentNameRow">
@@ -188,17 +188,17 @@ export default function Dashboard() {
               </div>
             </React.Fragment>
           )}
-
-          {activeComponent == "accounts" && (
-            <AccountManagment></AccountManagment>
-          )}
-          {activeComponent == "packages" && (
-            <TariffManagement></TariffManagement>
-          )}
-          {activeComponent == "agents" && <SellerManagement></SellerManagement>}
-        </div>
-        <div className="d-flex justify-content-center">
-          Marzban Seller Panel v{process.env.npm_package_version}
+          <div>
+            {activeComponent == "accounts" && (
+              <AccountManagment></AccountManagment>
+            )}
+            {activeComponent == "packages" && (
+              <TariffManagement></TariffManagement>
+            )}
+            {activeComponent == "agents" && (
+              <SellerManagement></SellerManagement>
+            )}
+          </div>
         </div>
       </div>
     </div>

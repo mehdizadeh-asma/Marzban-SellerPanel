@@ -6,6 +6,7 @@ import ToggleOffIcon from "@mui/icons-material/ToggleOff";
 import AssignPackageIcon from "@mui/icons-material/MonetizationOn";
 
 import SellerType from "@/models/SellerType";
+import Footer from "../General/Footer";
 
 interface PropsType {
   Loading: boolean;
@@ -21,50 +22,50 @@ export default function SellerGrid(props: PropsType) {
     {
       field: "Title",
       headerName: "Title",
-      width: 150,
+      width: 100,
       headerClassName: "MUIGridHeader",
     },
     {
       field: "Username",
       headerName: "Username",
-      width: 150,
+      width: 100,
       headerClassName: "MUIGridHeader",
     },
     {
       field: "Password",
       headerName: "Password",
-      width: 150,
+      width: 120,
       headerClassName: "MUIGridHeader",
     },
     {
       field: "MarzbanUsername",
       headerName: "MarzbanUsername",
-      width: 200,
+      width: 120,
       headerClassName: "MUIGridHeader",
     },
     {
       field: "MarzbanPassword",
       headerName: "MarzbanPassword",
-      width: 200,
+      width: 120,
       headerClassName: "MUIGridHeader",
     },
     {
       field: "Limit",
       headerName: "Limit(GB)",
-      width: 100,
+      width: 80,
       headerClassName: "MUIGridHeader",
     },
     {
       field: "TotalPrice",
       headerName: "TotalPrice (IRT)",
-      width: 150,
+      width: 100,
       headerClassName: "MUIGridHeader",
     },
     {
       headerName: "Status",
       field: "active",
       type: "actions",
-      width: 100,
+      width: 80,
       headerClassName: "MUIGridHeader",
       getActions: (params: { row: SellerType }) => [
         <GridActionsCellItem
@@ -89,10 +90,10 @@ export default function SellerGrid(props: PropsType) {
     },
     {
       headerClassName: "MUIGridHeader",
-      headerName: "Packages",
+      headerName: "",
       field: "AssignPackages",
       type: "actions",
-      width: 100,
+      width: 50,
       getActions: (params: { row: SellerType }) => [
         <GridActionsCellItem
           key="AssignPackages"
@@ -107,7 +108,7 @@ export default function SellerGrid(props: PropsType) {
       headerName: "",
       field: "edit",
       type: "actions",
-      width: 50,
+      width: 30,
       getActions: (params: { row: SellerType }) => [
         <GridActionsCellItem
           key="edit"
@@ -122,7 +123,7 @@ export default function SellerGrid(props: PropsType) {
       headerName: "",
       field: "delete",
       type: "actions",
-      width: 50,
+      width: 30,
       getActions: (params: { row: SellerType }) => [
         <GridActionsCellItem
           key="delete"
@@ -149,7 +150,7 @@ export default function SellerGrid(props: PropsType) {
   };
 
   return (
-    <div className="container-fluid my-3 GridSellerContainer ">
+    <div className="container my-3 GridSellerContainer ">
       <div className="row d-flex justify-content-center  ">
         <div className="col-12">
           <DataGrid
@@ -181,6 +182,7 @@ export default function SellerGrid(props: PropsType) {
             }}
           />
         </div>
+        <Footer></Footer>
       </div>
     </div>
   );

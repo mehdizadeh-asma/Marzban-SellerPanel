@@ -102,7 +102,9 @@ a {
 .h305vh {
   height: 3.5vh;
 }
-
+.h2vh {
+  height: 2vh;
+}
 .h5vh {
   height: 5vh;
 }
@@ -252,7 +254,9 @@ a {
 .h100px {
   height: 100px;
 }
-
+.h20px {
+  height: 50px;
+}
 .hMin50px {
   min-height: 50px;
 }
@@ -1336,6 +1340,7 @@ a {
 @media (min-width: 300px) and (max-width: 800px) {
   .GridSellerContainer {
     width: 100%;
+    min-width: 300px;
   }
 }
 @media (min-width: 1000px) {
@@ -1348,7 +1353,16 @@ a {
     width: 100%;
   }
 }
+/* @media (max-width: 576px)   {
+  .SearchButton {
+    width: 30px;
+  }
+} */
 
 .text-purple {
   color: #6f42c1;
+}
+.expanded-row2 {
+  background-color: rgb(169, 149, 165); /* Mild orange color */
+  color: #16022e;
 }

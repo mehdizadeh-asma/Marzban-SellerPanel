@@ -133,11 +133,11 @@ const AddSeller = forwardRef(
     }));
 
     const style =
-      "container  moduleContainerStyle moduleContainer py-2  rounded";
+      "container  moduleContainerStyle moduleContainer py-2 rounded";
     return (
       <>
         <Messages ref={refMessages}></Messages>
-        <div className={mode === "Add" ? style + "  w-25" : style + " w-100"}>
+        <div className={mode === "Add" ? style + " w-75" : style + " w-100"}>
           <div></div>
           <div className="row py-1 my-1">
             <div className="col-12 ">
