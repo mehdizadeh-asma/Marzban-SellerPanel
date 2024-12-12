@@ -5,6 +5,8 @@ import { TextField } from "@mui/material";
 import FilterAltOffIcon from "@mui/icons-material/FilterAltOff";
 import SearchRounded from "@mui/icons-material/SearchRounded";
 import PaymentsIcon from "@mui/icons-material/Payments";
+import GridOnIcon from "@mui/icons-material/GridOn";
+import Deselect from "@mui/icons-material/Deselect";
 
 import { useMyContext } from "@/context/MyContext";
 import AddAccount from "./AddAccount";
@@ -16,6 +18,7 @@ import Messages from "../General/Messages";
 import ExpandableAccountGrid, {
   ForwardRefHandle,
 } from "./ExpandableAccountGrid";
+import AccountGrid from "./AccountGrid";
 
 export default function AccountManagement() {
   const { user, config, setUser } = useMyContext();
@@ -24,6 +27,7 @@ export default function AccountManagement() {
   const [accountList, setAccountList] = useState<AccountType[]>([]);
   const [selectedAccount, setSelectedAccount] = useState<AccountType>();
   const [searchText, setSearchText] = useState("");
+  const [gridType, setgridType] = useState("Expandable"); //Regular
 
   type DeleteModalHandle = ElementRef<typeof DeleteModal>;
   const refDeleteModal = useRef<DeleteModalHandle>(null);
@@ -221,6 +225,11 @@ export default function AccountManagement() {
     if (user.Token !== "" && searchText != "") LoadAccount();
   }, [config.BACKEND_URL, searchText, user.Token, user.Username]);
 
+  const GridTypeChoose_Click = () => {
+    if (gridType === "Expandable") setgridType("Regular");
+    else setgridType("Expandable");
+  };
+
   const UnFilter_Click = () => {
     LoadAccount(true);
   };
@@ -338,21 +347,51 @@ export default function AccountManagement() {
           ) : (
             ""
           )}
+          {gridType === "Expandable" ? (
+            <button
+              className="btn border-2 border border-success p-1"
+              onClick={GridTypeChoose_Click}
+            >
+              <GridOnIcon
+                sx={{ fontSize: "30px" }}
+                className="text-success  "
+              />
+            </button>
+          ) : (
+            <button
+              className="btn border-2 border border-success p-1"
+              onClick={GridTypeChoose_Click}
+            >
+              <Deselect sx={{ fontSize: "30px" }} className="text-success  " />
+            </button>
+          )}
         </div>
       </div>
       <div className="row mt-1">
         <div className="col-12">
           <Messages ref={refMessages}></Messages>
           <div className="ContainerGrid">
-            <ExpandableAccountGrid
-              ref={gridRef}
-              Accounts={accountList}
-              Loading={loading}
-              onDeleting={onDeleteClick}
-              onDisabling={onDisabledClick}
-              onRenewing={onRenewClick}
-              onPaying={onPaymentClick}
-            />
+            {gridType == "Expandable" ? (
+              <ExpandableAccountGrid
+                ref={gridRef}
+                Accounts={accountList}
+                Loading={loading}
+                onDeleting={onDeleteClick}
+                onDisabling={onDisabledClick}
+                onRenewing={onRenewClick}
+                onPaying={onPaymentClick}
+              />
+            ) : (
+              <AccountGrid
+                ref={gridRef}
+                Accounts={accountList}
+                Loading={loading}
+                onDeleting={onDeleteClick}
+                onDisabling={onDisabledClick}
+                onRenewing={onRenewClick}
+                onPaying={onPaymentClick}
+              />
+            )}
           </div>
         </div>
       </div>

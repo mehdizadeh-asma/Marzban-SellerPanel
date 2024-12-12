@@ -105,7 +105,7 @@ const AccountGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
     {
       field: "username",
       headerName: "Username",
-      width: 120,
+      width: 150,
       minWidth: 50,
       maxWidth: 160,
       resizable: true,
@@ -113,7 +113,7 @@ const AccountGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
     {
       field: "note",
       headerName: "Note",
-      width: 90,
+      width: 120,
       minWidth: 50,
       maxWidth: 120,
       resizable: true,
@@ -139,7 +139,7 @@ const AccountGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
     {
       field: "status",
       headerName: "Status",
-      width: 40,
+      width: 100,
       minWidth: 50,
       maxWidth: 120,
       resizable: true,
@@ -150,9 +150,9 @@ const AccountGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
     {
       field: "package",
       headerName: "Package",
-      width: 100,
+      width: 170,
       minWidth: 50,
-      maxWidth: 120,
+      maxWidth: 170,
       resizable: true,
       headerClassName: "MUIGridHeader",
     },
@@ -198,7 +198,7 @@ const AccountGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
     {
       field: "sub_updated_at",
       headerName: "Last Update (Subscription)",
-      width: 110,
+      width: 150,
       minWidth: 50,
       maxWidth: 170,
       resizable: true,
@@ -207,7 +207,7 @@ const AccountGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
     {
       field: "sub_last_user_agent",
       headerName: "Last App (Subscription)",
-      width: 100,
+      width: 150,
       minWidth: 50,
       maxWidth: 150,
       resizable: true,
@@ -305,31 +305,31 @@ const AccountGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
       case "active":
         return (
           <span className="text-success">
-            <GppGoodRoundedIcon></GppGoodRoundedIcon>
+            <GppGoodRoundedIcon></GppGoodRoundedIcon>Active
           </span>
         );
       case "on_hold":
         return (
           <span className="text-purple">
-            <WatchLaterIcon></WatchLaterIcon>
+            <WatchLaterIcon></WatchLaterIcon>On Hold
           </span>
         );
       case "disabled":
         return (
           <span className="text-secondary">
-            <GppBadRoundedIcon></GppBadRoundedIcon>
+            <GppBadRoundedIcon></GppBadRoundedIcon>Disabled
           </span>
         );
       case "expired":
         return (
           <span className="text-primary">
-            <SafetyCheckRoundedIcon></SafetyCheckRoundedIcon>
+            <SafetyCheckRoundedIcon></SafetyCheckRoundedIcon>Expired
           </span>
         );
       case "limited":
         return (
           <span className="text-danger">
-            <GppMaybeRoundedIcon></GppMaybeRoundedIcon>
+            <GppMaybeRoundedIcon></GppMaybeRoundedIcon>Limited
           </span>
         );
     }
