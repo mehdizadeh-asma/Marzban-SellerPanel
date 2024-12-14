@@ -96,14 +96,11 @@ export default function AccountManagement() {
       }
   };
 
-  const onPaymentClick = async (account: AccountType) => {
+  const onPaymentClick = async (accountId: string) => {
     if (user.IsAdmin)
       try {
         StartLoading();
-        const url = new URL(
-          "api/payaccount/" + account.username,
-          config.BACKEND_URL,
-        );
+        const url = new URL("api/payaccount/" + accountId, config.BACKEND_URL);
         await axios.post(url.toString(), {
           headers: { Authorization: "Bearer " + user.Token },
         });
@@ -117,17 +114,17 @@ export default function AccountManagement() {
   const onPayAllClick = async () => {
     if (user.IsAdmin)
       if (gridRef.current) {
-        const accountNames = gridRef.current.SendBackUsernames();
+        const accountIds = gridRef.current.SendBackUsernames();
         if (
-          !Array.isArray(accountNames) ||
-          !accountNames.every((name) => typeof name === "string")
+          !Array.isArray(accountIds) ||
+          !accountIds.every((id) => typeof id === "string")
         )
           return;
 
         try {
           StartLoading();
           const url = new URL("api/payaccounts/", config.BACKEND_URL);
-          await axios.post(url.toString(), accountNames, {
+          await axios.post(url.toString(), accountIds, {
             headers: { Authorization: "Bearer " + user.Token },
           });
           refMessages.current?.Show(

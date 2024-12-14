@@ -44,7 +44,7 @@ interface PropsType {
   onDeleting: (account: AccountType) => void;
   onRenewing: (account: AccountType) => void;
   onDisabling: (account: AccountType) => void;
-  onPaying: (account: AccountType) => void;
+  onPaying: (accountId: string) => void;
 }
 export interface ForwardRefHandle {
   SendBackUsernames: () => string[];
@@ -54,7 +54,7 @@ const label = { inputProps: { "aria-label": "Checkbox demo" } };
 
 const AccountGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
   const [selectedLink, setSelectedLink] = useState("");
-  const [UsernamesToPay, setUsernamesToPay] = useState<string[]>([]);
+  const [accountIdsToPay, setAccountIdsToPay] = useState<string[]>([]);
 
   type QRModalHandle = ElementRef<typeof QRModal>;
   const refQRModal = useRef<QRModalHandle>(null);
@@ -259,22 +259,25 @@ const AccountGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
 
   useImperativeHandle(ref, () => ({
     SendBackUsernames: () => {
-      return [...UsernamesToPay];
+      console.log(accountIdsToPay);
+      return [...accountIdsToPay];
     },
   }));
 
   const onCheckPay = (account: AccountType) => {
-    if (account.username) {
-      setUsernamesToPay((prevUsernames) =>
-        prevUsernames.includes(account.username)
-          ? prevUsernames.filter((id) => id !== account.username)
-          : [...prevUsernames, account.username],
+    if (account.id) {
+      setAccountIdsToPay((prevAccountIds) =>
+        prevAccountIds.includes(account.id)
+          ? prevAccountIds.filter((myid) => myid !== account.id)
+          : [...prevAccountIds, account.id],
       );
     }
+    console.log("accountIdsToPay", account);
   };
 
   const onPaymentClick = (account: AccountType) => {
-    props.onPaying(account);
+    console.log("account grid", account);
+    props.onPaying(account.id);
   };
 
   const RenderOnline = (online: string | undefined) => {

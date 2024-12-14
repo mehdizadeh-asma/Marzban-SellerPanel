@@ -45,7 +45,7 @@ interface PropsType {
   onDeleting: (account: AccountType) => void;
   onRenewing: (account: AccountType) => void;
   onDisabling: (account: AccountType) => void;
-  onPaying: (account: AccountType) => void;
+  onPaying: (accountId: string) => void;
 }
 export interface ForwardRefHandle {
   SendBackUsernames: () => string[];
@@ -53,21 +53,48 @@ export interface ForwardRefHandle {
 
 interface GridRowData extends AccountType {
   isParent: boolean;
+  isChecked: boolean;
 }
 
 const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
   (props, ref) => {
     const [selectedLink, setSelectedLink] = useState("");
-    const [UsernamesToPay, setUsernamesToPay] = useState<string[]>([]);
     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+    const [selectAll, setSelectAll] = useState(false);
+    const [accountIdsToPay, setAccountIdsToPay] = useState<string[]>([]);
+
     type QRModalHandle = ElementRef<typeof QRModal>;
     const refQRModal = useRef<QRModalHandle>(null);
 
+    // useImperativeHandle(ref, () => ({
+    //   SendBackUsernames: () => {
+    //     const gridRows = props.Accounts as GridRowData[];
+
+    //     console.log(gridRows.filter((row) => row.isChecked));
+
+    //     return gridRows
+    //       .filter((row) => row.isChecked)
+    //       .map((row) => row.username);
+    //   },
+    // }));
+
     useImperativeHandle(ref, () => ({
       SendBackUsernames: () => {
-        return [...UsernamesToPay];
+        console.log("in exp", accountIdsToPay);
+        return [...accountIdsToPay];
       },
     }));
+
+    const onCheckPay = (account: AccountType) => {
+      if (account.id) {
+        setAccountIdsToPay((prevAccountIds) =>
+          prevAccountIds.includes(account.id)
+            ? prevAccountIds.filter((myid) => myid !== account.id)
+            : [...prevAccountIds, account.id],
+        );
+      }
+      console.log("accountIdsToPay in exp", account);
+    };
 
     const columns = [
       {
@@ -80,7 +107,7 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
           const { username } = params.row;
           if (params.row.isParent) {
             return (
-              <Button size="small" onClick={() => toggleRowExpansion(username)}>
+              <Button onClick={() => toggleRowExpansion(username)}>
                 {expandedRows.has(username) ? (
                   <ExpandLessIcon className="text-danger"></ExpandLessIcon>
                 ) : (
@@ -95,9 +122,12 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
       {
         headerClassName: "MUIGridHeader",
         headerName: "",
-        field: "link",
+        field: "select",
         type: "actions",
-        width: 160,
+        width: 30,
+        renderHeader: () => (
+          <Checkbox checked={selectAll} onChange={handleSelectAllChange} />
+        ),
         getActions: (params: { row: GridRowData }) => {
           const isParentRow = params.row.isParent;
 
@@ -109,6 +139,22 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
                   icon={<Checkbox />}
                   onClick={() => onCheckPay(params.row)}
                 />,
+              ]
+            : [];
+        },
+      },
+
+      {
+        headerClassName: "MUIGridHeader",
+        headerName: "",
+        field: "link",
+        type: "actions",
+        width: 110,
+        getActions: (params: { row: GridRowData }) => {
+          const isParentRow = params.row.isParent;
+
+          return isParentRow
+            ? [
                 <GridActionsCellItem
                   key="link"
                   label="Link"
@@ -142,6 +188,7 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
                   label="Paid"
                   icon={RenderPayment(params.row.payed)}
                   onClick={() => {
+                    console.log("params.row", params.row);
                     onPaymentClick(params.row);
                   }}
                 />,
@@ -152,11 +199,11 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
                     params.row.status === "disabled" ? (
                       <ToggleOffIcon
                         className="text-secondry "
-                        sx={{ fontSize: "35px" }}
+                        sx={{ fontSize: "25px" }}
                       />
                     ) : (
                       <ToggleOnIcon
-                        sx={{ fontSize: "35px" }}
+                        sx={{ fontSize: "25px" }}
                         className="text-success "
                       />
                     )
@@ -168,13 +215,17 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
                 <GridActionsCellItem
                   key="delete"
                   label="Delete"
-                  icon={<DeleteIcon className="text-danger fontsize2rem" />}
+                  icon={
+                    <DeleteIcon
+                      sx={{ fontSize: "25px" }}
+                      className="text-danger"
+                    />
+                  }
                   onClick={() => onDeleteClick(params.row)}
                 />,
               ];
         },
       },
-
       {
         field: "username",
         headerName: "Username",
@@ -427,21 +478,36 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
         const updated = new Set(prev);
         if (updated.has(username)) updated.delete(username);
         else updated.add(username);
-
         return updated;
       });
     };
-    const onCheckPay = (account: AccountType) => {
-      if (account.username) {
-        setUsernamesToPay((prevUsernames) =>
-          prevUsernames.includes(account.username)
-            ? prevUsernames.filter((id) => id !== account.username)
-            : [...prevUsernames, account.username],
-        );
-      }
+
+    // const onCheckPay = (account: GridRowData) => {
+    //   account.isChecked = !account.isChecked;
+    //   console.log(account.isChecked);
+
+    //   setSelectAll(false);
+    // };
+
+    const handleSelectAllChange = (
+      event: React.ChangeEvent<HTMLInputElement>,
+    ) => {
+      const isChecked = event.target.checked;
+      setSelectAll(isChecked);
+
+      // Update all usernames in UsernamesToPay
+      // if (isChecked) {
+      //   const allUsernames = props.Accounts.map((account) => account.username);
+      //   const gridRows = props.Accounts as GridRowData[];
+      // } else {
+      //   setUsernamesToPay([]);
+      // }
     };
+
     const onPaymentClick = (account: AccountType) => {
-      props.onPaying(account);
+      const id = account.id.replace("-detail", "");
+      console.log("id", id);
+      props.onPaying(id);
     };
 
     const RenderOnline = (online: string | undefined) => {
@@ -505,11 +571,15 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
     const RenderPayment = (payment: string | undefined) => {
       return payment === "Paid" ? (
         <span className="text-success">
-          <CreditScoreRoundedIcon></CreditScoreRoundedIcon>
+          <CreditScoreRoundedIcon
+            sx={{ fontSize: "20px" }}
+          ></CreditScoreRoundedIcon>
         </span>
       ) : (
         <span className="text-secondary">
-          <CreditCardOffRoundedIcon></CreditCardOffRoundedIcon>
+          <CreditCardOffRoundedIcon
+            sx={{ fontSize: "20px" }}
+          ></CreditCardOffRoundedIcon>
         </span>
       );
     };
@@ -558,7 +628,7 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
           className="Grid"
           rows={rows}
           columns={columns}
-          getRowId={(row) => row.id || row.username}
+          getRowId={(row) => row.id}
           loading={props.Loading}
           slots={{
             toolbar: () => (

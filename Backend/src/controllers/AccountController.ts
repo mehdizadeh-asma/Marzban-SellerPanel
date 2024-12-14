@@ -61,16 +61,16 @@ class AccountController {
 
   static PayAccounts: RequestHandler = async (req, res, next) => {
     try {
-      const accountNames = req.body as string[];
-      for (const username of accountNames) {
+      const accountIds = req.body as string[];
+      for (const id of accountIds) {
         const accounts = await Account.find({
-          Username: username,
-          Payed: false,
+          _id: id,
+          // Payed: false,
         });
 
         if (accounts)
           for (const account of accounts) {
-            account.Payed = true;
+            account.Payed = !account.Payed;
             await account.save();
           }
       }
@@ -83,13 +83,13 @@ class AccountController {
 
   static PayAccount: RequestHandler = async (req, res, next) => {
     try {
-      const username: string = req.params.username;
+      const id: string = req.params.id;
       const account = await Account.findOne({
-        Username: username,
-        Payed: false,
+        _id: id,
+        // Payed: false,
       });
       if (account) {
-        account.Payed = true;
+        account.Payed = !account.Payed;
         await account.save();
       }
 
