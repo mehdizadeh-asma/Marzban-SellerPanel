@@ -71,17 +71,17 @@ class AccountHelpers {
   };
 
   static GetSellerAccounts = async (sellerTitle: string, IsAll: boolean) => {
-    const sellerUsername = await ConfigFile.GetSellerAdminUsername();
-
-    const seller = await Seller.findOne({ Title: sellerTitle });
+    const adminUsername = await ConfigFile.GetSellerAdminUsername();
 
     let condition = {};
 
-    if (sellerTitle.toLowerCase() !== sellerUsername.toLowerCase())
+    if (sellerTitle.toLowerCase() !== adminUsername.toLowerCase()) {
+      const seller = await Seller.findOne({ Title: sellerTitle });
       condition = {
         ...condition,
         Seller: seller?._id,
       };
+    }
 
     if (!IsAll) condition = { ...condition, Payed: false };
 
