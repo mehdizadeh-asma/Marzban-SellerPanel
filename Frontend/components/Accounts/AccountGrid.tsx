@@ -259,7 +259,6 @@ const AccountGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
 
   useImperativeHandle(ref, () => ({
     SendBackUsernames: () => {
-      console.log(accountIdsToPay);
       return [...accountIdsToPay];
     },
   }));
@@ -272,11 +271,9 @@ const AccountGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
           : [...prevAccountIds, account.id],
       );
     }
-    console.log("accountIdsToPay", account);
   };
 
   const onPaymentClick = (account: AccountType) => {
-    console.log("account grid", account);
     props.onPaying(account.id);
   };
 

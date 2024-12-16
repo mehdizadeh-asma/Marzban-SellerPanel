@@ -106,6 +106,10 @@ class MarzbanController {
       const sellerSubscriptionUrl = await ConfigFile.GetSubscriptionURL();
       const adminUsername = await ConfigFile.GetSellerAdminUsername();
 
+      console.log(
+        `Start Get All Accounts Seller : ${seller}, Date : ${new Date().toTimeString()}`
+      );
+
       if (
         !AccountHelpers.MarzbanAccountsList[seller] ||
         seller !== adminUsername
@@ -117,9 +121,17 @@ class MarzbanController {
 
       const marzbanAccounts = AccountHelpers.MarzbanAccountsList[seller];
 
+      console.log(
+        `Get Marzban Accounts And Store Seller : ${seller}, Date : ${new Date().toTimeString()}`
+      );
+
       const sellerAccounts = await AccountHelpers.GetSellerAccounts(
         seller,
         isAll
+      );
+
+      console.log(
+        `Get Seller All Accounts Seller : ${seller}, Date : ${new Date().toTimeString()}`
       );
 
       const accounts = await AccountHelpers.GetMixedAccount(
@@ -127,6 +139,10 @@ class MarzbanController {
         sellerAccounts,
         seller,
         sellerSubscriptionUrl
+      );
+
+      console.log(
+        `Mixed Accounts Seller : ${seller}, Date : ${new Date().toTimeString()}`
       );
 
       res.status(200).json(accounts);
@@ -138,6 +154,11 @@ class MarzbanController {
   static GetAccount: RequestHandler = async (req, res, next) => {
     try {
       const seller = req.params.seller;
+      const sellerSubscriptionUrl = await ConfigFile.GetSubscriptionURL();
+
+      console.log(
+        `Start Search Account Seller : ${seller}, Date : ${new Date().toTimeString()}`
+      );
 
       const resultAccount = await AccountHelpers.GetMarzbanAccounts(
         req.headers.authorization,
@@ -148,18 +169,28 @@ class MarzbanController {
         resultAccount.data as { users: MarzbanAccount[] }
       ).users;
 
+      console.log(
+        `Get Marzban Accounts Seller : ${seller}, Date : ${new Date().toTimeString()}`
+      );
+
       const sellerAccounts = await AccountHelpers.GetSellerAccounts(
         seller,
         true
       );
 
-      const sellerSubscriptionUrl = await ConfigFile.GetSubscriptionURL();
+      console.log(
+        `Get Seller Accounts Seller : ${seller}, Date : ${new Date().toTimeString()}`
+      );
 
       const accounts = await AccountHelpers.GetMixedAccount(
         marzbanAccounts,
         sellerAccounts,
         seller,
         sellerSubscriptionUrl
+      );
+
+      console.log(
+        `Mixed Accounts Seller : ${seller}, Date : ${new Date().toTimeString()}`
       );
 
       res.status(200).json(accounts);

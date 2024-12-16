@@ -70,8 +70,6 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
     //   SendBackUsernames: () => {
     //     const gridRows = props.Accounts as GridRowData[];
 
-    //     console.log(gridRows.filter((row) => row.isChecked));
-
     //     return gridRows
     //       .filter((row) => row.isChecked)
     //       .map((row) => row.username);
@@ -80,7 +78,6 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
 
     useImperativeHandle(ref, () => ({
       SendBackUsernames: () => {
-        console.log("in exp", accountIdsToPay);
         return [...accountIdsToPay];
       },
     }));
@@ -93,7 +90,6 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
             : [...prevAccountIds, account.id],
         );
       }
-      console.log("accountIdsToPay in exp", account);
     };
 
     const columns = [
@@ -188,7 +184,6 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
                   label="Paid"
                   icon={RenderPayment(params.row.payed)}
                   onClick={() => {
-                    console.log("params.row", params.row);
                     onPaymentClick(params.row);
                   }}
                 />,
@@ -484,7 +479,6 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
 
     // const onCheckPay = (account: GridRowData) => {
     //   account.isChecked = !account.isChecked;
-    //   console.log(account.isChecked);
 
     //   setSelectAll(false);
     // };
@@ -506,7 +500,6 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
 
     const onPaymentClick = (account: AccountType) => {
       const id = account.id.replace("-detail", "");
-      console.log("id", id);
       props.onPaying(id);
     };
 

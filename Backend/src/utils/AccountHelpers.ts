@@ -188,52 +188,73 @@ class AccountHelpers {
     sellername: string,
     sellerSubscriptionUrl: string
   ) => {
-    const accounts = await Promise.all(
-      sellerAccounts.map(async (item) => {
-        const marzbanAccount = marzbanAccounts.filter(
-          (account) => account.username == item.Username
-        )[0];
+    // Convert marzbanAccounts into a map for faster lookups
+    const marzbanAccountMap = new Map(
+      marzbanAccounts.map((account) => [account.username, account])
+    );
 
-        const tarrif = await Tariff.findOne({ _id: item.TariffId });
+    // Fetch all tariffs in one query to minimize database calls
+    const tariffIds = sellerAccounts.map((item) => item.TariffId);
+    const tariffs = await Tariff.find({ _id: { $in: tariffIds } }).lean();
+    const tariffMap = new Map(
+      tariffs.map((tariff) => [tariff._id.toString(), tariff])
+    );
 
-        if (!marzbanAccount)
-          return {
-            id: item._id,
-            username: item.Username,
-            tarif: item.Tariff,
-            payed: item.Payed ? "Paid" : "Unpaid",
-          };
+    // Process seller accounts
+    const accounts = sellerAccounts.map((item) => {
+      const marzbanAccount = marzbanAccountMap.get(item.Username);
+      const tariff = tariffMap.get(item.TariffId?.toString());
 
+      if (!marzbanAccount) {
         return {
           id: item._id,
-          counter: +marzbanAccount.username.replace(sellername, ""),
-          username: marzbanAccount.username,
-          package: item.Tariff,
-          price: tarrif?.Price,
-          data_limit: marzbanAccount.data_limit,
-          data_limit_string: Helper.CalculateTraffic(marzbanAccount.data_limit),
-          used_traffic: marzbanAccount.used_traffic,
-          used_traffic_string: Helper.CalculateTraffic(
-            marzbanAccount.used_traffic
-          ),
-          expire: marzbanAccount.expire,
-          expire_string: Helper.CalculateRemainDate(marzbanAccount.expire),
-          status: marzbanAccount.status,
-          subscription_url: AccountHelpers.GetSubscriptionUrl(
-            marzbanAccount.subscription_url,
-            sellerSubscriptionUrl
-          ),
-          online: Helper.IsOnline(marzbanAccount.online_at),
-          online_at: Helper.CalculateOnlineDate(marzbanAccount.online_at),
-          sub_updated_at: Helper.CalculateUpdateSubscriptionDate(
-            marzbanAccount.sub_updated_at
-          ),
-          sub_last_user_agent: marzbanAccount.sub_last_user_agent,
+          username: item.Username,
+          tarif: item.Tariff,
           payed: item.Payed ? "Paid" : "Unpaid",
-          note: marzbanAccount.note,
         };
-      })
-    );
+      }
+
+      // Pre-calculate data-related fields
+      const dataLimitString = Helper.CalculateTraffic(
+        marzbanAccount.data_limit
+      );
+      const usedTrafficString = Helper.CalculateTraffic(
+        marzbanAccount.used_traffic
+      );
+      const expireString = Helper.CalculateRemainDate(marzbanAccount.expire);
+      const isOnline = Helper.IsOnline(marzbanAccount.online_at);
+      const onlineAt = Helper.CalculateOnlineDate(marzbanAccount.online_at);
+      const subUpdatedAt = Helper.CalculateUpdateSubscriptionDate(
+        marzbanAccount.sub_updated_at
+      );
+
+      return {
+        id: item._id,
+        counter: +marzbanAccount.username.replace(sellername, ""),
+        username: marzbanAccount.username,
+        package: item.Tariff,
+        price: tariff?.Price,
+        data_limit: marzbanAccount.data_limit,
+        data_limit_string: dataLimitString,
+        used_traffic: marzbanAccount.used_traffic,
+        used_traffic_string: usedTrafficString,
+        expire: marzbanAccount.expire,
+        expire_string: expireString,
+        status: marzbanAccount.status,
+        subscription_url: AccountHelpers.GetSubscriptionUrl(
+          marzbanAccount.subscription_url,
+          sellerSubscriptionUrl
+        ),
+        online: isOnline,
+        online_at: onlineAt,
+        sub_updated_at: subUpdatedAt,
+        sub_last_user_agent: marzbanAccount.sub_last_user_agent,
+        payed: item.Payed ? "Paid" : "Unpaid",
+        note: marzbanAccount.note,
+      };
+    });
+
+    // Filter accounts with data_limit and reverse the result
     return accounts.filter((acc) => acc.data_limit).reverse();
   };
 
