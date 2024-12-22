@@ -1,7 +1,7 @@
-import mongoose, { Document, ObjectId, Schema } from "mongoose";
+import mongoose, { Document, Types, Schema } from "mongoose";
 
 export interface ISeller extends Document {
-  _id: ObjectId;
+  _id: Types.ObjectId;
   Title: string;
   Username: string;
   Password: string;

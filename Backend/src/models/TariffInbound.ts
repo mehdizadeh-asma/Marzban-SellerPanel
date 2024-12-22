@@ -1,9 +1,9 @@
-import mongoose, { Document, ObjectId, Schema } from "mongoose";
+import mongoose, { Document, Types, Schema } from "mongoose";
 import { ITariff } from "./Tariff";
 
 export interface ITariffInbound extends Document {
-  _id: ObjectId;
-  TariffId: ObjectId | ITariff;
+  _id: Types.ObjectId;
+  TariffId: Types.ObjectId | ITariff;
   InboundTag: string;
   InboundType: "vmess" | "vless" | "trojan";
   Status: "Active" | "Deactive";
@@ -11,7 +11,7 @@ export interface ITariffInbound extends Document {
 
 export const TariffInboundSchema: Schema = new Schema({
   TariffId: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Types.ObjectId,
     required: [true, "Tariff is required"],
     ref: "Tariff",
     index: true,

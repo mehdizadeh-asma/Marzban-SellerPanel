@@ -1,7 +1,7 @@
-import mongoose, { Document, ObjectId, Schema } from "mongoose";
+import mongoose, { Document, Schema, Types } from "mongoose";
 
 export interface ITariff extends Document {
-  _id: ObjectId;
+  _id: Types.ObjectId;
   Title: string;
   DataLimit: number;
   Duration: number;

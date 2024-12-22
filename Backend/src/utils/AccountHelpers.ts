@@ -1,4 +1,4 @@
-import { Document } from "mongoose";
+import { Document, Types } from "mongoose";
 import axios from "axios";
 
 import MarzbanAccount from "../models/MarzbanAccount";
@@ -16,6 +16,7 @@ class AccountHelpers {
     let vmesses: string[] | undefined = undefined;
     let vlesses: string[] | undefined = undefined;
     let trojans: string[] | undefined = undefined;
+    let shadowsocks: string[] | undefined = undefined;
 
     const apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/inbounds";
 
@@ -27,13 +28,21 @@ class AccountHelpers {
         vmess: { tag: string }[];
         vless: { tag: string }[];
         trojan: { tag: string }[];
+        shadowsocks: { tag: string }[];
       };
       if (inbounds.vmess) vmesses = inbounds.vmess.map((vmess) => vmess.tag);
       if (inbounds.vless) vlesses = inbounds.vless.map((vless) => vless.tag);
       if (inbounds.trojan)
         trojans = inbounds.trojan.map((trojan) => trojan.tag);
+      if (inbounds.shadowsocks)
+        shadowsocks = inbounds.shadowsocks.map((shadowsock) => shadowsock.tag);
 
-      return { vmess: vmesses, vless: vlesses, trojan: trojans };
+      return {
+        vmess: vmesses,
+        vless: vlesses,
+        trojan: trojans,
+        shadowsocks: shadowsocks,
+      };
     }
     throw new Error("No Inbound Found!!");
   };
@@ -188,23 +197,24 @@ class AccountHelpers {
     sellername: string,
     sellerSubscriptionUrl: string
   ) => {
-    // Convert marzbanAccounts into a map for faster lookups
     const marzbanAccountMap = new Map(
       marzbanAccounts.map((account) => [account.username, account])
     );
 
-    // Fetch all tariffs in one query to minimize database calls
     const tariffIds = sellerAccounts.map((item) => item.TariffId);
     const tariffs = await Tariff.find({ _id: { $in: tariffIds } }).lean();
     const tariffMap = new Map(
       tariffs.map((tariff) => [tariff._id.toString(), tariff])
     );
 
-    // Process seller accounts
     const accounts = sellerAccounts.map((item) => {
-      const marzbanAccount = marzbanAccountMap.get(item.Username);
-      const tariff = tariffMap.get(item.TariffId?.toString());
+      const tariffIdString =
+        item.TariffId instanceof Types.ObjectId
+          ? item.TariffId.toString()
+          : item.TariffId?._id?.toString();
 
+      const marzbanAccount = marzbanAccountMap.get(item.Username);
+      const tariff = tariffMap.get(tariffIdString);
       if (!marzbanAccount) {
         return {
           id: item._id,

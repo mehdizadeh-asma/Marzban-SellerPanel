@@ -2,7 +2,7 @@ import { RequestHandler } from "express";
 import { Types } from "mongoose";
 
 import TariffSeller from "../models/TariffSeller";
-import Tariff from "../models/Tariff";
+import Tariff, { ITariff } from "../models/Tariff";
 
 class TariffSellerController {
   static GetTariffSellerListBySellerId: RequestHandler = async (
@@ -16,7 +16,11 @@ class TariffSellerController {
         SellerId: new Types.ObjectId(sellerId),
       });
       const sellerTariffIds = new Set(
-        sellerTariffs.map((ts) => ts.TariffId.toString())
+        sellerTariffs.map((ts) =>
+          ts.TariffId instanceof Types.ObjectId
+            ? ts.TariffId.toString()
+            : (ts.TariffId as ITariff)
+        )
       );
 
       const allTariffs = await Tariff.find();
