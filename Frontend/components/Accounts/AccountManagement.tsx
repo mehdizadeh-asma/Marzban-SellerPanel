@@ -96,6 +96,28 @@ export default function AccountManagement() {
       }
   };
 
+  const onRevokeClick = async (account: AccountType) => {
+    try {
+      const url = new URL(
+        "api/marzban/revokesub/" + account.username,
+        config.BACKEND_URL,
+      );
+      await axios.post(
+        url.toString(),
+        {},
+        {
+          headers: { Authorization: "Bearer " + user.Token },
+        },
+      );
+      refMessages.current?.Show(
+        "success",
+        "Subscription Revoked Successfully!",
+      );
+    } catch (error) {
+      refMessages.current?.Show("error", "Something went Wrong!" + error);
+    }
+  };
+
   const onPaymentClick = async (accountId: string) => {
     if (user.IsAdmin)
       try {
@@ -377,6 +399,7 @@ export default function AccountManagement() {
                 onDisabling={onDisabledClick}
                 onRenewing={onRenewClick}
                 onPaying={onPaymentClick}
+                onRevoke={onRevokeClick}
               />
             ) : (
               <AccountGrid
@@ -387,6 +410,7 @@ export default function AccountManagement() {
                 onDisabling={onDisabledClick}
                 onRenewing={onRenewClick}
                 onPaying={onPaymentClick}
+                onRevoke={onRevokeClick}
               />
             )}
           </div>

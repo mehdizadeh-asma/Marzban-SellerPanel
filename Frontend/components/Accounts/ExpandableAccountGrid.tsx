@@ -32,6 +32,7 @@ import ToggleOffIcon from "@mui/icons-material/ToggleOff";
 import QrCode2Icon from "@mui/icons-material/QrCode2";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import AutoModeIcon from "@mui/icons-material/AutoMode";
 
 import AccountType from "@/models/AccountType";
 import { copyTextToClipboard } from "@/utils/Helper";
@@ -46,6 +47,7 @@ interface PropsType {
   onRenewing: (account: AccountType) => void;
   onDisabling: (account: AccountType) => void;
   onPaying: (accountId: string) => void;
+  onRevoke: (account: AccountType) => void;
 }
 export interface ForwardRefHandle {
   SendBackUsernames: () => string[];
@@ -82,6 +84,9 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
       },
     }));
 
+    const onRevoke = (account: AccountType) => {
+      props.onRevoke(account);
+    };
     const onCheckPay = (account: AccountType) => {
       if (account.id) {
         setAccountIdsToPay((prevAccountIds) =>
@@ -132,11 +137,23 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
                 <GridActionsCellItem
                   key="checkPay"
                   label="Check To Pay"
-                  icon={<Checkbox />}
+                  icon={<Checkbox sx={{ fontSize: "25px" }} />}
                   onClick={() => onCheckPay(params.row)}
                 />,
               ]
-            : [];
+            : [
+                <GridActionsCellItem
+                  key="revoke"
+                  label="Revoke"
+                  icon={
+                    <AutoModeIcon
+                      className="text-warning"
+                      sx={{ fontSize: "25px" }}
+                    />
+                  }
+                  onClick={() => onRevoke(params.row)}
+                />,
+              ];
         },
       },
 
@@ -156,7 +173,7 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
                   label="Link"
                   icon={
                     params.row.username === selectedLink ? (
-                      <CheckIcon className="text-primary" />
+                      <CheckIcon className="text-primary " />
                     ) : (
                       <LinkIcon className="text-primary" />
                     )
@@ -194,11 +211,11 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
                     params.row.status === "disabled" ? (
                       <ToggleOffIcon
                         className="text-secondry "
-                        sx={{ fontSize: "25px" }}
+                        sx={{ fontSize: "28px" }}
                       />
                     ) : (
                       <ToggleOnIcon
-                        sx={{ fontSize: "25px" }}
+                        sx={{ fontSize: "28px" }}
                         className="text-success "
                       />
                     )
@@ -212,7 +229,7 @@ const ExpandableAccountGrid = forwardRef<ForwardRefHandle, PropsType>(
                   label="Delete"
                   icon={
                     <DeleteIcon
-                      sx={{ fontSize: "25px" }}
+                      sx={{ fontSize: "23px" }}
                       className="text-danger"
                     />
                   }

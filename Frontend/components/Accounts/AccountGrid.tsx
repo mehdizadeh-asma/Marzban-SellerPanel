@@ -31,6 +31,7 @@ import CircleIcon from "@mui/icons-material/Circle";
 import ToggleOnIcon from "@mui/icons-material/ToggleOn";
 import ToggleOffIcon from "@mui/icons-material/ToggleOff";
 import QrCode2Icon from "@mui/icons-material/QrCode2";
+import AutoModeIcon from "@mui/icons-material/AutoMode";
 
 import AccountType from "@/models/AccountType";
 import { copyTextToClipboard } from "@/utils/Helper";
@@ -45,6 +46,7 @@ interface PropsType {
   onRenewing: (account: AccountType) => void;
   onDisabling: (account: AccountType) => void;
   onPaying: (accountId: string) => void;
+  onRevoke: (account: AccountType) => void;
 }
 export interface ForwardRefHandle {
   SendBackUsernames: () => string[];
@@ -217,9 +219,9 @@ const AccountGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
       headerName: "",
       field: "tools",
       type: "actions",
-      width: 120,
+      width: 160,
       minWidth: 50,
-      maxWidth: 120,
+      maxWidth: 160,
       resizable: true,
       headerClassName: "MUIGridHeader",
       getActions: (params: { row: AccountType }) => [
@@ -232,7 +234,9 @@ const AccountGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
         <GridActionsCellItem
           key="delete"
           label="Delete"
-          icon={<DeleteIcon className="text-danger" />}
+          icon={
+            <DeleteIcon className="text-danger" sx={{ fontSize: "25px" }} />
+          }
           onClick={() => onDeleteClick(params.row)}
         />,
         <GridActionsCellItem
@@ -253,6 +257,14 @@ const AccountGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
           }
           onClick={() => onDisableAccount(params.row)}
         />,
+        <GridActionsCellItem
+          key="revoke"
+          label="Revoke"
+          icon={
+            <AutoModeIcon className="text-warning " sx={{ fontSize: "25px" }} />
+          }
+          onClick={() => onRevoke(params.row)}
+        />,
       ],
     },
   ];
@@ -262,7 +274,9 @@ const AccountGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
       return [...accountIdsToPay];
     },
   }));
-
+  const onRevoke = (account: AccountType) => {
+    props.onRevoke(account);
+  };
   const onCheckPay = (account: AccountType) => {
     if (account.id) {
       setAccountIdsToPay((prevAccountIds) =>
@@ -337,12 +351,16 @@ const AccountGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
 
   const RenderPayment = (payment: string | undefined) => {
     return payment === "Paid" ? (
-      <span className="text-success">
-        <CreditScoreRoundedIcon></CreditScoreRoundedIcon>
+      <span className="text-success ">
+        <CreditScoreRoundedIcon
+          sx={{ fontSize: "25px" }}
+        ></CreditScoreRoundedIcon>
       </span>
     ) : (
       <span className="text-secondary">
-        <CreditCardOffRoundedIcon></CreditCardOffRoundedIcon>
+        <CreditCardOffRoundedIcon
+          sx={{ fontSize: "25px" }}
+        ></CreditCardOffRoundedIcon>
       </span>
     );
   };

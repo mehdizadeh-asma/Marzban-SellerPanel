@@ -578,6 +578,29 @@ class MarzbanController {
       next(error);
     }
   };
+
+  static RevokeSub: RequestHandler = async (req, res, next) => {
+    try {
+      const apiURL = `${await ConfigFile.GetMarzbanURL()}/api/user/${
+        req.params.username
+      }/revoke_sub`;
+
+      console.log(" req.params.username", apiURL);
+      const result = await axios.post(
+        apiURL,
+        {},
+        {
+          headers: { Authorization: req.headers.authorization },
+        }
+      );
+      console.log("result", result, apiURL);
+
+      res.status(200).json({ message: "Revoke Success!" });
+    } catch (error) {
+      // console.log("error", error);
+      next(error);
+    }
+  };
 }
 
 export default MarzbanController;
