@@ -98,7 +98,7 @@ const PackagesGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
     {
       field: "Title",
       headerName: "Title",
-      width: 100,
+      width: 250,
       headerClassName: "MUIGridHeader",
     },
     {
