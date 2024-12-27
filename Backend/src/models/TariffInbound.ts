@@ -5,7 +5,7 @@ export interface ITariffInbound extends Document {
   _id: Types.ObjectId;
   TariffId: Types.ObjectId | ITariff;
   InboundTag: string;
-  InboundType: "vmess" | "vless" | "trojan";
+  InboundType: "vmess" | "vless" | "trojan" | "shadowsocks";
   Status: "Active" | "Deactive";
 }
 
@@ -20,7 +20,7 @@ export const TariffInboundSchema: Schema = new Schema({
   InboundType: {
     type: String,
     enum: {
-      values: ["vmess", "vless", "trojan"],
+      values: ["vmess", "vless", "trojan", "shadowsocks"],
       message: "{VALUE} is not supported",
     },
     default: "Active",

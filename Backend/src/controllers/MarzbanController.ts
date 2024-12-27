@@ -1,14 +1,12 @@
 import { RequestHandler } from "express";
 import { Types } from "mongoose";
 import axios from "axios";
-import { v4 as uuidv4 } from "uuid";
 
 import MarzbanAccount from "../models/MarzbanAccount";
 import Account from "../models/Account";
 import Seller from "../models/Seller";
 import Tariff from "../models/Tariff";
 
-import Helper from "../utils/Helper";
 import ConfigFile from "../utils/Config";
 import Mongoose from "../utils/Mongoose";
 import AccountHelpers from "../utils/AccountHelpers";
@@ -106,9 +104,7 @@ class MarzbanController {
       const sellerSubscriptionUrl = await ConfigFile.GetSubscriptionURL();
       const adminUsername = await ConfigFile.GetSellerAdminUsername();
 
-      console.log(
-        `Start Get All Accounts Seller : ${seller}, Date : ${new Date().toTimeString()}`
-      );
+      // console.log(`Start Get All Accounts Seller : ${seller}, Date : ${new Date().toTimeString()}`);
 
       if (
         !AccountHelpers.MarzbanAccountsList[seller] ||
@@ -121,18 +117,14 @@ class MarzbanController {
 
       const marzbanAccounts = AccountHelpers.MarzbanAccountsList[seller];
 
-      console.log(
-        `Get Marzban Accounts And Store Seller : ${seller}, Date : ${new Date().toTimeString()}`
-      );
+      // console.log(`Get Marzban Accounts And Store Seller : ${seller}, Date : ${new Date().toTimeString()}`);
 
       const sellerAccounts = await AccountHelpers.GetSellerAccounts(
         seller,
         isAll
       );
 
-      console.log(
-        `Get Seller All Accounts Seller : ${seller}, Date : ${new Date().toTimeString()}`
-      );
+      // console.log(`Get Seller All Accounts Seller : ${seller}, Date : ${new Date().toTimeString()}`);
 
       const accounts = await AccountHelpers.GetMixedAccount(
         marzbanAccounts,
@@ -141,9 +133,7 @@ class MarzbanController {
         sellerSubscriptionUrl
       );
 
-      console.log(
-        `Mixed Accounts Seller : ${seller}, Date : ${new Date().toTimeString()}`
-      );
+      // console.log(`Mixed Accounts Seller : ${seller}, Date : ${new Date().toTimeString()}`);
 
       res.status(200).json(accounts);
     } catch (error) {
@@ -156,9 +146,7 @@ class MarzbanController {
       const seller = req.params.seller;
       const sellerSubscriptionUrl = await ConfigFile.GetSubscriptionURL();
 
-      console.log(
-        `Start Search Account Seller : ${seller}, Date : ${new Date().toTimeString()}`
-      );
+      // console.log(`Start Search Account Seller : ${seller}, Date : ${new Date().toTimeString()}`);
 
       const resultAccount = await AccountHelpers.GetMarzbanAccounts(
         req.headers.authorization,
@@ -169,18 +157,14 @@ class MarzbanController {
         resultAccount.data as { users: MarzbanAccount[] }
       ).users;
 
-      console.log(
-        `Get Marzban Accounts Seller : ${seller}, Date : ${new Date().toTimeString()}`
-      );
+      // console.log(`Get Marzban Accounts Seller : ${seller}, Date : ${new Date().toTimeString()}`);
 
       const sellerAccounts = await AccountHelpers.GetSellerAccounts(
         seller,
         true
       );
 
-      console.log(
-        `Get Seller Accounts Seller : ${seller}, Date : ${new Date().toTimeString()}`
-      );
+      // console.log(`Get Seller Accounts Seller : ${seller}, Date : ${new Date().toTimeString()}`);
 
       const accounts = await AccountHelpers.GetMixedAccount(
         marzbanAccounts,
@@ -189,9 +173,7 @@ class MarzbanController {
         sellerSubscriptionUrl
       );
 
-      console.log(
-        `Mixed Accounts Seller : ${seller}, Date : ${new Date().toTimeString()}`
-      );
+      // console.log(`Mixed Accounts Seller : ${seller}, Date : ${new Date().toTimeString()}`);
 
       res.status(200).json(accounts);
     } catch (error) {
@@ -215,29 +197,13 @@ class MarzbanController {
         onhold: boolean;
       };
 
-      if (!tariffId && tariffId === "") {
-        res.status(404).json("TariffId not Found");
-        return;
-      }
-
       if (!username && username === "") {
         res.status(404).json("Username not Found");
         return;
       }
 
-      const vlessUUID = uuidv4();
-      const vmessUUID = uuidv4();
-
-      const getInbound = await AccountHelpers.GetInbounds(
-        req.headers.authorization
-      );
-
-      const tariff = await Tariff.findOne({
-        _id: new Types.ObjectId(tariffId),
-      });
-
-      if (!tariff) {
-        res.status(404).json("Tariff not Found");
+      if (!tariffId && tariffId === "") {
+        res.status(404).json("TariffId not Found");
         return;
       }
 
@@ -245,6 +211,15 @@ class MarzbanController {
 
       if (!seller) {
         res.status(404).json("Seller not Found");
+        return;
+      }
+
+      const tariff = await Tariff.findOne({
+        _id: new Types.ObjectId(tariffId),
+      });
+
+      if (!tariff) {
+        res.status(404).json("Tariff not Found");
         return;
       }
 
@@ -282,45 +257,12 @@ class MarzbanController {
         username,
         req.headers.authorization
       );
-      let inbounds: { vmess?: string[]; vless?: string[]; trojan?: string[] } =
-        {};
-      let proxies: {
-        vmess?: { id: string };
-        vless?: { id: string; flow: string };
-        trojan?: { password: string };
-      } = {};
 
-      if (getInbound.vmess) {
-        proxies = {
-          ...proxies,
-          vmess: {
-            id: vmessUUID,
-          },
-        };
-        inbounds = { ...inbounds, vmess: getInbound.vmess };
-      }
-
-      if (getInbound.vless) {
-        const flow = await ConfigFile.GetMarzbanFlow();
-        proxies = {
-          ...proxies,
-          vless: {
-            id: vlessUUID,
-            flow: flow == "none" ? "" : flow,
-          },
-        };
-        inbounds = { ...inbounds, vless: getInbound.vless };
-      }
-
-      if (getInbound.trojan) {
-        proxies = {
-          ...proxies,
-          trojan: {
-            password: Helper.GenerateRandomPassword(12),
-          },
-        };
-        inbounds = { ...inbounds, trojan: getInbound.trojan };
-      }
+      const { proxies, inbounds } =
+        await AccountHelpers.GenerateProxiesAndInbounds(
+          req.headers.authorization,
+          tariff
+        );
 
       const result = await axios.post(
         apiURL,
@@ -498,12 +440,18 @@ class MarzbanController {
       if (tariff.DataLimit && tariff.DataLimit > 0)
         data_limit = tariff.DataLimit * 1024 * 1024 * 1024;
 
+      const { inbounds } = await AccountHelpers.GenerateProxiesAndInbounds(
+        req.headers.authorization,
+        tariff
+      );
+
       let apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/user/" + username;
       const result = await axios.put(
         apiURL,
         {
           expire: expireTimestamp,
           data_limit: data_limit,
+          inbounds: inbounds,
         },
         {
           headers: { Authorization: req.headers.authorization },
@@ -585,7 +533,6 @@ class MarzbanController {
         req.params.username
       }/revoke_sub`;
 
-      console.log(" req.params.username", apiURL);
       const result = await axios.post(
         apiURL,
         {},

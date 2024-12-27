@@ -13,10 +13,6 @@ class TariffInboundController {
     try {
       const tariffId: string = req.params.tariffId;
 
-      if (!Types.ObjectId.isValid(tariffId)) {
-        return res.status(400).json({ error: "Invalid TariffId format." });
-      }
-
       const tariffInbounds = await TariffInbound.find({
         TariffId: new Types.ObjectId(tariffId),
       });
@@ -29,20 +25,8 @@ class TariffInboundController {
         req.headers.authorization
       );
 
-      const formattedInbounds = Object.entries(allInbound).flatMap(
-        ([inboundType, inboundTags]) => {
-          if (!inboundTags || inboundTags.length === 0) {
-            return [];
-          }
-          return inboundTags.map((inboundTag) => ({
-            InboundType: inboundType,
-            InboundTag: inboundTag,
-          }));
-        }
-      );
-
       const FinalList = [
-        ...formattedInbounds
+        ...allInbound
           .filter((inbound) =>
             tariffInboundTags.has(inbound.InboundTag.toString())
           )
@@ -51,7 +35,7 @@ class TariffInboundController {
             InboundType: inbound.InboundType,
             TariffId: tariffId,
           })),
-        ...formattedInbounds
+        ...allInbound
           .filter(
             (inbound) => !tariffInboundTags.has(inbound.InboundTag.toString())
           )

@@ -1,23 +1,20 @@
 import { Document, Types } from "mongoose";
 import axios from "axios";
+import { v4 as uuidv4 } from "uuid";
 
 import MarzbanAccount from "../models/MarzbanAccount";
 import Seller, { ISeller } from "../models/Seller";
 import Account, { IAccount } from "../models/Account";
-import Tariff from "../models/Tariff";
+import Tariff, { ITariff } from "../models/Tariff";
 
 import ConfigFile from "./Config";
 import Helper from "./Helper";
+import TariffInbound from "../models/TariffInbound";
 
 class AccountHelpers {
   static MarzbanAccountsList: Record<string, MarzbanAccount[]> = {};
 
   static GetInbounds = async (authorization: string | undefined) => {
-    let vmesses: string[] | undefined = undefined;
-    let vlesses: string[] | undefined = undefined;
-    let trojans: string[] | undefined = undefined;
-    let shadowsocks: string[] | undefined = undefined;
-
     const apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/inbounds";
 
     const result = await axios.get(apiURL, {
@@ -30,21 +27,154 @@ class AccountHelpers {
         trojan: { tag: string }[];
         shadowsocks: { tag: string }[];
       };
-      if (inbounds.vmess) vmesses = inbounds.vmess.map((vmess) => vmess.tag);
-      if (inbounds.vless) vlesses = inbounds.vless.map((vless) => vless.tag);
-      if (inbounds.trojan)
-        trojans = inbounds.trojan.map((trojan) => trojan.tag);
-      if (inbounds.shadowsocks)
-        shadowsocks = inbounds.shadowsocks.map((shadowsock) => shadowsock.tag);
 
-      return {
-        vmess: vmesses,
-        vless: vlesses,
-        trojan: trojans,
-        shadowsocks: shadowsocks,
-      };
+      const formattedInbounds = Object.entries(inbounds).flatMap(
+        ([inboundType, inboundTags]) =>
+          inboundTags.map(({ tag }) => ({
+            InboundType: inboundType,
+            InboundTag: tag,
+          }))
+      );
+
+      return formattedInbounds;
     }
     throw new Error("No Inbound Found!!");
+  };
+
+  static GenerateProxiesAndInbounds = async (
+    authorization: string | undefined,
+    tariff: ITariff
+  ) => {
+    const vlessUUID = uuidv4();
+    const vmessUUID = uuidv4();
+
+    const tariffInbounds = await TariffInbound.find({ TariffId: tariff._id });
+
+    const getInbound = await AccountHelpers.GetInbounds(authorization);
+
+    const inbounds: {
+      vmess?: string[];
+      vless?: string[];
+      trojan?: string[];
+      shadowsocks?: string[];
+    } = {};
+    const proxies: {
+      vmess?: { id: string };
+      vless?: { id: string; flow: string };
+      trojan?: { password: string };
+      shadowsocks?: { password: string; method: string };
+    } = {};
+
+    // Handle vmess
+    const vmessInbounds = getInbound.filter(
+      (inbound) => inbound.InboundType === "vmess"
+    );
+    if (
+      vmessInbounds.length > 0 &&
+      tariffInbounds.filter((inbound) => inbound.InboundType === "vmess")
+        .length > 0
+    ) {
+      proxies.vmess = { id: vmessUUID };
+
+      const vmessInboundTags = new Set(
+        tariffInbounds
+          .filter((tariffInbound) => tariffInbound.InboundType === "vmess")
+          .map((tariffInbound) => tariffInbound.InboundTag)
+      );
+
+      inbounds.vmess = vmessInbounds
+        .filter((inbound) => vmessInboundTags.has(inbound.InboundTag))
+        .map((inbound) => inbound.InboundTag);
+    }
+
+    // Handle vless
+    const vlessInbounds = getInbound.filter(
+      (inbound) => inbound.InboundType === "vless"
+    );
+    if (
+      vlessInbounds.length > 0 &&
+      tariffInbounds.filter((inbound) => inbound.InboundType === "vless")
+        .length > 0
+    ) {
+      const flow = await ConfigFile.GetMarzbanFlow();
+      proxies.vless = {
+        id: vlessUUID,
+        flow: flow === "none" ? "" : flow,
+      };
+
+      const vlessInboundTags = new Set(
+        tariffInbounds
+          .filter((tariffInbound) => tariffInbound.InboundType === "vless")
+          .map((tariffInbound) => tariffInbound.InboundTag)
+      );
+
+      inbounds.vless = vlessInbounds
+        .filter((inbound) => vlessInboundTags.has(inbound.InboundTag))
+        .map((inbound) => inbound.InboundTag);
+    }
+
+    // Handle trojan
+    const trojanInbounds = getInbound.filter(
+      (inbound) => inbound.InboundType === "trojan"
+    );
+    if (
+      trojanInbounds.length > 0 &&
+      tariffInbounds.filter((inbound) => inbound.InboundType === "trojan")
+        .length > 0
+    ) {
+      proxies.trojan = { password: Helper.GenerateRandomPassword(12) };
+
+      const trojanInboundTags = new Set(
+        tariffInbounds
+          .filter((tariffInbound) => tariffInbound.InboundType === "trojan")
+          .map((tariffInbound) => tariffInbound.InboundTag)
+      );
+
+      inbounds.trojan = trojanInbounds
+        .filter((inbound) => trojanInboundTags.has(inbound.InboundTag))
+        .map((inbound) => inbound.InboundTag);
+    }
+
+    // Handle shadowsocks
+    const shadowsocksInbounds = getInbound.filter(
+      (inbound) => inbound.InboundType === "shadowsocks"
+    );
+    if (
+      shadowsocksInbounds.length > 0 &&
+      tariffInbounds.filter((inbound) => inbound.InboundType === "shadowsocks")
+        .length > 0
+    ) {
+      proxies.shadowsocks = {
+        password: Helper.GenerateRandomPassword(22),
+        method: "chacha20-ietf-poly1305",
+      };
+
+      const shadowsocksInboundTags = new Set(
+        tariffInbounds
+          .filter(
+            (tariffInbound) => tariffInbound.InboundType === "shadowsocks"
+          )
+          .map((tariffInbound) => tariffInbound.InboundTag)
+      );
+
+      inbounds.shadowsocks = shadowsocksInbounds
+        .filter((inbound) => shadowsocksInboundTags.has(inbound.InboundTag))
+        .map((inbound) => inbound.InboundTag);
+    }
+
+    // Remove entries with no inbounds
+    if (!inbounds.vmess?.length) delete proxies.vmess;
+    if (!inbounds.vless?.length) delete proxies.vless;
+    if (!inbounds.trojan?.length) delete proxies.trojan;
+    if (!inbounds.shadowsocks?.length) delete proxies.shadowsocks;
+
+    // Remove inbounds entry if no proxy was created
+    if (!proxies.vmess) delete inbounds.vmess;
+    if (!proxies.vless) delete inbounds.vless;
+    if (!proxies.trojan) delete inbounds.trojan;
+    if (!proxies.shadowsocks) delete inbounds.shadowsocks;
+
+    return { proxies, inbounds };
   };
 
   static GetMarzbanAccounts = async (
