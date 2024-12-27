@@ -48,13 +48,16 @@ interface PropsType {
   onPaying: (accountId: string) => void;
   onRevoke: (account: AccountType) => void;
 }
-export interface ForwardRefHandle {
+export interface GeneralAccountGridForwardRefHandle {
   SendBackUsernames: () => string[];
 }
 
 const label = { inputProps: { "aria-label": "Checkbox demo" } };
 
-const AccountGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
+const GeneralAccountGrid = forwardRef<
+  GeneralAccountGridForwardRefHandle,
+  PropsType
+>((props, ref) => {
   const [selectedLink, setSelectedLink] = useState("");
   const [accountIdsToPay, setAccountIdsToPay] = useState<string[]>([]);
 
@@ -271,7 +274,9 @@ const AccountGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
 
   useImperativeHandle(ref, () => ({
     SendBackUsernames: () => {
-      return [...accountIdsToPay];
+      const accountsId = [...accountIdsToPay];
+      setAccountIdsToPay([]);
+      return accountsId;
     },
   }));
   const onRevoke = (account: AccountType) => {
@@ -452,6 +457,6 @@ const AccountGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
   );
 });
 
-AccountGrid.displayName = "AccountGrid";
+GeneralAccountGrid.displayName = "GeneralAccountGrid";
 
-export default AccountGrid;
+export default GeneralAccountGrid;

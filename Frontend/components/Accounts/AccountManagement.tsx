@@ -16,18 +16,21 @@ import AccountType from "@/models/AccountType";
 import TariffType from "@/models/TariffType";
 import Messages from "../General/Messages";
 import ExpandableAccountGrid, {
-  ForwardRefHandle,
+  ExpandableGridForwardRefHandle,
 } from "./ExpandableAccountGrid";
-import AccountGrid from "./AccountGrid";
+import GeneralAccountGrid, {
+  GeneralAccountGridForwardRefHandle,
+} from "./GeneralAccountGrid";
 
 export default function AccountManagement() {
   const { user, config, setUser } = useMyContext();
-  const gridRef = useRef<ForwardRefHandle>(null);
+  const gridGeneralRef = useRef<GeneralAccountGridForwardRefHandle>(null);
+  const gridExpandableRef = useRef<ExpandableGridForwardRefHandle>(null);
   const [loading, setLoading] = useState(false);
   const [accountList, setAccountList] = useState<AccountType[]>([]);
   const [selectedAccount, setSelectedAccount] = useState<AccountType>();
   const [searchText, setSearchText] = useState("");
-  const [gridType, setgridType] = useState("Expandable"); //Regular
+  const [gridType, setgridType] = useState("Expandable"); //General
 
   type DeleteModalHandle = ElementRef<typeof DeleteModal>;
   const refDeleteModal = useRef<DeleteModalHandle>(null);
@@ -134,32 +137,32 @@ export default function AccountManagement() {
   };
 
   const onPayAllClick = async () => {
-    if (user.IsAdmin)
-      if (gridRef.current) {
-        const accountIds = gridRef.current.SendBackUsernames();
-        if (
-          !Array.isArray(accountIds) ||
-          !accountIds.every((id) => typeof id === "string")
-        )
-          return;
-
-        try {
-          StartLoading();
-          const url = new URL("api/payaccounts/", config.BACKEND_URL);
-          await axios.post(url.toString(), accountIds, {
-            headers: { Authorization: "Bearer " + user.Token },
-          });
-          refMessages.current?.Show(
-            "success",
-            "Payments Changed Successfully!",
-          );
-        } catch (error) {
-          console.log(error);
-        } finally {
-          LoadAccount();
-        }
+    const accountIds = GetAccountIdToPay();
+    if (user.IsAdmin && accountIds.length > 0) {
+      try {
+        StartLoading();
+        const url = new URL("api/payaccounts/", config.BACKEND_URL);
+        await axios.post(url.toString(), accountIds, {
+          headers: { Authorization: "Bearer " + user.Token },
+        });
+        refMessages.current?.Show("success", "Payments Changed Successfully!");
+      } catch (error) {
+        console.log(error);
+      } finally {
+        LoadAccount();
       }
+    }
   };
+
+  const GetAccountIdToPay = useCallback(() => {
+    let accountIds: string[] = [];
+    if (gridType === "Expandable" && gridExpandableRef.current) {
+      accountIds = gridExpandableRef.current.SendBackUsernames();
+    } else if (gridType === "General" && gridGeneralRef.current) {
+      accountIds = gridGeneralRef.current.SendBackUsernames();
+    }
+    return accountIds;
+  }, [gridType]);
 
   const OnAddClick = async (
     tariff: TariffType,
@@ -200,6 +203,8 @@ export default function AccountManagement() {
     async (IsAll: boolean = false) => {
       try {
         StartLoading();
+        GetAccountIdToPay();
+        setSearchText("");
         const url = new URL(
           `api/marzban/accounts/${user.Username}/${IsAll}`,
           config.BACKEND_URL,
@@ -215,7 +220,7 @@ export default function AccountManagement() {
         EndLoading();
       }
     },
-    [config.BACKEND_URL, user.Token, user.Username],
+    [GetAccountIdToPay, config.BACKEND_URL, user.Token, user.Username],
   );
 
   useEffect(() => {
@@ -226,6 +231,8 @@ export default function AccountManagement() {
     const LoadAccount = async () => {
       try {
         StartLoading();
+        GetAccountIdToPay();
+
         const url = new URL(
           `api/marzban/account/${user.Username}/${searchText}`,
           config.BACKEND_URL,
@@ -242,10 +249,16 @@ export default function AccountManagement() {
       }
     };
     if (user.Token !== "" && searchText != "") LoadAccount();
-  }, [config.BACKEND_URL, searchText, user.Token, user.Username]);
+  }, [
+    GetAccountIdToPay,
+    config.BACKEND_URL,
+    searchText,
+    user.Token,
+    user.Username,
+  ]);
 
   const GridTypeChoose_Click = () => {
-    if (gridType === "Expandable") setgridType("Regular");
+    if (gridType === "Expandable") setgridType("General");
     else setgridType("Expandable");
   };
 
@@ -392,7 +405,7 @@ export default function AccountManagement() {
           <div className="ContainerGrid">
             {gridType == "Expandable" ? (
               <ExpandableAccountGrid
-                ref={gridRef}
+                ref={gridExpandableRef}
                 Accounts={accountList}
                 Loading={loading}
                 onDeleting={onDeleteClick}
@@ -402,8 +415,8 @@ export default function AccountManagement() {
                 onRevoke={onRevokeClick}
               />
             ) : (
-              <AccountGrid
-                ref={gridRef}
+              <GeneralAccountGrid
+                ref={gridGeneralRef}
                 Accounts={accountList}
                 Loading={loading}
                 onDeleting={onDeleteClick}
