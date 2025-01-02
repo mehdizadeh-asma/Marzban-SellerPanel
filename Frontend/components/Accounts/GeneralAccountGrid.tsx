@@ -114,6 +114,7 @@ const GeneralAccountGrid = forwardRef<
       minWidth: 50,
       maxWidth: 160,
       resizable: true,
+      headerClassName: "MUIGridHeader",
     },
     {
       field: "note",
@@ -128,6 +129,7 @@ const GeneralAccountGrid = forwardRef<
       field: "online",
       headerName: "",
       width: 10,
+      resizable: true,
       renderCell: (params: GridRenderCellParams<AccountType, string>) =>
         RenderOnline(params.value),
       headerClassName: "MUIGridHeader",

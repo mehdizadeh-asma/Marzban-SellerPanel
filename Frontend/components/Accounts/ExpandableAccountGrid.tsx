@@ -367,7 +367,7 @@ const ExpandableAccountGrid = forwardRef<
     {
       field: "used_traffic_string",
       headerName: "Usage",
-      width: 140,
+      width: 180,
       headerClassName: "MUIGridHeader",
       renderCell: (params: GridRenderCellParams<GridRowData, string>) => {
         if (params.row.isParent) {
@@ -435,38 +435,38 @@ const ExpandableAccountGrid = forwardRef<
       },
     },
     {
-      field: "data_limit_string",
-      headerName: "Limit",
-      width: 90,
+      field: "price",
+      headerName: "Price",
+      width: 60,
       headerClassName: "MUIGridHeader",
       renderCell: (params: GridRenderCellParams<GridRowData, string>) => {
-        if (params.row.isParent) {
-          return params.value;
-        } else {
-          return (
-            <Box display="flex" flexDirection="column" alignItems="center">
-              <p style={{ margin: 0, fontWeight: "bold" }}>Price</p>
-              <div
-                style={{
-                  width: "100%",
-                  height: "1px",
-                  backgroundColor: "#ccc",
-                  margin: "4px 0",
-                }}
-              ></div>
-              <p
-                style={{
-                  margin: 0,
-                  textAlign: "center",
-                  wordWrap: "break-word",
-                  whiteSpace: "normal",
-                }}
-              >
-                {params.row.price ? `${params.row.price}` : "N/A"}
-              </p>
-            </Box>
-          );
-        }
+        if (params.row.isParent) return params.value;
+        return "";
+        // } else {
+        //   return (
+        //     <Box display="flex" flexDirection="column" alignItems="center">
+        //       <p style={{ margin: 0, fontWeight: "bold" }}>Price</p>
+        //       <div
+        //         style={{
+        //           width: "100%",
+        //           height: "1px",
+        //           backgroundColor: "#ccc",
+        //           margin: "4px 0",
+        //         }}
+        //       ></div>
+        //       <p
+        //         style={{
+        //           margin: 0,
+        //           textAlign: "center",
+        //           wordWrap: "break-word",
+        //           whiteSpace: "normal",
+        //         }}
+        //       >
+        //         {params.row.price ? `${params.row.price}` : "N/A"}
+        //       </p>
+        //     </Box>
+        //   );
+        // }
       },
     },
   ];
@@ -603,7 +603,7 @@ const ExpandableAccountGrid = forwardRef<
   const RenderUsage = (account: AccountType) => {
     return (
       <Box sx={{ width: "100%" }}>
-        {account.used_traffic_string}
+        {`${account.used_traffic_string} of ${account.data_limit / (1024 * 1024 * 1024)} GB`}
         <LinearProgress
           variant="determinate"
           value={(account.used_traffic / account.data_limit) * 100}
