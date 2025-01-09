@@ -280,7 +280,7 @@ class AccountHelpers {
         await axios.get(apiURL + generateUsername, {
           headers: { Authorization: authorization },
         });
-      } while (seller.Counter > 10000000);
+      } while (seller.Counter < 10000000);
     } catch {
       // empty
     }
