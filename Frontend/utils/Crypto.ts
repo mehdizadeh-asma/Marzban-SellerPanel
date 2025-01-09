@@ -1,7 +1,7 @@
 import crypto from "crypto";
 
-const keyString = "Fair@Internet@Seller@Marzban@Panel@1401@1402@1403@1";
-const ivString = "Seller@Marzban@Panel@1401";
+const keyString = process.env.cryptokey!;
+const ivString = process.env.cryptoiv!;
 
 const key = Buffer.from(keyString, "base64");
 const iv = Buffer.from(ivString, "base64");
