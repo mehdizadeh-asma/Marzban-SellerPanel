@@ -394,7 +394,14 @@ class AccountHelpers {
       };
     });
 
-    // Filter accounts with data_limit and reverse the result
+    const fillteredUnpaidDeletedAccount = accounts.filter(
+      (acc) => acc.payed == "Unpaid" && !acc.data_limit
+    );
+
+    if (fillteredUnpaidDeletedAccount.length > 0) {
+      console.log("Log Unpaid and Deleted Account :");
+      fillteredUnpaidDeletedAccount.map((acc) => console.log(acc.username));
+    }
     return accounts.filter((acc) => acc.data_limit).reverse();
   };
 
