@@ -41,7 +41,7 @@ app.use("/api", cors(corsOptions), tariffSellerRouter);
 app.use("/api", cors(corsOptions), tariffInboundRouter);
 
 app.use((err: Error, _req: Request, res: Response, next: NextFunction) => {
-  console.log(err.message); //replace with logger later
+  console.log(err); //replace with logger later
   if (res.headersSent) {
     return next(err);
   }

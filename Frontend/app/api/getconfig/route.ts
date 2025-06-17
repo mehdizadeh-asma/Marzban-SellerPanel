@@ -19,7 +19,6 @@ export async function GET() {
       PAGE_TITLE: jd.PAGE_TITLE,
       CHANNEL_NAME: jd.CHANNEL_NAME,
     };
-    console.log(newjd);
 
     const encryptedContent = encrypt(JSON.stringify(newjd));
 
