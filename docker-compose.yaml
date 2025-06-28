@@ -19,6 +19,13 @@ services:
     ports:
       - 8000:8443
       - 8008:8080
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.5'
+    environment:
+      - NODE_OPTIONS=--max-old-space-size=8192
 
   nginx:
     image: nginx:alpine
