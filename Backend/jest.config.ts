@@ -34,13 +34,7 @@ export default {
   coverageProvider: "v8",
 
   // A list of reporter names that Jest uses when writing coverage reports
-  coverageReporters: [
-    "json",
-    "text",
-    "lcov",
-    "clover",
-    "html"
-  ],
+  coverageReporters: ["json", "text", "lcov", "clover", "html"],
   // An object that configures minimum threshold enforcement for coverage results
   // coverageThreshold: undefined,
 
@@ -108,9 +102,12 @@ export default {
   // Use this configuration option to add custom reporters to Jest
   reporters: [
     "default",
-    ["jest-html-reporter", {
-      pageTitle: "Greple-Github-Challeng Backend Test Report"
-    }]
+    [
+      "jest-html-reporter",
+      {
+        pageTitle: "Greple-Github-Challeng Backend Test Report",
+      },
+    ],
   ],
 
   // Automatically reset mock state before every test
@@ -190,7 +187,7 @@ export default {
   // unmockedModulePathPatterns: undefined,
 
   // Indicates whether each individual test should be reported during the run
-   verbose: true,
+  verbose: true,
 
   // An array of regexp patterns that are matched against all source file paths before re-running tests in watch mode
   // watchPathIgnorePatterns: [],
