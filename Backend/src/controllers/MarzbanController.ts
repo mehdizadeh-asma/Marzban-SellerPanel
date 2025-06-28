@@ -183,7 +183,7 @@ class MarzbanController {
 
   static AddAccount: RequestHandler = async (req, res, next) => {
     try {
-      const isValidLicense = await Mongoose.CheckLicense();
+      const isValidLicense: boolean = await Mongoose.checkLicense();
 
       if (!isValidLicense)
         throw new Error("License is not Available or Expired!");

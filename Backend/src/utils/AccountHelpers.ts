@@ -398,7 +398,11 @@ class AccountHelpers {
       (acc) => acc.payed == "Unpaid" && !acc.data_limit
     );
 
-    if (fillteredUnpaidDeletedAccount.length > 0) {
+    if (
+      fillteredUnpaidDeletedAccount.length > 0 &&
+      sellername.toLowerCase() ==
+        (await ConfigFile.GetSellerAdminUsername()).toLowerCase()
+    ) {
       console.log("Log Unpaid and Deleted Account :");
       fillteredUnpaidDeletedAccount.map((acc) => console.log(acc.username));
     }

@@ -4,11 +4,14 @@ import mongoose, {
   Model,
   Document,
 } from "mongoose";
-import Account, { AccountSchema } from "../models/Account";
-import Seller, { SellerSchema } from "../models/Seller";
-import Tariff, { TariffSchema } from "../models/Tariff";
+
 import { WholeSalerSchema } from "../models/WholeSaler";
 import ConfigFile from "./Config";
+import { AccountSchema, IAccount } from "../models/Account";
+import { ISeller, SellerSchema } from "../models/Seller";
+import { ITariff, TariffSchema } from "../models/Tariff";
+import { ITariffInbound, TariffInboundSchema } from "../models/TariffInbound";
+import { ITariffSeller, TariffSellerSchema } from "../models/TariffSeller";
 
 // تنظیمات پیش‌فرض اتصال
 const DEFAULT_CONNECTION_OPTIONS: ConnectOptions = {
@@ -48,20 +51,15 @@ class Mongoose {
   private static initConnectionCleanup() {
     if (this.connectionCleanupInterval) return;
 
-    this.connectionCleanupInterval = setInterval(async () => {
+    const cleanupTask = async () => {
       const now = Date.now();
-      const maxIdleTime = 5 * 60 * 1000; // 5 دقیقه
-
-      // ایجاد یک کپی از اتصالات برای جلوگیری از تغییرات حین اجرا
+      const maxIdleTime = 5 * 60 * 1000; // 5 minutes
       const connections = Array.from(this.activeConnections.entries());
 
-      // حلقه برای بررسی همه اتصالات فعال
       for (const [connectionString, connection] of connections) {
         try {
-          // بررسی اگر اتصال هنوز در Map وجود دارد
           if (!this.activeConnections.has(connectionString)) continue;
 
-          // دریافت زمان آخرین استفاده از WeakMap
           const lastUsed = this.connectionLastUsedMap.get(connection) || 0;
           const isIdle = now - lastUsed > maxIdleTime;
 
@@ -76,7 +74,14 @@ class Mongoose {
           );
         }
       }
-    }, 30000); // هر 30 ثانیه چک کن
+    };
+
+    // Wrap async task to handle promise properly
+    this.connectionCleanupInterval = setInterval(() => {
+      cleanupTask().catch((error) =>
+        console.error("Unhandled error in connection cleanup:", error)
+      );
+    }, 30000);
   }
 
   // اتصال به دیتابیس اصلی
@@ -176,6 +181,10 @@ class Mongoose {
     );
   }
 
+  static getMainConnection(): Connection | null {
+    return this.mainConnection;
+  }
+
   // بستن اتصال
   static async closeConnection(connectionString: string): Promise<void> {
     const connection = this.activeConnections.get(connectionString);
@@ -188,6 +197,59 @@ class Mongoose {
     } catch (error) {
       console.error(`Error closing connection:`, error);
     }
+  }
+
+  // تنظیم مانیتورینگ اتصال
+  private static setupConnectionMonitoring(
+    connection: Connection,
+    name: string
+  ): void {
+    connection.on("connected", () => {
+      console.log(`[${name}] MongoDB connected`);
+      // ذخیره زمان به روز رسانی در WeakMap
+      this.connectionLastUsedMap.set(connection, Date.now());
+    });
+
+    connection.on("disconnected", () => {
+      console.warn(`[${name}] MongoDB disconnected`);
+    });
+
+    connection.on("error", (err) => {
+      console.error(`[${name}] MongoDB error:`, err);
+    });
+
+    connection.on("reconnected", () => {
+      console.log(`[${name}] MongoDB reconnected`);
+      // به روز رسانی زمان استفاده
+      this.connectionLastUsedMap.set(connection, Date.now());
+    });
+
+    // به روز رسانی زمان هنگام انجام عملیات
+    connection.on("open", () => {
+      this.connectionLastUsedMap.set(connection, Date.now());
+    });
+  }
+
+  // بستن همه اتصالات هنگام خاتمه
+  static async shutdown(): Promise<void> {
+    // توقف تایمر پاکسازی
+    if (this.connectionCleanupInterval) {
+      clearInterval(this.connectionCleanupInterval);
+      this.connectionCleanupInterval = null;
+    }
+
+    // بستن همه اتصالات فعال
+    for (const [connectionString] of this.activeConnections) {
+      await this.closeConnection(connectionString);
+    }
+
+    // بستن اتصال اصلی
+    if (this.mainConnection) {
+      await this.mainConnection.close();
+      this.mainConnection = null;
+    }
+
+    console.log("All database connections closed");
   }
 
   // متدهای مدیریت رشته اتصال
@@ -262,39 +324,66 @@ class Mongoose {
     destinationConnectionString: string
   ): Promise<void> {
     try {
-      const connection = await this.getConnection(
+      // اطمینان از وجود اتصال اصلی
+      if (!this.mainConnection) {
+        throw new Error("اتصال به دیتابیس اصلی برقرار نشده است");
+      }
+
+      const targetConnection = await this.getConnection(
         destinationConnectionString,
         "CopyDB",
         5
       );
 
-      console.log("Starting database copy process...");
+      console.log("شروع فرآیند کپی دیتابیس...");
 
-      // کپی تعرفه‌ها
-      await this.copyCollection(
-        Tariff,
-        connection.model("Tariff", TariffSchema),
-        "Tariffs"
-      );
-
-      // کپی فروشندگان
-      await this.copyCollection(
-        Seller,
-        connection.model("Seller", SellerSchema),
-        "Sellers"
-      );
-
-      // کپی اکانت‌ها
-      await this.copyCollection(
-        Account,
-        connection.model("Account", AccountSchema),
+      // کپی تمام مجموعه‌های مورد نیاز
+      await this.copyCollection<IAccount>(
+        this.mainConnection.model<IAccount>("Account", AccountSchema),
+        targetConnection.model<IAccount>("Account", AccountSchema),
         "Accounts"
       );
 
-      console.log("Database copy completed successfully");
+      await this.copyCollection<ISeller>(
+        this.mainConnection.model<ISeller>("Seller", SellerSchema),
+        targetConnection.model<ISeller>("Seller", SellerSchema),
+        "Sellers"
+      );
+
+      await this.copyCollection<ITariff>(
+        this.mainConnection.model<ITariff>("Tariff", TariffSchema),
+        targetConnection.model<ITariff>("Tariff", TariffSchema),
+        "Tariffs"
+      );
+
+      await this.copyCollection<ITariffInbound>(
+        this.mainConnection.model<ITariffInbound>(
+          "TariffInbound",
+          TariffInboundSchema
+        ),
+        targetConnection.model<ITariffInbound>(
+          "TariffInbound",
+          TariffInboundSchema
+        ),
+        "TariffInbounds"
+      );
+
+      await this.copyCollection<ITariffSeller>(
+        this.mainConnection.model<ITariffSeller>(
+          "TariffSeller",
+          TariffSellerSchema
+        ),
+        targetConnection.model<ITariffSeller>(
+          "TariffSeller",
+          TariffSellerSchema
+        ),
+        "TariffSellers"
+      );
+
+      console.log("کپی دیتابیس با موفقیت انجام شد");
       await this.closeConnection(destinationConnectionString);
     } catch (error) {
-      console.error("Database copy failed:", error);
+      console.error("خطا در کپی دیتابیس:", error);
       throw error;
     }
   }
@@ -302,71 +391,27 @@ class Mongoose {
   // متد کمکی برای کپی مجموعه‌ها
   private static async copyCollection<T extends Document>(
     sourceModel: Model<T>,
-    targetModel: Model<any>,
+    targetModel: Model<T>,
     collectionName: string
   ): Promise<void> {
-    console.log(`Copying ${collectionName}...`);
+    console.log(`در حال کپی‌کردن ${collectionName}...`);
+
+    // دریافت اسناد به صورت lean برای عملکرد بهتر
     const documents = await sourceModel.find().lean();
+
     if (documents.length === 0) {
-      console.log(`No documents found for ${collectionName}`);
+      console.log(`هیچ سندی در ${collectionName} یافت نشد`);
       return;
     }
 
-    await targetModel.insertMany(documents, { ordered: false });
-    console.log(`Copied ${documents.length} ${collectionName}`);
-  }
-
-  // تنظیم مانیتورینگ اتصال
-  private static setupConnectionMonitoring(
-    connection: Connection,
-    name: string
-  ): void {
-    connection.on("connected", () => {
-      console.log(`[${name}] MongoDB connected`);
-      // ذخیره زمان به روز رسانی در WeakMap
-      this.connectionLastUsedMap.set(connection, Date.now());
-    });
-
-    connection.on("disconnected", () => {
-      console.warn(`[${name}] MongoDB disconnected`);
-    });
-
-    connection.on("error", (err) => {
-      console.error(`[${name}] MongoDB error:`, err);
-    });
-
-    connection.on("reconnected", () => {
-      console.log(`[${name}] MongoDB reconnected`);
-      // به روز رسانی زمان استفاده
-      this.connectionLastUsedMap.set(connection, Date.now());
-    });
-
-    // به روز رسانی زمان هنگام انجام عملیات
-    connection.on("open", () => {
-      this.connectionLastUsedMap.set(connection, Date.now());
-    });
-  }
-
-  // بستن همه اتصالات هنگام خاتمه
-  static async shutdown(): Promise<void> {
-    // توقف تایمر پاکسازی
-    if (this.connectionCleanupInterval) {
-      clearInterval(this.connectionCleanupInterval);
-      this.connectionCleanupInterval = null;
+    try {
+      // درج اسناد با امکان ادامه در صورت خطا
+      await targetModel.insertMany(documents, { ordered: false });
+      console.log(`تعداد ${documents.length} سند در ${collectionName} کپی شد`);
+    } catch (insertError) {
+      console.error(`خطا در کپی ${collectionName}:`, insertError);
+      throw new Error(`کپی ${collectionName} ناموفق بود`);
     }
-
-    // بستن همه اتصالات فعال
-    for (const [connectionString] of this.activeConnections) {
-      await this.closeConnection(connectionString);
-    }
-
-    // بستن اتصال اصلی
-    if (this.mainConnection) {
-      await this.mainConnection.close();
-      this.mainConnection = null;
-    }
-
-    console.log("All database connections closed");
   }
 }
 
