@@ -192,9 +192,7 @@ class MarzbanController {
 
   static AddAccount: RequestHandler = async (req, res, next) => {
     try {
-      const isValidLicense: boolean = await MongooseDbManagement.checkLicense();
-
-      if (!isValidLicense)
+      if (!(await MongooseDbManagement.checkLicense()))
         throw new Error("License is not Available or Expired!");
 
       const apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/user";
@@ -315,6 +313,9 @@ class MarzbanController {
 
   static EditAccount: RequestHandler = async (req, res, next) => {
     try {
+      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
+        throw new Error("Invalid Token");
+
       const apiURL =
         (await ConfigFile.GetMarzbanURL()) + "/api/user/" + req.params.username;
       const { status } = req.body as { status: string };
@@ -351,6 +352,9 @@ class MarzbanController {
 
   static DisableAccount: RequestHandler = async (req, res, next) => {
     try {
+      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
+        throw new Error("Invalid Token");
+
       const apiURL =
         (await ConfigFile.GetMarzbanURL()) + "/api/user/" + req.params.username;
       const { status } = req.body as { status: string };
@@ -383,6 +387,11 @@ class MarzbanController {
 
   static RenewAccount: RequestHandler = async (req, res, next) => {
     try {
+      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
+        throw new Error("Invalid Token");
+      if (!(await MongooseDbManagement.checkLicense()))
+        throw new Error("License is not Available or Expired!");
+
       const AccountModel = await getModel<IAccount>("Account", AccountSchema);
       const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
       const TariffModel = await getModel<ITariff>("Tariff", TariffSchema);
@@ -483,6 +492,9 @@ class MarzbanController {
 
   static RemoveAccount: RequestHandler = async (req, res, next) => {
     try {
+      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
+        throw new Error("Invalid Token");
+
       const apiURL =
         (await ConfigFile.GetMarzbanURL()) + "/api/user/" + req.params.username;
 

@@ -3,6 +3,7 @@ import { Types } from "mongoose";
 import { getModel } from "../utils/MongooseModel";
 import { ITariffSeller, TariffSellerSchema } from "../models/TariffSeller";
 import { ITariff, TariffSchema } from "../models/Tariff";
+import AccountHelpers from "../utils/AccountHelpers";
 
 class TariffSellerController {
   static GetTariffSellerListBySellerId: RequestHandler = async (
@@ -11,7 +12,13 @@ class TariffSellerController {
     next
   ) => {
     try {
-      const TariffSellerModel = await getModel<ITariffSeller>("TariffSeller", TariffSellerSchema);
+      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
+        throw new Error("Invalid Token");
+
+      const TariffSellerModel = await getModel<ITariffSeller>(
+        "TariffSeller",
+        TariffSellerSchema
+      );
       const TariffModel = await getModel<ITariff>("Tariff", TariffSchema);
       const sellerId: string = req.params.sellerId;
       const sellerTariffs = await TariffSellerModel.find({
@@ -55,7 +62,13 @@ class TariffSellerController {
   };
   static GetTariffSeller: RequestHandler = async (req, res, next) => {
     try {
-      const TariffSellerModel = await getModel<ITariffSeller>("TariffSeller", TariffSellerSchema);
+      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
+        throw new Error("Invalid Token");
+
+      const TariffSellerModel = await getModel<ITariffSeller>(
+        "TariffSeller",
+        TariffSellerSchema
+      );
       const id: string = req.params.id;
       const tariffSeller = await TariffSellerModel.findOne({
         _id: new Types.ObjectId(id),
@@ -68,7 +81,13 @@ class TariffSellerController {
   };
   static AddTariffSeller: RequestHandler = async (req, res, next) => {
     try {
-      const TariffSellerModel = await getModel<ITariffSeller>("TariffSeller", TariffSellerSchema);
+      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
+        throw new Error("Invalid Token");
+
+      const TariffSellerModel = await getModel<ITariffSeller>(
+        "TariffSeller",
+        TariffSellerSchema
+      );
       const { TariffID, SellerID } = req.body as {
         TariffID: string | undefined;
         SellerID: string | undefined;
@@ -85,7 +104,13 @@ class TariffSellerController {
   };
   static AssignTariffSeller: RequestHandler = async (req, res, next) => {
     try {
-      const TariffSellerModel = await getModel<ITariffSeller>("TariffSeller", TariffSellerSchema);
+      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
+        throw new Error("Invalid Token");
+
+      const TariffSellerModel = await getModel<ITariffSeller>(
+        "TariffSeller",
+        TariffSellerSchema
+      );
       const sellerId: string = req.params.sellerid;
       const tariffIds = (req.body as { TariffIds: string[] }).TariffIds;
       await TariffSellerModel.deleteMany({
@@ -110,7 +135,13 @@ class TariffSellerController {
     next
   ) => {
     try {
-      const TariffSellerModel = await getModel<ITariffSeller>("TariffSeller", TariffSellerSchema);
+      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
+        throw new Error("Invalid Token");
+
+      const TariffSellerModel = await getModel<ITariffSeller>(
+        "TariffSeller",
+        TariffSellerSchema
+      );
       const id: string = req.params.sellerid;
       const result = await TariffSellerModel.deleteMany({
         SellerId: new Types.ObjectId(id),
@@ -122,7 +153,13 @@ class TariffSellerController {
   };
   static ChangeStatusTariffSeller: RequestHandler = async (req, res, next) => {
     try {
-      const TariffSellerModel = await getModel<ITariffSeller>("TariffSeller", TariffSellerSchema);
+      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
+        throw new Error("Invalid Token");
+
+      const TariffSellerModel = await getModel<ITariffSeller>(
+        "TariffSeller",
+        TariffSellerSchema
+      );
       const _id = new Types.ObjectId(req.params.id);
       const tariffSeller = await TariffSellerModel.findOne({ _id: _id });
       if (tariffSeller) {

@@ -4,10 +4,14 @@ import { ISeller, SellerSchema } from "../models/Seller";
 import { ITariff, TariffSchema } from "../models/Tariff";
 import { ITariffSeller, TariffSellerSchema } from "../models/TariffSeller";
 import { getModel } from "../utils/MongooseModel";
+import AccountHelpers from "../utils/AccountHelpers";
 
 class TariffController {
   static GetTariffList: RequestHandler = async (req, res, next) => {
     try {
+      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
+        throw new Error("Invalid Token");
+
       const TariffModel = await getModel<ITariff>("Tariff", TariffSchema);
       const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
       const TariffSellerModel = await getModel<ITariffSeller>(
@@ -51,6 +55,9 @@ class TariffController {
 
   static AddTariff: RequestHandler = async (req, res, next) => {
     try {
+      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
+        throw new Error("Invalid Token");
+
       const { Title, DataLimit, Duration, Price, IsFree, IsVisible } =
         req.body as {
           Title: string | undefined;
@@ -94,6 +101,9 @@ class TariffController {
 
   static DisableTariff: RequestHandler = async (req, res, next) => {
     try {
+      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
+        throw new Error("Invalid Token");
+
       const _id = new Types.ObjectId(req.params.id);
       const TariffModel = await getModel<ITariff>("Tariff", TariffSchema);
       const tariff = await TariffModel.findOne({ _id: _id });
@@ -111,6 +121,9 @@ class TariffController {
 
   static FreeChanged: RequestHandler = async (req, res, next) => {
     try {
+      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
+        throw new Error("Invalid Token");
+
       const _id = new Types.ObjectId(req.params.id);
       const TariffModel = await getModel<ITariff>("Tariff", TariffSchema);
       const tariff = await TariffModel.findOne({ _id: _id });

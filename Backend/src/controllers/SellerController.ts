@@ -9,28 +9,27 @@ import { getModel } from "../utils/MongooseModel";
 class SellerController {
   static GetSellerList: RequestHandler = async (req, res, next) => {
     try {
-      if (await AccountHelpers.CheckToken(req.headers.authorization)) {
-        const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
-        const result = await SellerModel.find();
+      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
+        throw new Error("Invalid Token");
 
-        const customSellers = await Promise.all(
-          result.map(async (seller) => {
-            const totalUnpaid = await AccountHelpers.GetTotalUnpaid(
-              seller,
-              false
-            );
+      const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
+      const result = await SellerModel.find();
 
-            return {
-              ...seller.toObject(), // Convert mongoose doc to plain object
-              TotalPrice: totalUnpaid.TotalPriceUnpaid,
-            };
-          })
-        );
+      const customSellers = await Promise.all(
+        result.map(async (seller) => {
+          const totalUnpaid = await AccountHelpers.GetTotalUnpaid(
+            seller,
+            false
+          );
 
-        res.status(200).json(customSellers);
-        return;
-      }
-      res.status(404).json("Invalid Token");
+          return {
+            ...seller.toObject(), // Convert mongoose doc to plain object
+            TotalPrice: totalUnpaid.TotalPriceUnpaid,
+          };
+        })
+      );
+
+      res.status(200).json(customSellers);
     } catch (error) {
       next(error);
     }
@@ -39,6 +38,9 @@ class SellerController {
   static GetSeller: RequestHandler = async (req, res, next) => {
     try {
       const id: string = req.params.id;
+      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
+        throw new Error("Invalid Token");
+
       const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
       const seller = await SellerModel.findOne({ _id: new Types.ObjectId(id) });
       if (!seller) throw new Error("Seller not found!");
@@ -174,10 +176,14 @@ class SellerController {
       if (Password) updateFields.Password = Password;
       if (MarzbanUsername) updateFields.MarzbanUsername = MarzbanUsername;
       if (MarzbanPassword) updateFields.MarzbanPassword = MarzbanPassword;
-      const updatedSeller = await SellerModel.findByIdAndUpdate(id, updateFields, {
-        new: true,
-        runValidators: true,
-      });
+      const updatedSeller = await SellerModel.findByIdAndUpdate(
+        id,
+        updateFields,
+        {
+          new: true,
+          runValidators: true,
+        }
+      );
       if (!updatedSeller) {
         return res.status(404).json({ error: "Seller Not Found" });
       }
@@ -196,7 +202,9 @@ class SellerController {
       if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
         throw new Error("Invalid Token");
       const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
-      const result = await SellerModel.deleteOne({ _id: new Types.ObjectId(id) });
+      const result = await SellerModel.deleteOne({
+        _id: new Types.ObjectId(id),
+      });
       res.status(200).json(result);
     } catch (error) {
       next(error);
@@ -205,6 +213,9 @@ class SellerController {
 
   static DisableSeller: RequestHandler = async (req, res, next) => {
     try {
+      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
+        throw new Error("Invalid Token");
+
       const _id = new Types.ObjectId(req.params.id);
       const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
       const seller = await SellerModel.findOne({ _id: _id });

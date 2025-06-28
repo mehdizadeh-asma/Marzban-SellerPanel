@@ -2,10 +2,14 @@ import { RequestHandler } from "express";
 import { Types } from "mongoose";
 import { getModel } from "../utils/MongooseModel";
 import { IAccount, AccountSchema } from "../models/Account";
+import AccountHelpers from "../utils/AccountHelpers";
 
 class AccountController {
   static GetAccountList: RequestHandler = async (req, res, next) => {
     try {
+      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
+        throw new Error("Invalid Token");
+
       const AccountModel = await getModel<IAccount>("Account", AccountSchema);
       const result = await AccountModel.find();
       res.status(200).json(result);
@@ -16,9 +20,14 @@ class AccountController {
 
   static GetAccount: RequestHandler = async (req, res, next) => {
     try {
+      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
+        throw new Error("Invalid Token");
+
       const AccountModel = await getModel<IAccount>("Account", AccountSchema);
       const id: string = req.params.id;
-      const account = await AccountModel.findOne({ _id: new Types.ObjectId(id) });
+      const account = await AccountModel.findOne({
+        _id: new Types.ObjectId(id),
+      });
       if (!account) throw new Error("Account not found!");
       res.status(200).json(account);
     } catch (error) {
@@ -28,6 +37,9 @@ class AccountController {
 
   static AddAccount: RequestHandler = async (req, res, next) => {
     try {
+      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
+        throw new Error("Invalid Token");
+
       const AccountModel = await getModel<IAccount>("Account", AccountSchema);
       const { Username, TariffID, SellerID } = req.body as {
         Username: string | undefined;
@@ -48,9 +60,14 @@ class AccountController {
 
   static RemoveAccount: RequestHandler = async (req, res, next) => {
     try {
+      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
+        throw new Error("Invalid Token");
+
       const AccountModel = await getModel<IAccount>("Account", AccountSchema);
       const id: string = req.params.id;
-      const result = await AccountModel.deleteOne({ _id: new Types.ObjectId(id) });
+      const result = await AccountModel.deleteOne({
+        _id: new Types.ObjectId(id),
+      });
       res.status(200).json(result);
     } catch (error) {
       next(error);
@@ -59,6 +76,9 @@ class AccountController {
 
   static PayAccounts: RequestHandler = async (req, res, next) => {
     try {
+      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
+        throw new Error("Invalid Token");
+
       const AccountModel = await getModel<IAccount>("Account", AccountSchema);
       const accountIds = req.body as string[];
       for (const id of accountIds) {
@@ -79,6 +99,9 @@ class AccountController {
 
   static PayAccount: RequestHandler = async (req, res, next) => {
     try {
+      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
+        throw new Error("Invalid Token");
+
       const AccountModel = await getModel<IAccount>("Account", AccountSchema);
       const id: string = req.params.id;
       const account = await AccountModel.findOne({

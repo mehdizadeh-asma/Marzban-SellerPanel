@@ -11,6 +11,9 @@ class TariffInboundController {
     next
   ) => {
     try {
+      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
+        throw new Error("Invalid Token");
+
       const TariffInboundModel = await getModel<ITariffInbound>(
         "TariffInbound",
         TariffInboundSchema
@@ -53,6 +56,9 @@ class TariffInboundController {
 
   static AssignTariffInbound: RequestHandler = async (req, res, next) => {
     try {
+      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
+        throw new Error("Invalid Token");
+
       const TariffInboundModel = await getModel<ITariffInbound>(
         "TariffInbound",
         TariffInboundSchema
