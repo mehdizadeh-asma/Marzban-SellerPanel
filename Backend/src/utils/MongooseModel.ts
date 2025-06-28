@@ -1,4 +1,4 @@
-import Mongoose from "./Mongoose";
+import Mongoose from "./MongooseDbManagement";
 import { Schema, Model, Connection, Document } from "mongoose";
 
 export async function getModel<T extends Document>(

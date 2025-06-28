@@ -26,7 +26,9 @@ const DEFAULT_CONNECTION_OPTIONS: ConnectOptions = {
   waitQueueTimeoutMS: 5000,
   maxIdleTimeMS: 30000,
 };
-
+interface ConnectionWithClient extends Connection {
+  client?: { s?: { url?: string } };
+}
 class MongooseDbManagement {
   private static readonly BASE_CONNECTION_STRING =
     "mongodb+srv://##USERNAME##:##PASSWORD##@##CLUSTER##.mongodb.net/##DB##?retryWrites=true&w=majority";
@@ -63,7 +65,12 @@ class MongooseDbManagement {
           const lastUsed = this.connectionLastUsedMap.get(connection) || 0;
           const isIdle = now - lastUsed > maxIdleTime;
 
-          const isMain = this.mainConnection && (this.mainConnection as any).client?.s?.url === connectionString;
+          // Define a type for connections with optional client property
+
+          const isMain =
+            this.mainConnection &&
+            (this.mainConnection as ConnectionWithClient).client?.s?.url ===
+              connectionString;
           if (connection.readyState === 1 && isIdle && !isMain) {
             console.log(`Closing idle connection: ${connectionString}`);
             await this.closeConnection(connectionString);
@@ -194,16 +201,83 @@ class MongooseDbManagement {
     );
   }
 
+  // متد کمکی: اطمینان از اتصال سالم و تلاش مجدد در صورت قطع بودن
+  static async ensureMainConnection(
+    retries = 3,
+    delayMs = 2000
+  ): Promise<Connection> {
+    let lastError: unknown = null;
+    for (let i = 0; i < retries; i++) {
+      const connectionString = this.getDbWholeSalerConnectionString();
+      console.log(
+        `[DB DEBUG] [ensureMainConnection] Try #${i + 1} - connectionString:`,
+        connectionString
+      );
+      if (!connectionString) {
+        console.error("[DB DEBUG] connectionString is empty/null!");
+        throw new Error("WholeSaler connection string not configured");
+      }
+      if (!this.mainConnection || this.mainConnection.readyState !== 1) {
+        try {
+          console.log(
+            `[DB DEBUG] [ensureMainConnection] mainConnection is null or not ready. Calling connectMainDatabase...`
+          );
+          await this.connectMainDatabase();
+          if (this.mainConnection && this.mainConnection.readyState === 1) {
+            console.log(
+              `[DB DEBUG] [ensureMainConnection] mainConnection is now ready!`
+            );
+            return this.mainConnection;
+          } else {
+            console.warn(
+              `[DB DEBUG] [ensureMainConnection] mainConnection still not ready after connectMainDatabase. State:`,
+              this.mainConnection?.readyState
+            );
+          }
+        } catch (e) {
+          lastError = e;
+          console.error(
+            `[DB DEBUG] [ensureMainConnection] Error on try #${i + 1}:`,
+            e
+          );
+          // پاک‌سازی mainConnection در صورت خطا
+          this.mainConnection = null;
+          await new Promise((res) => setTimeout(res, delayMs));
+        }
+      } else {
+        console.log(
+          `[DB DEBUG] [ensureMainConnection] mainConnection already ready!`
+        );
+        return this.mainConnection;
+      }
+    }
+    console.error(
+      `[DB DEBUG] [ensureMainConnection] All retries failed. Last error:`,
+      lastError
+    );
+    throw (
+      lastError || new Error("Failed to establish main database connection")
+    );
+  }
+
+  // نسخه امن برای گرفتن اتصال اصلی (همیشه سالم)
+  static async getMainConnectionSafe(): Promise<Connection> {
+    return await this.ensureMainConnection();
+  }
+
   static getMainConnection(): Connection | null {
     return this.mainConnection;
   }
 
   // بستن اتصال
   static async closeConnection(connectionString: string): Promise<void> {
-    // جلوگیری از بستن mainConnection
+    const mainConn = this.mainConnection as ConnectionWithClient;
+
     if (
-      this.mainConnection &&
-      ((this.mainConnection as any).client?.s?.url === connectionString)
+      mainConn &&
+      mainConn.client &&
+      typeof mainConn.client.s?.url === "string" &&
+      mainConn.client.s.url === connectionString
     ) {
       console.log("Skip closing mainConnection");
       return;

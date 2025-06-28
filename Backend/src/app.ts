@@ -12,7 +12,7 @@ import tariffSellerRouter from "./routes/TariffSellerRouter";
 import tariffInboundRouter from "./routes/TariffInboundRouter";
 
 import Certificate from "./utils/Certificate";
-import MongooseDbManagement from "./utils/Mongoose";
+import MongooseDbManagement from "./utils/MongooseDbManagement";
 
 const app = express();
 
@@ -50,7 +50,9 @@ app.use("/api", tariffInboundRouter);
 app.get("/health", (req: Request, res: Response) => {
   res.status(200).json({
     status: "UP",
-    dbConnection: MongooseDbManagement.getMainConnection() ? "CONNECTED" : "DISCONNECTED",
+    dbConnection: MongooseDbManagement.getMainConnection()
+      ? "CONNECTED"
+      : "DISCONNECTED",
     timestamp: new Date().toISOString(),
   });
 });
