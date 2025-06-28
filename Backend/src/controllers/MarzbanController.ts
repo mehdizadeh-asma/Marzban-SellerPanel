@@ -3,7 +3,7 @@ import { Types } from "mongoose";
 import axios from "axios";
 
 import ConfigFile from "../utils/Config";
-import MongooseDbManagement from "../utils/Mongoose";
+import MongooseDbManagement from "../utils/MongooseDbManagement";
 import { getModel } from "../utils/MongooseModel";
 
 import AccountHelpers from "../utils/AccountHelpers";
@@ -60,7 +60,7 @@ class MarzbanController {
       }
 
       //Login Seller
-      const SellerModel =await getModel<ISeller>("Seller", SellerSchema);
+      const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
       const seller = await SellerModel.findOne({
         Username: username,
         Password: password,
@@ -73,6 +73,13 @@ class MarzbanController {
             seller.MarzbanUsername,
             seller.MarzbanPassword
           );
+
+          // فقط جمعه‌ها اجرا شود
+          if (new Date().getDay() === 5)
+            await AccountHelpers.RemoveDeletedAccountSeller(
+              `Bearer ${token}`,
+              seller
+            );
 
           const totalUnpaid = await AccountHelpers.GetTotalUnpaid(
             seller,
@@ -326,8 +333,12 @@ class MarzbanController {
       );
       const AccountModel = await getModel<IAccount>("Account", AccountSchema);
       const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
-      const account = await AccountModel.findOne({ Username: req.params.username });
-      const seller = account ? await SellerModel.findOne({ _id: account.Seller }) : null;
+      const account = await AccountModel.findOne({
+        Username: req.params.username,
+      });
+      const seller = account
+        ? await SellerModel.findOne({ _id: account.Seller })
+        : null;
       if (seller) delete AccountHelpers.MarzbanAccountsList[seller.Title];
       delete AccountHelpers.MarzbanAccountsList[
         await ConfigFile.GetSellerAdminUsername()
@@ -354,8 +365,12 @@ class MarzbanController {
       );
       const AccountModel = await getModel<IAccount>("Account", AccountSchema);
       const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
-      const account = await AccountModel.findOne({ Username: req.params.username });
-      const seller = account ? await SellerModel.findOne({ _id: account.Seller }) : null;
+      const account = await AccountModel.findOne({
+        Username: req.params.username,
+      });
+      const seller = account
+        ? await SellerModel.findOne({ _id: account.Seller })
+        : null;
       if (seller) delete AccountHelpers.MarzbanAccountsList[seller.Title];
       delete AccountHelpers.MarzbanAccountsList[
         await ConfigFile.GetSellerAdminUsername()
@@ -490,7 +505,9 @@ class MarzbanController {
           Username: req.params.username,
           Payed: false,
         });
-        const seller = account ? await SellerModel.findOne({ _id: account.Seller }) : null;
+        const seller = account
+          ? await SellerModel.findOne({ _id: account.Seller })
+          : null;
         if (seller) delete AccountHelpers.MarzbanAccountsList[seller.Title];
         delete AccountHelpers.MarzbanAccountsList[
           await ConfigFile.GetSellerAdminUsername()

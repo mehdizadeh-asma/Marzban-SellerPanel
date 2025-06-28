@@ -47,8 +47,13 @@ class AccountHelpers {
   ) => {
     const vlessUUID = uuidv4();
     const vmessUUID = uuidv4();
-    const TariffInboundModel = await getModel<ITariffInbound>("TariffInbound", TariffInboundSchema);
-    const tariffInbounds = await TariffInboundModel.find({ TariffId: tariff._id });
+    const TariffInboundModel = await getModel<ITariffInbound>(
+      "TariffInbound",
+      TariffInboundSchema
+    );
+    const tariffInbounds = await TariffInboundModel.find({
+      TariffId: tariff._id,
+    });
 
     const getInbound = await AccountHelpers.GetInbounds(authorization);
 
@@ -190,7 +195,7 @@ class AccountHelpers {
     const config = {
       headers: { Authorization: authorization },
       params: params,
-      timeout: 120000,
+      timeout: 600000, // افزایش به ۱۰ دقیقه
     };
 
     return axios.get(apiURL, config);
@@ -224,6 +229,39 @@ class AccountHelpers {
     const AccountModel = await getModel<IAccount>("Account", AccountSchema);
     const accounts = await AccountModel.find(condition);
     return accounts;
+  };
+
+  static RemoveDeletedAccountSeller = async (
+    authorization: string | undefined,
+    seller: Document | undefined
+  ) => {
+    if (seller) {
+      const resultMarzban = await AccountHelpers.GetMarzbanAccounts(
+        authorization,
+        String(seller.get("Title"))
+      );
+      const sellerUsers = (resultMarzban.data as { users: MarzbanAccount[] })
+        .users;
+      const marzbanUsernames = new Set(
+        sellerUsers.map((user) => user.username)
+      );
+
+      const AccountModel = await getModel<IAccount>("Account", AccountSchema);
+      const sellerAccounts = await AccountModel.find({
+        Seller: seller,
+        Payed: true,
+      });
+
+      // پیدا کردن اکانت‌هایی که در مرزبان نیستند
+      const accountsToDelete = sellerAccounts.filter(
+        (acc) => !marzbanUsernames.has(acc.Username)
+      );
+
+      // حذف اکانت‌ها
+      await AccountModel.deleteMany({
+        _id: { $in: accountsToDelete.map((acc) => acc._id) },
+      });
+    }
   };
 
   static GetTotalUnpaid = async (
