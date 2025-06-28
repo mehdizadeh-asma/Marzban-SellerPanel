@@ -1,6 +1,6 @@
 {
   "name": "marzban-seller-panel",
-  "version": "2.3.8",
+  "version": "2.3.11",
   "description": "Marzban Seller Panel",
   "main": "app.js",
   "scripts": {
