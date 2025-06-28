@@ -1,8 +1,8 @@
 import { RequestHandler } from "express";
 import { Types } from "mongoose";
-
-import TariffSeller from "../models/TariffSeller";
-import Tariff from "../models/Tariff";
+import { getModel } from "../utils/MongooseModel";
+import { ITariffSeller, TariffSellerSchema } from "../models/TariffSeller";
+import { ITariff, TariffSchema } from "../models/Tariff";
 
 class TariffSellerController {
   static GetTariffSellerListBySellerId: RequestHandler = async (
@@ -11,8 +11,10 @@ class TariffSellerController {
     next
   ) => {
     try {
+      const TariffSellerModel = await getModel<ITariffSeller>("TariffSeller", TariffSellerSchema);
+      const TariffModel = await getModel<ITariff>("Tariff", TariffSchema);
       const sellerId: string = req.params.sellerId;
-      const sellerTariffs = await TariffSeller.find({
+      const sellerTariffs = await TariffSellerModel.find({
         SellerId: new Types.ObjectId(sellerId),
       });
       const sellerTariffIds = new Set(
@@ -22,9 +24,7 @@ class TariffSellerController {
             : ts.TariffId
         )
       );
-
-      const allTariffs = await Tariff.find();
-
+      const allTariffs = await TariffModel.find();
       const tariffList = [
         ...allTariffs
           .filter((tariff) =>
@@ -48,7 +48,6 @@ class TariffSellerController {
             Price: tariff.Price,
           })),
       ];
-
       res.status(200).json(tariffList);
     } catch (error) {
       next(error);
@@ -56,31 +55,28 @@ class TariffSellerController {
   };
   static GetTariffSeller: RequestHandler = async (req, res, next) => {
     try {
+      const TariffSellerModel = await getModel<ITariffSeller>("TariffSeller", TariffSellerSchema);
       const id: string = req.params.id;
-
-      const tariffSeller = await TariffSeller.findOne({
+      const tariffSeller = await TariffSellerModel.findOne({
         _id: new Types.ObjectId(id),
       });
-
       if (!tariffSeller) throw new Error("The Seller's Packages not found!");
-
       res.status(200).json(tariffSeller);
     } catch (error) {
       next(error);
     }
   };
-
   static AddTariffSeller: RequestHandler = async (req, res, next) => {
     try {
+      const TariffSellerModel = await getModel<ITariffSeller>("TariffSeller", TariffSellerSchema);
       const { TariffID, SellerID } = req.body as {
         TariffID: string | undefined;
         SellerID: string | undefined;
       };
-      const tariffSeller = new TariffSeller({
+      const tariffSeller = new TariffSellerModel({
         TariffId: new Types.ObjectId(TariffID),
-        Seller: new Types.ObjectId(SellerID),
+        SellerId: new Types.ObjectId(SellerID),
       });
-
       const result = await tariffSeller.save();
       res.status(200).json(result);
     } catch (error) {
@@ -89,19 +85,17 @@ class TariffSellerController {
   };
   static AssignTariffSeller: RequestHandler = async (req, res, next) => {
     try {
+      const TariffSellerModel = await getModel<ITariffSeller>("TariffSeller", TariffSellerSchema);
       const sellerId: string = req.params.sellerid;
       const tariffIds = (req.body as { TariffIds: string[] }).TariffIds;
-
-      await TariffSeller.deleteMany({
+      await TariffSellerModel.deleteMany({
         SellerId: new Types.ObjectId(sellerId),
       });
-
       const newEntries = tariffIds.map((tariffId) => ({
         SellerId: new Types.ObjectId(sellerId),
         TariffId: new Types.ObjectId(tariffId),
       }));
-      const result = await TariffSeller.insertMany(newEntries);
-
+      const result = await TariffSellerModel.insertMany(newEntries);
       res.status(200).json({
         message: "Tariffs successfully assigned to seller.",
         result,
@@ -116,12 +110,11 @@ class TariffSellerController {
     next
   ) => {
     try {
+      const TariffSellerModel = await getModel<ITariffSeller>("TariffSeller", TariffSellerSchema);
       const id: string = req.params.sellerid;
-
-      const result = await TariffSeller.deleteMany({
+      const result = await TariffSellerModel.deleteMany({
         SellerId: new Types.ObjectId(id),
       });
-
       res.status(200).json(result);
     } catch (error) {
       next(error);
@@ -129,16 +122,13 @@ class TariffSellerController {
   };
   static ChangeStatusTariffSeller: RequestHandler = async (req, res, next) => {
     try {
+      const TariffSellerModel = await getModel<ITariffSeller>("TariffSeller", TariffSellerSchema);
       const _id = new Types.ObjectId(req.params.id);
-
-      const tariffSeller = await TariffSeller.findOne({ _id: _id });
-
+      const tariffSeller = await TariffSellerModel.findOne({ _id: _id });
       if (tariffSeller) {
         if (tariffSeller.Status == "Active") tariffSeller.Status = "Deactive";
         else tariffSeller.Status = "Active";
-
         await tariffSeller.save();
-
         res.status(200).json({
           result:
             "The Status Changed To" + tariffSeller.Status + " Successfully!",

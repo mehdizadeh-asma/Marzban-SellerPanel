@@ -34,9 +34,3 @@ export const TariffInboundSchema: Schema = new Schema({
     default: "Active",
   },
 });
-
-const TariffInbound = mongoose.model<ITariffInbound>(
-  "TariffInbound",
-  TariffInboundSchema
-);
-export default TariffInbound;

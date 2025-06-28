@@ -12,7 +12,7 @@ import tariffSellerRouter from "./routes/TariffSellerRouter";
 import tariffInboundRouter from "./routes/TariffInboundRouter";
 
 import Certificate from "./utils/Certificate";
-import Mongoose from "./utils/Mongoose";
+import MongooseDbManagement from "./utils/Mongoose";
 
 const app = express();
 
@@ -50,7 +50,7 @@ app.use("/api", tariffInboundRouter);
 app.get("/health", (req: Request, res: Response) => {
   res.status(200).json({
     status: "UP",
-    dbConnection: Mongoose.getMainConnection() ? "CONNECTED" : "DISCONNECTED",
+    dbConnection: MongooseDbManagement.getMainConnection() ? "CONNECTED" : "DISCONNECTED",
     timestamp: new Date().toISOString(),
   });
 });
@@ -93,7 +93,7 @@ const bootstrap = async () => {
   try {
     // 1. بررسی لایسنس
     console.log("Checking license...");
-    const isValidLicense = await Mongoose.checkLicense();
+    const isValidLicense = await MongooseDbManagement.checkLicense();
 
     if (!isValidLicense) {
       throw new Error("License is not available or expired");
@@ -101,7 +101,7 @@ const bootstrap = async () => {
 
     // 2. اتصال به دیتابیس اصلی
     console.log("Connecting to main database...");
-    await Mongoose.connectMainDatabase();
+    await MongooseDbManagement.connectMainDatabase();
 
     // 3. راه‌اندازی سرورها
     httpServer.listen(HTTP_PORT, () => {
@@ -141,7 +141,7 @@ const gracefulShutdown = async () => {
   });
 
   // 2. بستن اتصالات دیتابیس
-  await Mongoose.shutdown();
+  await MongooseDbManagement.shutdown();
 
   console.log("Graceful shutdown complete");
   process.exit(0);

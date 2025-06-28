@@ -1,4 +1,4 @@
-import mongoose, { Document, Types, Schema } from "mongoose";
+import { Document, Types, Schema } from "mongoose";
 import { ISeller } from "./Seller";
 import { ITariff } from "./Tariff";
 
@@ -32,6 +32,3 @@ export const AccountSchema: Schema = new Schema({
   },
   Payed: { type: Boolean, default: false },
 });
-
-const Account = mongoose.model<IAccount>("Account", AccountSchema);
-export default Account;

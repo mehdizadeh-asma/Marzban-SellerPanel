@@ -1,39 +1,41 @@
 import { RequestHandler } from "express";
-import Tariff from "../models/Tariff";
 import { Types } from "mongoose";
-import Seller from "../models/Seller";
-import TariffSeller from "../models/TariffSeller";
+import { ISeller, SellerSchema } from "../models/Seller";
+import { ITariff, TariffSchema } from "../models/Tariff";
+import { ITariffSeller, TariffSellerSchema } from "../models/TariffSeller";
+import { getModel } from "../utils/MongooseModel";
 
 class TariffController {
   static GetTariffList: RequestHandler = async (req, res, next) => {
     try {
+      const TariffModel = await getModel<ITariff>("Tariff", TariffSchema);
+      const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
+      const TariffSellerModel = await getModel<ITariffSeller>(
+        "TariffSeller",
+        TariffSellerSchema
+      );
       if (req.params.isall === "false") {
         if (!req.params.title) {
           res.status(404).json({ result: "Seller Not Found!" });
           return;
         }
-
-        const seller = await Seller.findOne({ Title: req.params.title });
-
+        const seller = await SellerModel.findOne({ Title: req.params.title });
         if (!seller) {
           res.status(404).json({ result: "Seller Not Found!" });
           return;
         }
-
-        const tariffSellers = await TariffSeller.find({
+        const tariffSellers = await TariffSellerModel.find({
           SellerId: seller._id,
         });
-
         const tariffIds = tariffSellers.map((entry) => entry.TariffId);
-
         const condition = { _id: { $in: tariffIds }, IsVisible: true };
-        const result = await Tariff.find(condition); //.sort({ Title: "asc" });
-
+        const result = await TariffModel.find(condition); //.sort({ Title: "asc" });
         res.status(200).json(result);
         return;
+      } else {
+        const result = await TariffModel.find();
+        res.status(200).json(result);
       }
-      const result = await Tariff.find();
-      res.status(200).json(result);
     } catch (error) {
       next(error);
     }
@@ -58,7 +60,8 @@ class TariffController {
           IsFree: boolean | undefined;
           IsVisible: boolean | undefined;
         };
-      const tariff = new Tariff({
+      const TariffModel = await getModel<ITariff>("Tariff", TariffSchema);
+      const tariff = new TariffModel({
         Title: Title,
         DataLimit: DataLimit,
         Duration: Duration,
@@ -66,7 +69,6 @@ class TariffController {
         IsFree: IsFree,
         IsVisible: IsVisible,
       });
-
       const result = await tariff.save();
       res.status(200).json(result);
     } catch (error) {
@@ -93,14 +95,14 @@ class TariffController {
   static DisableTariff: RequestHandler = async (req, res, next) => {
     try {
       const _id = new Types.ObjectId(req.params.id);
-
-      const tariff = await Tariff.findOne({ _id: _id });
-
+      const TariffModel = await getModel<ITariff>("Tariff", TariffSchema);
+      const tariff = await TariffModel.findOne({ _id: _id });
       if (tariff) {
         tariff.IsVisible = !tariff.IsVisible;
         await tariff.save();
-
         res.status(200).json({ result: "Tariff Changed!" });
+      } else {
+        res.status(404).json({ result: "Tariff Not Found!" });
       }
     } catch (error) {
       next(error);
@@ -110,14 +112,14 @@ class TariffController {
   static FreeChanged: RequestHandler = async (req, res, next) => {
     try {
       const _id = new Types.ObjectId(req.params.id);
-
-      const tariff = await Tariff.findOne({ _id: _id });
-
+      const TariffModel = await getModel<ITariff>("Tariff", TariffSchema);
+      const tariff = await TariffModel.findOne({ _id: _id });
       if (tariff) {
         tariff.IsFree = !tariff.IsFree;
         await tariff.save();
-
         res.status(200).json({ result: "Tariff Changed!" });
+      } else {
+        res.status(404).json({ result: "Tariff Not Found!" });
       }
     } catch (error) {
       next(error);

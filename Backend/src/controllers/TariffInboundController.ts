@@ -1,7 +1,7 @@
 import { RequestHandler } from "express";
 import { Types } from "mongoose";
-
-import TariffInbound, { ITariffInbound } from "../models/TariffInbound";
+import { getModel } from "../utils/MongooseModel";
+import { ITariffInbound, TariffInboundSchema } from "../models/TariffInbound";
 import AccountHelpers from "../utils/AccountHelpers";
 
 class TariffInboundController {
@@ -11,20 +11,20 @@ class TariffInboundController {
     next
   ) => {
     try {
+      const TariffInboundModel = await getModel<ITariffInbound>(
+        "TariffInbound",
+        TariffInboundSchema
+      );
       const tariffId: string = req.params.tariffId;
-
-      const tariffInbounds = await TariffInbound.find({
+      const tariffInbounds = await TariffInboundModel.find({
         TariffId: new Types.ObjectId(tariffId),
       });
-
       const tariffInboundTags = new Set(
         tariffInbounds.map((ts) => ts.InboundTag?.toString())
       );
-
       const allInbound = await AccountHelpers.GetInbounds(
         req.headers.authorization
       );
-
       const FinalList = [
         ...allInbound
           .filter((inbound) =>
@@ -45,7 +45,6 @@ class TariffInboundController {
             TariffId: "",
           })),
       ];
-
       res.status(200).json(FinalList);
     } catch (error) {
       next(error);
@@ -54,19 +53,21 @@ class TariffInboundController {
 
   static AssignTariffInbound: RequestHandler = async (req, res, next) => {
     try {
+      const TariffInboundModel = await getModel<ITariffInbound>(
+        "TariffInbound",
+        TariffInboundSchema
+      );
       const tariffId = req.params.tariffid;
       const InboundList = req.body as ITariffInbound[];
-      await TariffInbound.deleteMany({
+      await TariffInboundModel.deleteMany({
         TariffId: new Types.ObjectId(tariffId),
       });
-
       const newEntries = InboundList.map((inbound: ITariffInbound) => ({
         TariffId: new Types.ObjectId(tariffId),
         InboundTag: inbound.InboundTag,
         InboundType: inbound.InboundType,
       }));
-      const result = await TariffInbound.insertMany(newEntries);
-
+      const result = await TariffInboundModel.insertMany(newEntries);
       res.status(200).json({
         message: "Inbounds successfully assigned to Package.",
         result,

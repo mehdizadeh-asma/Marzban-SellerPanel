@@ -27,7 +27,7 @@ const DEFAULT_CONNECTION_OPTIONS: ConnectOptions = {
   maxIdleTimeMS: 30000,
 };
 
-class Mongoose {
+class MongooseDbManagement {
   private static readonly BASE_CONNECTION_STRING =
     "mongodb+srv://##USERNAME##:##PASSWORD##@##CLUSTER##.mongodb.net/##DB##?retryWrites=true&w=majority";
 
@@ -63,7 +63,8 @@ class Mongoose {
           const lastUsed = this.connectionLastUsedMap.get(connection) || 0;
           const isIdle = now - lastUsed > maxIdleTime;
 
-          if (connection.readyState === 1 && isIdle) {
+          const isMain = this.mainConnection && (this.mainConnection as any).client?.s?.url === connectionString;
+          if (connection.readyState === 1 && isIdle && !isMain) {
             console.log(`Closing idle connection: ${connectionString}`);
             await this.closeConnection(connectionString);
           }
@@ -86,7 +87,19 @@ class Mongoose {
 
   // اتصال به دیتابیس اصلی
   static async connectMainDatabase(): Promise<void> {
-    if (this.mainConnection) return;
+    // اگر mainConnection وجود دارد اما قطع شده است، آن را ببند و دوباره کانکت کن
+    if (this.mainConnection) {
+      if (this.mainConnection.readyState !== 1) {
+        try {
+          await this.mainConnection.close();
+        } catch (e) {
+          console.warn("Error closing stale mainConnection:", e);
+        }
+        this.mainConnection = null;
+      } else {
+        return;
+      }
+    }
 
     const connectionString = this.getDbWholeSalerConnectionString();
     if (!connectionString) {
@@ -187,6 +200,15 @@ class Mongoose {
 
   // بستن اتصال
   static async closeConnection(connectionString: string): Promise<void> {
+    // جلوگیری از بستن mainConnection
+    if (
+      this.mainConnection &&
+      ((this.mainConnection as any).client?.s?.url === connectionString)
+    ) {
+      console.log("Skip closing mainConnection");
+      return;
+    }
+
     const connection = this.activeConnections.get(connectionString);
     if (!connection) return;
 
@@ -415,4 +437,4 @@ class Mongoose {
   }
 }
 
-export default Mongoose;
+export default MongooseDbManagement;

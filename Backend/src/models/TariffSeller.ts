@@ -1,4 +1,4 @@
-import mongoose, { Document, Types, Schema } from "mongoose";
+import { Document, Types, Schema } from "mongoose";
 import { ITariff } from "./Tariff";
 import { ISeller } from "./Seller";
 
@@ -31,9 +31,3 @@ export const TariffSellerSchema: Schema = new Schema({
     default: "Active",
   },
 });
-
-const TariffSeller = mongoose.model<ITariffSeller>(
-  "TariffSeller",
-  TariffSellerSchema
-);
-export default TariffSeller;

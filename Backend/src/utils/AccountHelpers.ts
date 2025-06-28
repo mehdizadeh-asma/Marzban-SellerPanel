@@ -3,13 +3,13 @@ import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 
 import MarzbanAccount from "../models/MarzbanAccount";
-import Seller, { ISeller } from "../models/Seller";
-import Account, { IAccount } from "../models/Account";
-import Tariff, { ITariff } from "../models/Tariff";
-
+import { ISeller, SellerSchema } from "../models/Seller";
+import { IAccount, AccountSchema } from "../models/Account";
+import { ITariff, TariffSchema } from "../models/Tariff";
 import ConfigFile from "./Config";
 import Helper from "./Helper";
-import TariffInbound from "../models/TariffInbound";
+import { ITariffInbound, TariffInboundSchema } from "../models/TariffInbound";
+import { getModel } from "./MongooseModel";
 
 class AccountHelpers {
   static MarzbanAccountsList: Record<string, MarzbanAccount[]> = {};
@@ -47,8 +47,8 @@ class AccountHelpers {
   ) => {
     const vlessUUID = uuidv4();
     const vmessUUID = uuidv4();
-
-    const tariffInbounds = await TariffInbound.find({ TariffId: tariff._id });
+    const TariffInboundModel = await getModel<ITariffInbound>("TariffInbound", TariffInboundSchema);
+    const tariffInbounds = await TariffInboundModel.find({ TariffId: tariff._id });
 
     const getInbound = await AccountHelpers.GetInbounds(authorization);
 
@@ -211,21 +211,18 @@ class AccountHelpers {
 
   static GetSellerAccounts = async (sellerTitle: string, IsAll: boolean) => {
     const adminUsername = await ConfigFile.GetSellerAdminUsername();
-
     let condition = {};
-
     if (sellerTitle.toLowerCase() !== adminUsername.toLowerCase()) {
-      const seller = await Seller.findOne({ Title: sellerTitle });
+      const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
+      const seller = await SellerModel.findOne({ Title: sellerTitle });
       condition = {
         ...condition,
         Seller: seller?._id,
       };
     }
-
     if (!IsAll) condition = { ...condition, Payed: false };
-
-    const accounts = await Account.find(condition);
-
+    const AccountModel = await getModel<IAccount>("Account", AccountSchema);
+    const accounts = await AccountModel.find(condition);
     return accounts;
   };
 
@@ -235,18 +232,12 @@ class AccountHelpers {
   ) => {
     let totalLimitUnpaid = 0;
     let totalPriceUnpaid = 0;
-
+    const AccountModel = await getModel<IAccount>("Account", AccountSchema);
+    const TariffModel = await getModel<ITariff>("Tariff", TariffSchema);
     const accounts = IsAdmin
-      ? await Account.find({
-          Payed: false,
-        })
-      : await Account.find({
-          Seller: seller,
-          Payed: false,
-        });
-
-    const tariffs = await Tariff.find({ IsFree: false });
-
+      ? await AccountModel.find({ Payed: false })
+      : await AccountModel.find({ Seller: seller, Payed: false });
+    const tariffs = await TariffModel.find({ IsFree: false });
     accounts.map((account) => {
       const tariff = tariffs.find(
         (tariff) => tariff._id.toString() == account.TariffId._id.toString()
@@ -256,7 +247,6 @@ class AccountHelpers {
         totalLimitUnpaid += tariff.DataLimit ?? 0;
       }
     });
-
     return {
       TotalLimitUnpaid: totalLimitUnpaid,
       TotalPriceUnpaid: totalPriceUnpaid,
@@ -332,7 +322,8 @@ class AccountHelpers {
     );
 
     const tariffIds = sellerAccounts.map((item) => item.TariffId);
-    const tariffs = await Tariff.find({ _id: { $in: tariffIds } }).lean();
+    const TariffModel = await getModel<ITariff>("Tariff", TariffSchema);
+    const tariffs = await TariffModel.find({ _id: { $in: tariffIds } }).lean();
     const tariffMap = new Map(
       tariffs.map((tariff) => [tariff._id.toString(), tariff])
     );

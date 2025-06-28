@@ -1,4 +1,4 @@
-import mongoose, { Document, Types, Schema } from "mongoose";
+import { Document, Types, Schema } from "mongoose";
 
 export interface ISeller extends Document {
   _id: Types.ObjectId;
@@ -38,5 +38,4 @@ export const SellerSchema: Schema = new Schema({
   },
 });
 
-const Seller = mongoose.model<ISeller>("Seller", SellerSchema);
-export default Seller;
+// فقط این دو را export کن، مدل را export نکن!

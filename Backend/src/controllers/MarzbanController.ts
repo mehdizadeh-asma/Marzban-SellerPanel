@@ -2,14 +2,15 @@ import { RequestHandler } from "express";
 import { Types } from "mongoose";
 import axios from "axios";
 
-import MarzbanAccount from "../models/MarzbanAccount";
-import Account from "../models/Account";
-import Seller from "../models/Seller";
-import Tariff from "../models/Tariff";
-
 import ConfigFile from "../utils/Config";
-import Mongoose from "../utils/Mongoose";
+import MongooseDbManagement from "../utils/Mongoose";
+import { getModel } from "../utils/MongooseModel";
+
 import AccountHelpers from "../utils/AccountHelpers";
+import MarzbanAccount from "../models/MarzbanAccount";
+import { ISeller, SellerSchema } from "../models/Seller";
+import { ITariff, TariffSchema } from "../models/Tariff";
+import { IAccount, AccountSchema } from "../models/Account";
 
 class MarzbanController {
   static Login: RequestHandler = async (req, res, next) => {
@@ -59,7 +60,8 @@ class MarzbanController {
       }
 
       //Login Seller
-      const seller = await Seller.findOne({
+      const SellerModel =await getModel<ISeller>("Seller", SellerSchema);
+      const seller = await SellerModel.findOne({
         Username: username,
         Password: password,
         Status: "Active",
@@ -183,7 +185,7 @@ class MarzbanController {
 
   static AddAccount: RequestHandler = async (req, res, next) => {
     try {
-      const isValidLicense: boolean = await Mongoose.checkLicense();
+      const isValidLicense: boolean = await MongooseDbManagement.checkLicense();
 
       if (!isValidLicense)
         throw new Error("License is not Available or Expired!");
@@ -206,18 +208,17 @@ class MarzbanController {
         res.status(404).json("TariffId not Found");
         return;
       }
-
-      const seller = await Seller.findOne({ Title: username });
-
+      const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
+      const TariffModel = await getModel<ITariff>("Tariff", TariffSchema);
+      const AccountModel = await getModel<IAccount>("Account", AccountSchema);
+      const seller = await SellerModel.findOne({ Title: username });
       if (!seller) {
         res.status(404).json("Seller not Found");
         return;
       }
-
-      const tariff = await Tariff.findOne({
+      const tariff = await TariffModel.findOne({
         _id: new Types.ObjectId(tariffId),
       });
-
       if (!tariff) {
         res.status(404).json("Tariff not Found");
         return;
@@ -282,7 +283,7 @@ class MarzbanController {
         }
       );
 
-      const account = new Account();
+      const account = new AccountModel();
       account.Username = generateUsername;
       account.Seller = seller;
       account.Tariff = tariff.Title;
@@ -309,42 +310,28 @@ class MarzbanController {
     try {
       const apiURL =
         (await ConfigFile.GetMarzbanURL()) + "/api/user/" + req.params.username;
-
-      const { status } = req.body as {
-        status: string;
-      };
-
+      const { status } = req.body as { status: string };
       if (!req.params.username && req.params.username === "") {
         res.status(404).json("Username not Found");
         return;
       }
-
       const result = await axios.put(
         apiURL,
         {
-          // proxies: {},
-          // inbounds: {},
           status: status,
-          // note: "",
-          // data_limit_reset_strategy: "no_reset",
-          // on_hold_timeout: "",
-          // on_hold_expire_duration: 0,
         },
         {
           headers: { Authorization: req.headers.authorization },
         }
       );
-
-      const account = await Account.findOne({ Username: req.params.username });
-
-      const seller = await Seller.findOne({ _id: account?.Seller });
-
+      const AccountModel = await getModel<IAccount>("Account", AccountSchema);
+      const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
+      const account = await AccountModel.findOne({ Username: req.params.username });
+      const seller = account ? await SellerModel.findOne({ _id: account.Seller }) : null;
       if (seller) delete AccountHelpers.MarzbanAccountsList[seller.Title];
-
       delete AccountHelpers.MarzbanAccountsList[
         await ConfigFile.GetSellerAdminUsername()
       ];
-
       res.status(200).json(result.data);
     } catch (error) {
       next(error);
@@ -355,36 +342,24 @@ class MarzbanController {
     try {
       const apiURL =
         (await ConfigFile.GetMarzbanURL()) + "/api/user/" + req.params.username;
-
-      const { status } = req.body as {
-        status: string;
-      };
-
+      const { status } = req.body as { status: string };
       if (!req.params.username && req.params.username === "") {
         res.status(404).json("Username not Found");
         return;
       }
-
       const result = await axios.put(
         apiURL,
-        {
-          status: status,
-        },
-        {
-          headers: { Authorization: req.headers.authorization },
-        }
+        { status: status },
+        { headers: { Authorization: req.headers.authorization } }
       );
-
-      const account = await Account.findOne({ Username: req.params.username });
-
-      const seller = await Seller.findOne({ _id: account?.Seller });
-
+      const AccountModel = await getModel<IAccount>("Account", AccountSchema);
+      const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
+      const account = await AccountModel.findOne({ Username: req.params.username });
+      const seller = account ? await SellerModel.findOne({ _id: account.Seller }) : null;
       if (seller) delete AccountHelpers.MarzbanAccountsList[seller.Title];
-
       delete AccountHelpers.MarzbanAccountsList[
         await ConfigFile.GetSellerAdminUsername()
       ];
-
       res.status(200).json(result.data);
     } catch (error) {
       next(error);
@@ -393,6 +368,9 @@ class MarzbanController {
 
   static RenewAccount: RequestHandler = async (req, res, next) => {
     try {
+      const AccountModel = await getModel<IAccount>("Account", AccountSchema);
+      const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
+      const TariffModel = await getModel<ITariff>("Tariff", TariffSchema);
       const { tariffId, username } = req.body as {
         tariffId: string;
         username: string;
@@ -408,7 +386,7 @@ class MarzbanController {
         return;
       }
 
-      const tariff = await Tariff.findOne({
+      const tariff = await TariffModel.findOne({
         _id: new Types.ObjectId(tariffId),
       });
 
@@ -417,7 +395,7 @@ class MarzbanController {
         return;
       }
 
-      const seller = await Seller.findOne({ Title: req.params.seller });
+      const seller = await SellerModel.findOne({ Title: req.params.seller });
 
       if (!seller) {
         res.status(404).json("Seller not Found");
@@ -468,7 +446,7 @@ class MarzbanController {
         }
       );
 
-      const account = new Account();
+      const account = new AccountModel();
       account.Username = username;
       account.Seller = seller;
       account.Tariff = tariff.Title;
@@ -506,19 +484,17 @@ class MarzbanController {
           headers: { Authorization: req.headers.authorization },
         });
 
-        const account = await Account.findOneAndDelete({
+        const AccountModel = await getModel<IAccount>("Account", AccountSchema);
+        const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
+        const account = await AccountModel.findOneAndDelete({
           Username: req.params.username,
           Payed: false,
         });
-
-        const seller = await Seller.findOne({ _id: account?.Seller });
-
+        const seller = account ? await SellerModel.findOne({ _id: account.Seller }) : null;
         if (seller) delete AccountHelpers.MarzbanAccountsList[seller.Title];
-
         delete AccountHelpers.MarzbanAccountsList[
           await ConfigFile.GetSellerAdminUsername()
         ];
-
         res.status(200).json({ message: "Delete Success!" });
         // }
       }

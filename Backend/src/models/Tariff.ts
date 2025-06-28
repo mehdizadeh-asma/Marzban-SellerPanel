@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema, Types } from "mongoose";
+import { Document, Schema, Types } from "mongoose";
 
 export interface ITariff extends Document {
   _id: Types.ObjectId;
@@ -18,6 +18,3 @@ export const TariffSchema: Schema = new Schema({
   IsFree: { type: Boolean, default: false },
   IsVisible: { type: Boolean, default: true },
 });
-
-const Tariff = mongoose.model<ITariff>("Tariff", TariffSchema);
-export default Tariff;

@@ -1,6 +1,17 @@
-import mongoose from "mongoose";
+import { Document, Schema } from "mongoose";
 
-export const WholeSalerSchema = new mongoose.Schema({
+export interface IWholeSaler extends Document {
+  Owner: string;
+  MarzbanUrl: string;
+  SN: string;
+  ExpireDate: Date;
+  Cluster: string;
+  Database: string;
+  DbUsername: string;
+  DbPassword: string;
+}
+
+export const WholeSalerSchema = new Schema({
   Owner: { type: String, required: [true, "Owner is required"] },
 
   MarzbanUrl: {

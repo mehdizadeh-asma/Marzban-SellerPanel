@@ -1,12 +1,13 @@
 import { RequestHandler } from "express";
 import { Types } from "mongoose";
-
-import Account from "../models/Account";
+import { getModel } from "../utils/MongooseModel";
+import { IAccount, AccountSchema } from "../models/Account";
 
 class AccountController {
   static GetAccountList: RequestHandler = async (req, res, next) => {
     try {
-      const result = await Account.find();
+      const AccountModel = await getModel<IAccount>("Account", AccountSchema);
+      const result = await AccountModel.find();
       res.status(200).json(result);
     } catch (error) {
       next(error);
@@ -15,12 +16,10 @@ class AccountController {
 
   static GetAccount: RequestHandler = async (req, res, next) => {
     try {
+      const AccountModel = await getModel<IAccount>("Account", AccountSchema);
       const id: string = req.params.id;
-
-      const account = await Account.findOne({ _id: new Types.ObjectId(id) });
-
+      const account = await AccountModel.findOne({ _id: new Types.ObjectId(id) });
       if (!account) throw new Error("Account not found!");
-
       res.status(200).json(account);
     } catch (error) {
       next(error);
@@ -29,17 +28,17 @@ class AccountController {
 
   static AddAccount: RequestHandler = async (req, res, next) => {
     try {
+      const AccountModel = await getModel<IAccount>("Account", AccountSchema);
       const { Username, TariffID, SellerID } = req.body as {
         Username: string | undefined;
         TariffID: string | undefined;
         SellerID: string | undefined;
       };
-      const account = new Account({
+      const account = new AccountModel({
         Username: Username,
         TariffId: new Types.ObjectId(TariffID),
         Seller: new Types.ObjectId(SellerID),
       });
-
       const result = await account.save();
       res.status(200).json(result);
     } catch (error) {
@@ -49,10 +48,9 @@ class AccountController {
 
   static RemoveAccount: RequestHandler = async (req, res, next) => {
     try {
+      const AccountModel = await getModel<IAccount>("Account", AccountSchema);
       const id: string = req.params.id;
-
-      const result = await Account.deleteOne({ _id: new Types.ObjectId(id) });
-
+      const result = await AccountModel.deleteOne({ _id: new Types.ObjectId(id) });
       res.status(200).json(result);
     } catch (error) {
       next(error);
@@ -61,20 +59,18 @@ class AccountController {
 
   static PayAccounts: RequestHandler = async (req, res, next) => {
     try {
+      const AccountModel = await getModel<IAccount>("Account", AccountSchema);
       const accountIds = req.body as string[];
       for (const id of accountIds) {
-        const accounts = await Account.find({
+        const accounts = await AccountModel.find({
           _id: id,
-          // Payed: false,
         });
-
         if (accounts)
           for (const account of accounts) {
             account.Payed = !account.Payed;
             await account.save();
           }
       }
-
       res.status(200).json("Payments Changed Successfully!");
     } catch (error) {
       next(error);
@@ -83,44 +79,19 @@ class AccountController {
 
   static PayAccount: RequestHandler = async (req, res, next) => {
     try {
+      const AccountModel = await getModel<IAccount>("Account", AccountSchema);
       const id: string = req.params.id;
-      const account = await Account.findOne({
+      const account = await AccountModel.findOne({
         _id: id,
-        // Payed: false,
       });
       if (account) {
         account.Payed = !account.Payed;
         await account.save();
       }
-
       res.status(200).json("Payment Changed!");
     } catch (error) {
       next(error);
     }
   };
-
-  // static ConvertTariff: RequestHandler = async (req, res, next) => {
-  //   try {
-  //     let count = 0;
-  //     const tariffs = await Tariff.find();
-  //     const accounts = await Account.find();
-
-  //     if (accounts)
-  //       for (const account of accounts) {
-  //         const tariff = tariffs.find(
-  //           (tariff) => tariff.Title == account.Tariff
-  //         );
-  //         if (tariff && !account.TariffId) {
-  //           account.TariffId = tariff?._id;
-  //           await account.save();
-  //           count++;
-  //         }
-  //       }
-
-  //     res.status(200).json(`${count} Accounts Converted!`);
-  //   } catch (error) {
-  //     next(error);
-  //   }
-  // };
 }
 export default AccountController;
