@@ -27,7 +27,9 @@ const AddAccount = forwardRef<HTMLSelectElement, PropsType>((props, ref) => {
           `api/tariffs/false/${user.Username}`,
           config.BACKEND_URL,
         );
-        const resultTariff = await axios.get(url.toString());
+        const resultTariff = await axios.get(url.toString(), {
+          headers: { Authorization: "Bearer " + user.Token },
+        });
         setTariffList(resultTariff.data);
       } catch (error) {
         console.log(error);
