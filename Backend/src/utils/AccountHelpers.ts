@@ -474,7 +474,7 @@ class AccountHelpers {
             }
             // --- پایان لاگ ---
             return mixed;
-          } catch (err) {
+          } catch {
             return [];
           }
         })
@@ -514,7 +514,7 @@ class AccountHelpers {
           } ms`
         );
         return mixed;
-      } catch (err) {
+      } catch {
         return [];
       }
     }
@@ -587,6 +587,62 @@ class AccountHelpers {
       timeout: 300000, // افزایش به 5 دقیقه
     };
     return axios.get(apiURL, config);
+  };
+
+  static normalizeAccountOutput = (
+    account: unknown
+  ): Record<string, unknown> => {
+    if (typeof account !== "object" || account === null) {
+      return {};
+    }
+    const acc = account as {
+      id?: unknown;
+      _id?: unknown;
+      counter?: unknown;
+      username?: unknown;
+      Username?: unknown;
+      package?: unknown;
+      Tariff?: unknown;
+      price?: unknown;
+      data_limit?: unknown;
+      data_limit_string?: unknown;
+      used_traffic?: unknown;
+      used_traffic_string?: unknown;
+      expire?: unknown;
+      expire_string?: unknown;
+      status?: unknown;
+      subscription_url?: unknown;
+      online?: unknown;
+      online_at?: unknown;
+      sub_updated_at?: unknown;
+      sub_last_user_agent?: unknown;
+      payed?: unknown;
+      Payed?: unknown;
+      note?: unknown;
+    };
+    return {
+      id: acc.id ?? acc._id ?? null,
+      counter: acc.counter ?? null,
+      username: acc.username ?? acc.Username ?? null,
+      package: acc.package ?? acc.Tariff ?? null,
+      price: acc.price ?? null,
+      data_limit: acc.data_limit ?? null,
+      data_limit_string: acc.data_limit_string ?? null,
+      used_traffic: acc.used_traffic ?? null,
+      used_traffic_string: acc.used_traffic_string ?? null,
+      expire: acc.expire ?? null,
+      expire_string: acc.expire_string ?? null,
+      status: acc.status ?? null,
+      subscription_url: acc.subscription_url ?? null,
+      online: acc.online ?? null,
+      online_at: acc.online_at ?? null,
+      sub_updated_at: acc.sub_updated_at ?? null,
+      sub_last_user_agent: acc.sub_last_user_agent ?? null,
+      payed:
+        acc.payed ??
+        (acc.Payed === true ? "Paid" : acc.Payed === false ? "Unpaid" : null),
+      note: acc.note ?? null,
+    };
   };
 }
 

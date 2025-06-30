@@ -5,9 +5,8 @@ import axios from "axios";
 import ConfigFile from "../utils/Config";
 import MongooseDbManagement from "../utils/MongooseDbManagement";
 import { getModel } from "../utils/MongooseModel";
-
-import AccountHelpers from "../utils/AccountHelpers";
 import MarzbanAccount from "../models/MarzbanAccount";
+import AccountHelpers from "../utils/AccountHelpers";
 import { ISeller, SellerSchema } from "../models/Seller";
 import { ITariff, TariffSchema } from "../models/Tariff";
 import { IAccount, AccountSchema } from "../models/Account";
@@ -120,7 +119,10 @@ class MarzbanController {
         sellerSubscriptionUrl,
         isAdmin
       );
-      res.status(200).json({ accounts });
+      const normalized = Array.isArray(accounts)
+        ? accounts.map(AccountHelpers.normalizeAccountOutput)
+        : [];
+      res.status(200).json(normalized);
     } catch (error) {
       next(error);
     }
@@ -129,29 +131,80 @@ class MarzbanController {
   static GetAccount: RequestHandler = async (req, res, next) => {
     try {
       const seller = req.params.seller;
+      const search = req.params.search;
       const sellerSubscriptionUrl = await ConfigFile.GetSubscriptionURL();
-      // استفاده از کش هوشمند برای گرفتن لیست کاربران seller
-      const marzbanAccountsResult =
-        await AccountHelpers.GetMarzbanAccountsAndStoreSmart(
+      const adminUsername = await ConfigFile.GetSellerAdminUsername();
+      const isAdmin = seller === adminUsername;
+      // اگر ادمین است باید روی همه سلرها جستجو شود
+      if (isAdmin) {
+        const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
+        const sellers = await SellerModel.find({});
+        let allMixed: object[] = [];
+        for (const sellerObj of sellers) {
+          // استفاده از مدل MarzbanAccount اصلی
+
+          // دریافت اکانت‌های مرزبان با سرچ برای هر سلر
+          const marzbanAccountsResult = await AccountHelpers.GetMarzbanAccounts(
+            req.headers.authorization,
+            search
+          );
+          const marzbanAccounts =
+            (
+              marzbanAccountsResult.data as {
+                users?: IAccount[];
+              }
+            )?.users || [];
+          // دریافت اکانت‌های دیتابیس فقط با همین سرچ
+          const AccountModel = await getModel<IAccount>(
+            "Account",
+            AccountSchema
+          );
+          const sellerAccounts = await AccountModel.find({
+            Seller: sellerObj._id,
+            Username: { $regex: search, $options: "i" },
+          });
+          const mixed = await AccountHelpers.GetMixedAccount(
+            marzbanAccounts as unknown as MarzbanAccount[],
+            sellerAccounts,
+            sellerObj.Title,
+            sellerSubscriptionUrl
+          );
+          allMixed = allMixed.concat(mixed);
+        }
+        const normalized = allMixed.map(AccountHelpers.normalizeAccountOutput);
+        // حذف لاگ خروجی
+        res.status(200).json(normalized);
+        return;
+      } else {
+        // فقط برای یک سلر خاص
+        const marzbanAccountsResult = await AccountHelpers.GetMarzbanAccounts(
           req.headers.authorization,
-          seller,
-          true // حالت all
+          search
         );
-      if (marzbanAccountsResult.failed) {
-        return res.status(500).json({ message: "Marzban API error" });
+        const marzbanAccounts =
+          (marzbanAccountsResult.data as { users?: IAccount[] })?.users || [];
+        const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
+        const sellerDoc = await SellerModel.findOne({ Title: seller });
+        if (!sellerDoc) {
+          res.status(404).json({ message: "Seller not found" });
+          return;
+        }
+        const AccountModel = await getModel<IAccount>("Account", AccountSchema);
+        const sellerAccounts = await AccountModel.find({
+          Seller: sellerDoc._id,
+          Username: { $regex: search, $options: "i" },
+        });
+        const mixed = await AccountHelpers.GetMixedAccount(
+          marzbanAccounts as unknown as MarzbanAccount[],
+          sellerAccounts,
+          seller,
+          sellerSubscriptionUrl
+        );
+        const normalized = mixed.map(AccountHelpers.normalizeAccountOutput);
+        // حذف لاگ خروجی
+        res.status(200).json(normalized);
+        return;
       }
-      const marzbanAccounts = marzbanAccountsResult.users;
-      const sellerAccounts = await AccountHelpers.GetSellerAccounts(
-        seller,
-        true
-      );
-      const accounts = await AccountHelpers.GetMixedAccount(
-        marzbanAccounts,
-        sellerAccounts,
-        seller,
-        sellerSubscriptionUrl
-      );
-      res.status(200).json(accounts);
     } catch (error) {
       next(error);
     }
@@ -265,7 +318,7 @@ class MarzbanController {
       await account.save();
       await seller.save();
       // invalidate کش فقط همین seller
-      await AccountHelpers.InvalidateSellerAllCache(seller.Title);
+      AccountHelpers.InvalidateSellerAllCache(seller.Title);
       res.status(200).json(result.data);
     } catch (error) {
       next(error);
@@ -301,7 +354,7 @@ class MarzbanController {
       const seller = account
         ? await SellerModel.findOne({ _id: account.Seller })
         : null;
-      if (seller) await AccountHelpers.InvalidateSellerAllCache(seller.Title);
+      if (seller) AccountHelpers.InvalidateSellerAllCache(seller.Title);
       res.status(200).json(result.data);
     } catch (error) {
       next(error);
@@ -333,7 +386,7 @@ class MarzbanController {
       const seller = account
         ? await SellerModel.findOne({ _id: account.Seller })
         : null;
-      if (seller) await AccountHelpers.InvalidateSellerAllCache(seller.Title);
+      if (seller) AccountHelpers.InvalidateSellerAllCache(seller.Title);
       res.status(200).json(result.data);
     } catch (error) {
       next(error);
@@ -434,7 +487,7 @@ class MarzbanController {
       account.Payed = false;
       await account.save();
       // invalidate کش فقط همین seller و ادمین
-      await AccountHelpers.InvalidateSellerAllCache(seller.Title);
+      AccountHelpers.InvalidateSellerAllCache(seller.Title);
       res.status(200).json(result.data);
     } catch (error) {
       next(error);
@@ -488,7 +541,7 @@ class MarzbanController {
         Username: req.params.username,
         Payed: false,
       });
-      if (seller) await AccountHelpers.InvalidateSellerAllCache(seller.Title);
+      if (seller) AccountHelpers.InvalidateSellerAllCache(seller.Title);
       res.status(200).json({ message: "Delete Success!" });
     } catch (error) {
       next(error);
@@ -521,7 +574,7 @@ class MarzbanController {
       const seller = account
         ? await SellerModel.findOne({ _id: account.Seller })
         : null;
-      if (seller) await AccountHelpers.InvalidateSellerAllCache(seller.Title);
+      if (seller) AccountHelpers.InvalidateSellerAllCache(seller.Title);
 
       res.status(200).json({ message: "Revoke Success!" });
     } catch (error) {
