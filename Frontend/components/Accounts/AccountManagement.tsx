@@ -213,7 +213,7 @@ export default function AccountManagement() {
           headers: { Authorization: "Bearer " + user.Token },
         });
         const accounts = resultAccounts.data;
-        setAccountList(accounts);
+        setAccountList(accounts.accounts || []); // اصلاح این خط
       } catch (error) {
         console.log(error);
       } finally {
@@ -241,7 +241,7 @@ export default function AccountManagement() {
           headers: { Authorization: "Bearer " + user.Token },
         });
         const accounts = resultAccounts.data;
-        setAccountList(accounts);
+        setAccountList(accounts.accounts || []); // اصلاح این خط
       } catch (error) {
         console.log(error);
       } finally {
@@ -337,6 +337,8 @@ export default function AccountManagement() {
       setSearchText("");
     } else setSearchText("");
   };
+
+  console.log("accountList in AccountManagement:", accountList);
 
   return (
     <div className="container-fluid bg-primery  ">

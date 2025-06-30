@@ -471,24 +471,28 @@ const ExpandableAccountGrid = forwardRef<
     },
   ];
 
-  const rows = props.Accounts.flatMap((account) => {
+
+  const accounts = Array.isArray(props.Accounts) ? props.Accounts : [];
+
+  // ساختن آرایه rows برای DataGrid
+  const rows: GridRowData[] = accounts.flatMap(account => {
     const isExpanded = expandedRows.has(account.username);
-    return [
-      { ...account, isParent: true },
-      isExpanded
-        ? {
-            ...account,
-            id: `${account.id}-detail`,
-            isParent: false,
-            username: account.username,
-            price: account.price,
-            lastapp: account.sub_last_user_agent,
-            lastUpdate: account.sub_updated_at,
-            package: account.package,
-            lastonline: account.online_at,
-          }
-        : null,
-    ].filter(Boolean) as GridRowData[];
+    const parentRow: GridRowData = { ...account, isParent: true, isChecked: false };
+    const detailRow: GridRowData | null = isExpanded
+      ? {
+          ...account,
+          id: `${account.id}-detail`,
+          isParent: false,
+          isChecked: false,
+          username: account.username,
+          price: account.price,
+          sub_last_user_agent: account.sub_last_user_agent,
+          sub_updated_at: account.sub_updated_at,
+          package: account.package,
+          online_at: account.online_at,
+        }
+      : null;
+    return detailRow ? [parentRow, detailRow] : [parentRow];
   });
 
   const toggleRowExpansion = (username: string) => {
