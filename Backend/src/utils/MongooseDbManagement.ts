@@ -21,8 +21,8 @@ const DEFAULT_CONNECTION_OPTIONS: ConnectOptions = {
   socketTimeoutMS: 30000,
   serverSelectionTimeoutMS: 15000,
   heartbeatFrequencyMS: 30000,
-  ssl: true,
-  tlsAllowInvalidCertificates: false,
+  tls: true,
+  tlsInsecure: false, // برای تست می‌توانید true بگذارید، اما برای امنیت بهتر false باشد
   waitQueueTimeoutMS: 5000,
   maxIdleTimeMS: 30000,
 };
