@@ -9,8 +9,6 @@ RUN apk update && apk upgrade --no-cache && \
 WORKDIR /app
 COPY . .
 
-ARG NODE_ENV=production
-ENV NODE_ENV=$NODE_ENV
 ENV NODE_OPTIONS="--tls-min-v1.2 --max-old-space-size=8192"
 
 # نصب وابستگی‌ها و ساخت برنامه
