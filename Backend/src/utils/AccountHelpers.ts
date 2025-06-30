@@ -12,7 +12,11 @@ import { ITariffInbound, TariffInboundSchema } from "../models/TariffInbound";
 import { getModel } from "./MongooseModel";
 
 class AccountHelpers {
-  static MarzbanAccountsList: Record<string, MarzbanAccount[]> = {};
+  static MarzbanAccountsList: Record<
+    string,
+    Record<string, { users: MarzbanAccount[]; timestamp: number }>
+  > = {};
+  static CACHE_TTL_MS = 20 * 60 * 1000; // 20 دقیقه
 
   static GetInbounds = async (authorization: string | undefined) => {
     const apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/inbounds";
@@ -182,36 +186,11 @@ class AccountHelpers {
     return { proxies, inbounds };
   };
 
-  static GetMarzbanAccounts = async (
-    authorization: string | undefined,
-    username: string
-  ) => {
-    const apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/users";
-
-    const params = {
-      search: username,
-    };
-
-    const config = {
-      headers: { Authorization: authorization },
-      params: params,
-      timeout: 600000, // افزایش به ۱۰ دقیقه
-    };
-
-    return axios.get(apiURL, config);
-  };
-
-  static GetMarzbanAccountsAndStore = async (
-    authorization: string | undefined,
-    seller: string
-  ) => {
-    const resultMarzban = await this.GetMarzbanAccounts(authorization, "");
-    const sellerUsers = (resultMarzban.data as { users: MarzbanAccount[] })
-      .users;
-    this.MarzbanAccountsList = {
-      ...this.MarzbanAccountsList,
-      [seller]: sellerUsers,
-    };
+  static InvalidateSellerAllCache = (seller: string) => {
+    if (AccountHelpers.MarzbanAccountsList[seller]) {
+      delete AccountHelpers.MarzbanAccountsList[seller]["all"];
+      delete AccountHelpers.MarzbanAccountsList[seller]["unpaid"];
+    }
   };
 
   static GetSellerAccounts = async (sellerTitle: string, IsAll: boolean) => {
@@ -423,18 +402,6 @@ class AccountHelpers {
       };
     });
 
-    const fillteredUnpaidDeletedAccount = accounts.filter(
-      (acc) => acc.payed == "Unpaid" && !acc.data_limit
-    );
-
-    if (
-      fillteredUnpaidDeletedAccount.length > 0 &&
-      sellername.toLowerCase() ==
-        (await ConfigFile.GetSellerAdminUsername()).toLowerCase()
-    ) {
-      console.log("Log Unpaid and Deleted Account :");
-      fillteredUnpaidDeletedAccount.map((acc) => console.log(acc.username));
-    }
     return accounts.filter((acc) => acc.data_limit).reverse();
   };
 
@@ -454,6 +421,172 @@ class AccountHelpers {
       config
     );
     return (resultLogin.data as { access_token: string }).access_token;
+  };
+
+  static GetAccountsSmart = async (
+    authorization: string | undefined,
+    isAll: boolean,
+    seller: string,
+    sellerSubscriptionUrl: string,
+    isAdmin: boolean
+  ) => {
+    const startTime = Date.now(); // زمان شروع کل
+    if (isAdmin) {
+      const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
+      const sellers = await SellerModel.find({});
+      const allAccountsResults = await Promise.all(
+        sellers.map(async (sellerObj) => {
+          try {
+            const marzbanAccountsResult =
+              await AccountHelpers.GetMarzbanAccountsAndStoreSmart(
+                authorization,
+                sellerObj.Title,
+                isAll
+              );
+            if (marzbanAccountsResult.failed) {
+              return [];
+            }
+            const sellerAccounts = await AccountHelpers.GetSellerAccounts(
+              sellerObj.Title,
+              isAll
+            );
+            const mixed = await AccountHelpers.GetMixedAccount(
+              marzbanAccountsResult.users,
+              sellerAccounts,
+              sellerObj.Title,
+              sellerSubscriptionUrl
+            );
+
+            // --- لاگ اکانت‌های حذف‌شده و پرداخت‌نشده فقط برای ادمین ---
+            // اکانت‌های حذف‌شده و پرداخت‌نشده (در دیتابیس Payed=false و در مرزبان نیستند)
+            const marzbanUsernames = new Set(
+              marzbanAccountsResult.users.map((u) => u.username)
+            );
+            const deletedAndUnpaidAccounts = sellerAccounts.filter(
+              (acc) =>
+                !marzbanUsernames.has(acc.Username) && acc.Payed === false
+            );
+            if (deletedAndUnpaidAccounts.length > 0) {
+              console.log(
+                `[GetAccountsSmart] Deleted & Unpaid accounts for seller=${sellerObj.Title}:`,
+                deletedAndUnpaidAccounts.map((acc) => acc.Username)
+              );
+            }
+            // --- پایان لاگ ---
+            return mixed;
+          } catch (err) {
+            return [];
+          }
+        })
+      );
+      const result = allAccountsResults.flat();
+      const endTime = Date.now();
+      console.log(
+        `[GetAccountsSmart] Total time (all sellers): ${endTime - startTime} ms`
+      );
+      return result;
+    } else {
+      const sellerStart = Date.now();
+      try {
+        const marzbanAccountsResult =
+          await AccountHelpers.GetMarzbanAccountsAndStoreSmart(
+            authorization,
+            seller,
+            isAll
+          );
+        if (marzbanAccountsResult.failed) {
+          return [];
+        }
+        const sellerAccounts = await AccountHelpers.GetSellerAccounts(
+          seller,
+          isAll
+        );
+        const mixed = await AccountHelpers.GetMixedAccount(
+          marzbanAccountsResult.users,
+          sellerAccounts,
+          seller,
+          sellerSubscriptionUrl
+        );
+        const endTime = Date.now();
+        console.log(
+          `[GetAccountsSmart] Total time (single seller): ${
+            endTime - sellerStart
+          } ms`
+        );
+        return mixed;
+      } catch (err) {
+        return [];
+      }
+    }
+  };
+
+  // متد کش هوشمند برای گرفتن کاربران مرزبان و ذخیره در کش
+  static GetMarzbanAccountsAndStoreSmart = async (
+    authorization: string | undefined,
+    seller: string,
+    isAll: boolean
+  ) => {
+    const cacheKey = isAll ? "all" : "unpaid";
+    const now = Date.now();
+    if (
+      AccountHelpers.MarzbanAccountsList[seller]?.[cacheKey] &&
+      now - AccountHelpers.MarzbanAccountsList[seller][cacheKey].timestamp <
+        AccountHelpers.CACHE_TTL_MS
+    ) {
+      // console.error(`[GetMarzbanAccountsAndStoreSmart] seller=${seller} cache HIT`); // کامنت شد طبق درخواست
+      return {
+        users: AccountHelpers.MarzbanAccountsList[seller][cacheKey].users,
+        failed: false,
+      };
+    }
+    // اگر کش نبود یا منقضی شده بود، از مرزبان بگیر
+    try {
+      //const marzbanStart = Date.now();
+      const resultMarzban = await AccountHelpers.GetMarzbanAccounts(
+        authorization,
+        seller
+      );
+      //const marzbanEnd = Date.now();
+      // console.error(`[GetMarzbanAccountsAndStoreSmart] seller=${seller} Marzban API: ${marzbanEnd - marzbanStart} ms`); // کامنت شد طبق درخواست
+      const sellerUsers = (resultMarzban.data as { users: MarzbanAccount[] })
+        .users;
+      if (!AccountHelpers.MarzbanAccountsList[seller])
+        AccountHelpers.MarzbanAccountsList[seller] = {};
+      AccountHelpers.MarzbanAccountsList[seller][cacheKey] = {
+        users: sellerUsers,
+        timestamp: now,
+      };
+      // console.error(`[GetMarzbanAccountsAndStoreSmart] seller=${seller} cache MISS`); // کامنت شد طبق درخواست
+      return { users: sellerUsers, failed: false };
+    } catch (error) {
+      const err = error;
+      let status: unknown = err;
+      if (typeof err === "object" && err !== null) {
+        const e = err as {
+          response?: { status?: number };
+          code?: string;
+          message?: string;
+        };
+        status = e?.response?.status || e?.code || e?.message || err;
+      }
+      // console.warn(`[GetMarzbanAccountsAndStoreSmart] seller=${seller} failed with status=${status}`); // کامنت شد طبق درخواست
+      return { users: [], failed: true, error: status };
+    }
+  };
+
+  // متد گرفتن کاربران مرزبان (با سرچ)
+  static GetMarzbanAccounts = async (
+    authorization: string | undefined,
+    username: string
+  ) => {
+    const apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/users";
+    const params = { search: username };
+    const config = {
+      headers: { Authorization: authorization },
+      params: params,
+      timeout: 300000, // افزایش به 5 دقیقه
+    };
+    return axios.get(apiURL, config);
   };
 }
 

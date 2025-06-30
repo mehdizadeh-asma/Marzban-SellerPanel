@@ -1,4 +1,4 @@
-import mongoose, { Document, Types, Schema } from "mongoose";
+import { Document, Types, Schema } from "mongoose";
 import { ITariff } from "./Tariff";
 
 export interface ITariffInbound extends Document {
