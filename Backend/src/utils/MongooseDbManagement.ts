@@ -71,7 +71,11 @@ class MongooseDbManagement {
             this.mainConnection &&
             (this.mainConnection as ConnectionWithClient).client?.s?.url ===
               connectionString;
-          if (connection.readyState === 1 && isIdle && !isMain) {
+          if (
+            connection.readyState === mongoose.ConnectionStates.connected &&
+            isIdle &&
+            !isMain
+          ) {
             console.log(`Closing idle connection: ${connectionString}`);
             await this.closeConnection(connectionString);
           }
@@ -96,7 +100,9 @@ class MongooseDbManagement {
   static async connectMainDatabase(): Promise<void> {
     // اگر mainConnection وجود دارد اما قطع شده است، آن را ببند و دوباره کانکت کن
     if (this.mainConnection) {
-      if (this.mainConnection.readyState !== 1) {
+      if (
+        this.mainConnection.readyState !== mongoose.ConnectionStates.connected
+      ) {
         try {
           await this.mainConnection.close();
         } catch (e) {
@@ -188,7 +194,10 @@ class MongooseDbManagement {
     poolSize = 10
   ): Promise<Connection> {
     const cachedConnection = this.activeConnections.get(connectionString);
-    if (cachedConnection && cachedConnection.readyState === 1) {
+    if (
+      cachedConnection &&
+      cachedConnection.readyState === mongoose.ConnectionStates.connected
+    ) {
       // به روز رسانی زمان استفاده در WeakMap
       this.connectionLastUsedMap.set(cachedConnection, Date.now());
       return cachedConnection;
@@ -217,13 +226,20 @@ class MongooseDbManagement {
         console.error("[DB DEBUG] connectionString is empty/null!");
         throw new Error("WholeSaler connection string not configured");
       }
-      if (!this.mainConnection || this.mainConnection.readyState !== 1) {
+      if (
+        !this.mainConnection ||
+        this.mainConnection.readyState !== mongoose.ConnectionStates.connected
+      ) {
         try {
           console.log(
             `[DB DEBUG] [ensureMainConnection] mainConnection is null or not ready. Calling connectMainDatabase...`
           );
           await this.connectMainDatabase();
-          if (this.mainConnection && this.mainConnection.readyState === 1) {
+          if (
+            this.mainConnection &&
+            this.mainConnection.readyState ===
+              mongoose.ConnectionStates.connected
+          ) {
             console.log(
               `[DB DEBUG] [ensureMainConnection] mainConnection is now ready!`
             );
@@ -255,9 +271,11 @@ class MongooseDbManagement {
       `[DB DEBUG] [ensureMainConnection] All retries failed. Last error:`,
       lastError
     );
-    throw (
-      lastError || new Error("Failed to establish main database connection")
-    );
+    if (lastError instanceof Error) {
+      throw lastError;
+    } else {
+      throw new Error("Failed to establish main database connection");
+    }
   }
 
   // نسخه امن برای گرفتن اتصال اصلی (همیشه سالم)
