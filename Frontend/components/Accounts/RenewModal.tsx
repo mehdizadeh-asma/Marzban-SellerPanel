@@ -47,7 +47,7 @@ const RenewModal = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
         </Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <AddAccount Mode="Renew" ref={selectTariff} />
+        <AddAccount Mode="Renew" Loading={false} ref={selectTariff} />
       </Modal.Body>
       <Modal.Footer className="justify-content-end">
         <Button variant="success" className="w100px" onClick={btnRenew_Click}>
