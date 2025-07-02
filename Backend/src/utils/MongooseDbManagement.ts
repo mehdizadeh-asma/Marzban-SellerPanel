@@ -303,7 +303,7 @@ class MongooseDbManagement {
     try {
       await connection.close();
       this.activeConnections.delete(connectionString);
-      console.log(`Closed connection: ${connectionString}`);
+      console.log(`Closed connection`);
     } catch (error) {
       console.error(`Error closing connection:`, error);
     }
