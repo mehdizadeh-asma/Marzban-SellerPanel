@@ -66,19 +66,12 @@ const ExpandableAccountGrid = forwardRef<
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [selectAll, setSelectAll] = useState(false);
   const [accountIdsToPay, setAccountIdsToPay] = useState<string[]>([]);
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
 
   type QRModalHandle = ElementRef<typeof QRModal>;
   const refQRModal = useRef<QRModalHandle>(null);
-
-  // useImperativeHandle(ref, () => ({
-  //   SendBackUsernames: () => {
-  //     const gridRows = props.Accounts as GridRowData[];
-
-  //     return gridRows
-  //       .filter((row) => row.isChecked)
-  //       .map((row) => row.username);
-  //   },
-  // }));
 
   useImperativeHandle(ref, () => ({
     SendBackUsernames: () => {
@@ -95,6 +88,12 @@ const ExpandableAccountGrid = forwardRef<
     // const tempAccount = account as GridRowData;
     // tempAccount.isChecked = !tempAccount.isChecked;
     if (account.id) {
+      setSelectedRows((prev) => {
+        const newSet = new Set(prev);
+        if (newSet.has(account.id)) newSet.delete(account.id);
+        else newSet.add(account.id);
+        return newSet;
+      });
       setAccountIdsToPay((prevAccountIds) =>
         prevAccountIds.includes(account.id)
           ? prevAccountIds.filter((myid) => myid !== account.id)
@@ -137,14 +136,18 @@ const ExpandableAccountGrid = forwardRef<
       ),
       getActions: (params: { row: GridRowData }) => {
         const isParentRow = params.row.isParent;
-
         return isParentRow
           ? [
               <GridActionsCellItem
                 key="checkPay"
                 label="Check To Pay"
-                icon={<Checkbox sx={{ fontSize: "25px" }} />}
-                onClick={() => onCheckPay(params.row)}
+                icon={
+                  <Checkbox
+                    sx={{ fontSize: "25px" }}
+                    checked={selectedRows.has(params.row.id)}
+                    onChange={() => onCheckPay(params.row)}
+                  />
+                }
               />,
             ]
           : [
@@ -471,13 +474,16 @@ const ExpandableAccountGrid = forwardRef<
     },
   ];
 
-
   const accounts = Array.isArray(props.Accounts) ? props.Accounts : [];
 
   // ساختن آرایه rows برای DataGrid
-  const rows: GridRowData[] = accounts.flatMap(account => {
+  const rows: GridRowData[] = accounts.flatMap((account) => {
     const isExpanded = expandedRows.has(account.username);
-    const parentRow: GridRowData = { ...account, isParent: true, isChecked: false };
+    const parentRow: GridRowData = {
+      ...account,
+      isParent: true,
+      isChecked: false,
+    };
     const detailRow: GridRowData | null = isExpanded
       ? {
           ...account,
@@ -504,25 +510,26 @@ const ExpandableAccountGrid = forwardRef<
     });
   };
 
-  // const onCheckPay = (account: GridRowData) => {
-  //   account.isChecked = !account.isChecked;
-
-  //   setSelectAll(false);
-  // };
-
   const handleSelectAllChange = (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const isChecked = event.target.checked;
     setSelectAll(isChecked);
 
-    // Update all usernames in UsernamesToPay
-    // if (isChecked) {
-    //   const allUsernames = props.Accounts.map((account) => account.username);
-    //   const gridRows = props.Accounts as GridRowData[];
-    // } else {
-    //   setUsernamesToPay([]);
-    // }
+    const currentPageParentIds = rows
+      .filter((row) => row.isParent)
+      .slice(page * pageSize, (page + 1) * pageSize)
+      .map((row) => row.id);
+
+    setSelectedRows(() => {
+      if (isChecked) {
+        return new Set(currentPageParentIds);
+      } else {
+        return new Set();
+      }
+    });
+
+    setAccountIdsToPay(isChecked ? currentPageParentIds : []);
   };
 
   const onPaymentClick = (account: AccountType) => {
@@ -650,6 +657,11 @@ const ExpandableAccountGrid = forwardRef<
         columns={columns}
         getRowId={(row) => row.id}
         loading={props.Loading}
+        paginationModel={{ page, pageSize }}
+        onPaginationModelChange={(model) => {
+          setPage(model.page);
+          setPageSize(model.pageSize);
+        }}
         slots={{
           toolbar: () => (
             <Box

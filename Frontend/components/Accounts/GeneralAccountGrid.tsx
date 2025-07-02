@@ -32,11 +32,11 @@ import ToggleOnIcon from "@mui/icons-material/ToggleOn";
 import ToggleOffIcon from "@mui/icons-material/ToggleOff";
 import QrCode2Icon from "@mui/icons-material/QrCode2";
 import AutoModeIcon from "@mui/icons-material/AutoMode";
+import { Button, Checkbox } from "@mui/material";
 
 import AccountType from "@/models/AccountType";
 import { copyTextToClipboard } from "@/utils/Helper";
 import QRModal from "./QRModal";
-import { Checkbox } from "@mui/material";
 import Footer from "../General/Footer";
 
 interface PropsType {
@@ -60,11 +60,37 @@ const GeneralAccountGrid = forwardRef<
 >((props, ref) => {
   const [selectedLink, setSelectedLink] = useState("");
   const [accountIdsToPay, setAccountIdsToPay] = useState<string[]>([]);
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
+  const [selectAll, setSelectAll] = useState(false);
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
 
   type QRModalHandle = ElementRef<typeof QRModal>;
   const refQRModal = useRef<QRModalHandle>(null);
 
   const columns = [
+    {
+      headerClassName: "MUIGridHeader",
+      headerName: "",
+      field: "select",
+      type: "actions",
+      width: 30,
+      renderHeader: () => (
+        <Checkbox checked={selectAll} onChange={handleSelectAllChange} />
+      ),
+      getActions: (params: { row: AccountType }) => [
+        <GridActionsCellItem
+          key="checkPay"
+          label="Check To Pay"
+          icon={
+            <Checkbox
+              checked={selectedRows.has(params.row.id)}
+              onChange={() => onCheckPay(params.row)}
+            />
+          }
+        />,
+      ],
+    },
     {
       headerClassName: "MUIGridHeader",
       headerName: "",
@@ -75,12 +101,7 @@ const GeneralAccountGrid = forwardRef<
       maxWidth: 250,
       resizable: true,
       getActions: (params: { row: AccountType }) => [
-        <GridActionsCellItem
-          key="checkPay"
-          label="Check To Pay"
-          icon={<Checkbox {...label} />}
-          onClick={() => onCheckPay(params.row)}
-        />,
+        // فقط اکشن‌های غیر از چک‌باکس را اینجا نگه دار
         <GridActionsCellItem
           key="link"
           label="Link"
@@ -284,8 +305,37 @@ const GeneralAccountGrid = forwardRef<
   const onRevoke = (account: AccountType) => {
     props.onRevoke(account);
   };
+  const handleSelectAllChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const isChecked = event.target.checked;
+    setSelectAll(isChecked);
+
+    // فقط ردیف‌های صفحه جاری را انتخاب کن
+    const currentPageIds = props.Accounts.slice(
+      page * pageSize,
+      (page + 1) * pageSize,
+    ).map((row) => row.id);
+
+    setSelectedRows(() => {
+      if (isChecked) {
+        return new Set(currentPageIds);
+      } else {
+        return new Set();
+      }
+    });
+
+    setAccountIdsToPay(isChecked ? currentPageIds : []);
+  };
+
   const onCheckPay = (account: AccountType) => {
     if (account.id) {
+      setSelectedRows((prev) => {
+        const newSet = new Set(prev);
+        if (newSet.has(account.id)) newSet.delete(account.id);
+        else newSet.add(account.id);
+        return newSet;
+      });
       setAccountIdsToPay((prevAccountIds) =>
         prevAccountIds.includes(account.id)
           ? prevAccountIds.filter((myid) => myid !== account.id)
@@ -409,7 +459,7 @@ const GeneralAccountGrid = forwardRef<
     <>
       <DataGrid
         initialState={{
-          pagination: { paginationModel: { pageSize: 100 } },
+          pagination: { paginationModel: { pageSize: 10 } },
         }}
         pageSizeOptions={[10, 25, 50, 100]}
         className="Grid"
@@ -417,6 +467,11 @@ const GeneralAccountGrid = forwardRef<
         rows={props.Accounts}
         columns={columns}
         loading={props.Loading}
+        paginationModel={{ page, pageSize }}
+        onPaginationModelChange={(model) => {
+          setPage(model.page);
+          setPageSize(model.pageSize);
+        }}
         slots={{
           toolbar: () => (
             <Box
@@ -450,6 +505,11 @@ const GeneralAccountGrid = forwardRef<
           },
           "& .MuiDataGrid-columnHeaders": {
             cursor: "col-resize",
+          },
+        }}
+        slotProps={{
+          baseCheckbox: {
+            indeterminate: false,
           },
         }}
       />
