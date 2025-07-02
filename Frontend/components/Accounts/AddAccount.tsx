@@ -4,17 +4,24 @@ import { forwardRef, useEffect, useRef, useState } from "react";
 import TextField from "@mui/material/TextField";
 import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
+import Button from "react-bootstrap/Button";
+import Spinner from "react-bootstrap/Spinner";
 
 import { useMyContext } from "@/context/MyContext";
 import TariffType from "@/models/TariffType";
 
 interface PropsType {
   onAdding?: (tariff: TariffType, note: string, onHold: boolean) => void;
+  StartLoading?: () => void;
+  EndLoading?: () => void;
+  ref?: React.Ref<HTMLSelectElement>;
   Mode: string;
+  Loading: boolean;
 }
 
 const AddAccount = forwardRef<HTMLSelectElement, PropsType>((props, ref) => {
   const { user, config } = useMyContext();
+
   const [tariffList, setTariffList] = useState<TariffType[]>([]);
   const selectTariff = useRef<HTMLSelectElement | null>(null);
   const txtNote = useRef<HTMLInputElement | null>(null);
@@ -41,6 +48,8 @@ const AddAccount = forwardRef<HTMLSelectElement, PropsType>((props, ref) => {
   const BtnAdd_Click = async () => {
     let note = "";
     let onHold = false;
+
+    props.StartLoading?.();
 
     if (txtNote.current && txtNote.current.value) {
       note = txtNote.current.value;
@@ -95,12 +104,21 @@ const AddAccount = forwardRef<HTMLSelectElement, PropsType>((props, ref) => {
         />
       </div>
       <div className="col-sm-12 col-md-6 col-lg-6 col-xl-4 divButton py-2">
-        <button
+        <Button
           onClick={BtnAdd_Click}
+          disabled={props.Loading}
           className="btn btnAdd  BgGrdColorizePurple text-white border-1 BorderPurple h-75 "
         >
-          Add
-        </button>
+          <Spinner
+            as="span"
+            animation="border"
+            size="sm"
+            role="status"
+            aria-hidden="true"
+            className={props.Loading ? "mx-1" : "visually-hidden"}
+          />
+          {props.Loading ? "" : "Add"}
+        </Button>
       </div>
     </div>
   ) : (

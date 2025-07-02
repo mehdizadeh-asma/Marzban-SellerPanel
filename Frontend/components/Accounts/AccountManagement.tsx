@@ -126,9 +126,13 @@ export default function AccountManagement() {
       try {
         StartLoading();
         const url = new URL("api/payaccount/" + accountId, config.BACKEND_URL);
-        await axios.post(url.toString(), {
-          headers: { Authorization: "Bearer " + user.Token },
-        });
+        await axios.post(
+          url.toString(),
+          {},
+          {
+            headers: { Authorization: "Bearer " + user.Token },
+          },
+        );
       } catch (error) {
         console.log(error);
       } finally {
@@ -194,9 +198,9 @@ export default function AccountManagement() {
         refMessages.current?.Show("success", "Account Added Successful!");
       } catch (error) {
         console.log(error);
-      } finally {
-        LoadAccount();
       }
+    else refMessages.current?.Show("error", "You are Limited!");
+    LoadAccount();
   };
 
   const LoadAccount = useCallback(
@@ -340,7 +344,16 @@ export default function AccountManagement() {
 
   return (
     <div className="container-fluid bg-primery  ">
-      {user.IsAdmin ? "" : <AddAccount onAdding={OnAddClick} Mode="Add" />}
+      {user.IsAdmin ? (
+        ""
+      ) : (
+        <AddAccount
+          onAdding={OnAddClick}
+          Mode="Add"
+          Loading={loading}
+          StartLoading={StartLoading}
+        />
+      )}
       <div className="row">
         <div className="col justify-content-start d-flex mt-1  w-100">
           <TextField

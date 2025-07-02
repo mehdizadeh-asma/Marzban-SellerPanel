@@ -76,14 +76,11 @@ class MongooseDbManagement {
             isIdle &&
             !isMain
           ) {
-            console.log(`Closing idle connection: ${connectionString}`);
+            console.log(`Closing idle Main connection`);
             await this.closeConnection(connectionString);
           }
         } catch (error) {
-          console.error(
-            `Error cleaning connection ${connectionString}:`,
-            error
-          );
+          console.error(`Error cleaning connection :`, error);
         }
       }
     };
@@ -219,8 +216,7 @@ class MongooseDbManagement {
     for (let i = 0; i < retries; i++) {
       const connectionString = this.getDbWholeSalerConnectionString();
       console.log(
-        `[DB DEBUG] [ensureMainConnection] Try #${i + 1} - connectionString:`,
-        connectionString
+        `[DB DEBUG] [ensureMainConnection] Try #${i + 1} - DbWholeSaler:`
       );
       if (!connectionString) {
         console.error("[DB DEBUG] connectionString is empty/null!");
