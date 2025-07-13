@@ -15,7 +15,7 @@ import { ITariffSeller, TariffSellerSchema } from "../models/TariffSeller";
 
 // تنظیمات پیش‌فرض اتصال
 const DEFAULT_CONNECTION_OPTIONS: ConnectOptions = {
-  maxPoolSize: 20,
+  maxPoolSize: 10,
   minPoolSize: 5,
   connectTimeoutMS: 15000,
   socketTimeoutMS: 30000,
@@ -37,7 +37,6 @@ class MongooseDbManagement {
   private static activeConnections: Map<string, Connection> = new Map();
   private static mainConnection: Connection | null = null;
   private static connectionCleanupInterval: NodeJS.Timeout | null = null;
-  // ذخیره زمان آخرین استفاده به صورت نوع‌ایمن
   private static connectionLastUsedMap = new WeakMap<Connection, number>();
 
   // تنظیمات اتصال با اندازه پویای pool
@@ -55,7 +54,7 @@ class MongooseDbManagement {
 
     const cleanupTask = async () => {
       const now = Date.now();
-      const maxIdleTime = 5 * 60 * 1000; // 5 minutes
+      const maxIdleTime = 5 * 60 * 1000;
       const connections = Array.from(this.activeConnections.entries());
 
       for (const [connectionString, connection] of connections) {
@@ -64,8 +63,6 @@ class MongooseDbManagement {
 
           const lastUsed = this.connectionLastUsedMap.get(connection) || 0;
           const isIdle = now - lastUsed > maxIdleTime;
-
-          // Define a type for connections with optional client property
 
           const isMain =
             this.mainConnection &&
@@ -85,7 +82,6 @@ class MongooseDbManagement {
       }
     };
 
-    // Wrap async task to handle promise properly
     this.connectionCleanupInterval = setInterval(() => {
       cleanupTask().catch((error) =>
         console.error("Unhandled error in connection cleanup:", error)
@@ -95,7 +91,6 @@ class MongooseDbManagement {
 
   // اتصال به دیتابیس اصلی
   static async connectMainDatabase(): Promise<void> {
-    // اگر mainConnection وجود دارد اما قطع شده است، آن را ببند و دوباره کانکت کن
     if (this.mainConnection) {
       if (
         this.mainConnection.readyState !== mongoose.ConnectionStates.connected
@@ -138,7 +133,6 @@ class MongooseDbManagement {
     try {
       const connection = mongoose.createConnection(connectionString, options);
 
-      // انتظار برای برقراری اتصال
       await new Promise<void>((resolve, reject) => {
         const connectHandler = () => {
           cleanup();
@@ -165,14 +159,11 @@ class MongooseDbManagement {
         connection.once("error", errorHandler);
       });
 
-      // تنظیم مانیتورینگ و ذخیره اتصال
       this.setupConnectionMonitoring(connection, connectionName);
       this.activeConnections.set(connectionString, connection);
 
-      // استفاده از WeakMap برای ذخیره زمان آخرین استفاده به صورت نوع‌ایمن
       this.connectionLastUsedMap.set(connection, Date.now());
 
-      // راه‌اندازی سیستم پاکسازی اگر فعال نیست
       if (!this.connectionCleanupInterval) {
         this.initConnectionCleanup();
       }
@@ -195,7 +186,6 @@ class MongooseDbManagement {
       cachedConnection &&
       cachedConnection.readyState === mongoose.ConnectionStates.connected
     ) {
-      // به روز رسانی زمان استفاده در WeakMap
       this.connectionLastUsedMap.set(cachedConnection, Date.now());
       return cachedConnection;
     }
@@ -205,78 +195,6 @@ class MongooseDbManagement {
       connectionName,
       this.getConnectionOptions(poolSize)
     );
-  }
-
-  // متد کمکی: اطمینان از اتصال سالم و تلاش مجدد در صورت قطع بودن
-  static async ensureMainConnection(
-    retries = 3,
-    delayMs = 2000
-  ): Promise<Connection> {
-    let lastError: unknown = null;
-    for (let i = 0; i < retries; i++) {
-      const connectionString = this.getDbWholeSalerConnectionString();
-      console.log(
-        `[DB DEBUG] [ensureMainConnection] Try #${i + 1} - DbWholeSaler:`
-      );
-      if (!connectionString) {
-        console.error("[DB DEBUG] connectionString is empty/null!");
-        throw new Error("WholeSaler connection string not configured");
-      }
-      if (
-        !this.mainConnection ||
-        this.mainConnection.readyState !== mongoose.ConnectionStates.connected
-      ) {
-        try {
-          console.log(
-            `[DB DEBUG] [ensureMainConnection] mainConnection is null or not ready. Calling connectMainDatabase...`
-          );
-          await this.connectMainDatabase();
-          if (
-            this.mainConnection &&
-            this.mainConnection.readyState ===
-              mongoose.ConnectionStates.connected
-          ) {
-            console.log(
-              `[DB DEBUG] [ensureMainConnection] mainConnection is now ready!`
-            );
-            return this.mainConnection;
-          } else {
-            console.warn(
-              `[DB DEBUG] [ensureMainConnection] mainConnection still not ready after connectMainDatabase. State:`,
-              this.mainConnection?.readyState
-            );
-          }
-        } catch (e) {
-          lastError = e;
-          console.error(
-            `[DB DEBUG] [ensureMainConnection] Error on try #${i + 1}:`,
-            e
-          );
-          // پاک‌سازی mainConnection در صورت خطا
-          this.mainConnection = null;
-          await new Promise((res) => setTimeout(res, delayMs));
-        }
-      } else {
-        console.log(
-          `[DB DEBUG] [ensureMainConnection] mainConnection already ready!`
-        );
-        return this.mainConnection;
-      }
-    }
-    console.error(
-      `[DB DEBUG] [ensureMainConnection] All retries failed. Last error:`,
-      lastError
-    );
-    if (lastError instanceof Error) {
-      throw lastError;
-    } else {
-      throw new Error("Failed to establish main database connection");
-    }
-  }
-
-  // نسخه امن برای گرفتن اتصال اصلی (همیشه سالم)
-  static async getMainConnectionSafe(): Promise<Connection> {
-    return await this.ensureMainConnection();
   }
 
   static getMainConnection(): Connection | null {
@@ -316,7 +234,6 @@ class MongooseDbManagement {
   ): void {
     connection.on("connected", () => {
       console.log(`[${name}] MongoDB connected`);
-      // ذخیره زمان به روز رسانی در WeakMap
       this.connectionLastUsedMap.set(connection, Date.now());
     });
 
@@ -330,11 +247,9 @@ class MongooseDbManagement {
 
     connection.on("reconnected", () => {
       console.log(`[${name}] MongoDB reconnected`);
-      // به روز رسانی زمان استفاده
       this.connectionLastUsedMap.set(connection, Date.now());
     });
 
-    // به روز رسانی زمان هنگام انجام عملیات
     connection.on("open", () => {
       this.connectionLastUsedMap.set(connection, Date.now());
     });
@@ -342,18 +257,15 @@ class MongooseDbManagement {
 
   // بستن همه اتصالات هنگام خاتمه
   static async shutdown(): Promise<void> {
-    // توقف تایمر پاکسازی
     if (this.connectionCleanupInterval) {
       clearInterval(this.connectionCleanupInterval);
       this.connectionCleanupInterval = null;
     }
 
-    // بستن همه اتصالات فعال
     for (const [connectionString] of this.activeConnections) {
       await this.closeConnection(connectionString);
     }
 
-    // بستن اتصال اصلی
     if (this.mainConnection) {
       await this.mainConnection.close();
       this.mainConnection = null;
@@ -366,11 +278,11 @@ class MongooseDbManagement {
   static getDbPanelConnectionString(): string {
     return this.BASE_CONNECTION_STRING.replace(
       "##CLUSTER##",
-      "marzbanseller01.xrbygjz"
+      "marzbansellerpanel.ghtzkr3"
     )
       .replace("##DB##", "MarzbanSellerPanel")
       .replace("##USERNAME##", "marzbansellerpanel")
-      .replace("##PASSWORD##", "ZioVwUWNWcBb2LG6");
+      .replace("##PASSWORD##", "bwvOIYFifBShAtIj");
   }
 
   static setDbWholeSalerConnectionString(
@@ -434,7 +346,6 @@ class MongooseDbManagement {
     destinationConnectionString: string
   ): Promise<void> {
     try {
-      // اطمینان از وجود اتصال اصلی
       if (!this.mainConnection) {
         throw new Error("اتصال به دیتابیس اصلی برقرار نشده است");
       }
@@ -447,7 +358,6 @@ class MongooseDbManagement {
 
       console.log("شروع فرآیند کپی دیتابیس...");
 
-      // کپی تمام مجموعه‌های مورد نیاز
       await this.copyCollection<IAccount>(
         this.mainConnection.model<IAccount>("Account", AccountSchema),
         targetConnection.model<IAccount>("Account", AccountSchema),
@@ -506,7 +416,6 @@ class MongooseDbManagement {
   ): Promise<void> {
     console.log(`در حال کپی‌کردن ${collectionName}...`);
 
-    // دریافت اسناد به صورت lean برای عملکرد بهتر
     const documents = await sourceModel.find().lean();
 
     if (documents.length === 0) {
@@ -515,7 +424,6 @@ class MongooseDbManagement {
     }
 
     try {
-      // درج اسناد با امکان ادامه در صورت خطا
       await targetModel.insertMany(documents, { ordered: false });
       console.log(`تعداد ${documents.length} سند در ${collectionName} کپی شد`);
     } catch (insertError) {

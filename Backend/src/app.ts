@@ -116,7 +116,6 @@ const bootstrap = async () => {
 
     // 4. گزارش وضعیت
     console.log("Server is ready to handle requests");
-    console.log(`API Documentation: http://localhost:${HTTP_PORT}/api-docs`);
   } catch (error) {
     console.error("Failed to start server:", error);
     process.exit(1); // خروج با کد خطا
