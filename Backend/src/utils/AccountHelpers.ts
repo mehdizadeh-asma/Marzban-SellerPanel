@@ -193,12 +193,10 @@ class AccountHelpers {
     }
   };
 
-  static GetSellerAccounts = async (sellerTitle: string, IsAll: boolean) => {
+  static GetSellerAccounts = async (seller: ISeller, IsAll: boolean) => {
     const adminUsername = await ConfigFile.GetSellerAdminUsername();
     let condition = {};
-    if (sellerTitle.toLowerCase() !== adminUsername.toLowerCase()) {
-      const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
-      const seller = await SellerModel.findOne({ Title: sellerTitle });
+    if (seller.Title.toLowerCase() !== adminUsername.toLowerCase()) {
       condition = {
         ...condition,
         Seller: seller?._id,
@@ -212,12 +210,12 @@ class AccountHelpers {
 
   static RemoveDeletedAccountSeller = async (
     authorization: string | undefined,
-    seller: Document | undefined
+    seller: ISeller
   ) => {
     if (seller) {
       const resultMarzban = await AccountHelpers.GetMarzbanAccounts(
         authorization,
-        String(seller.get("Title"))
+        seller
       );
       const sellerUsers = (resultMarzban.data as { users: MarzbanAccount[] })
         .users;
@@ -440,14 +438,14 @@ class AccountHelpers {
             const marzbanAccountsResult =
               await AccountHelpers.GetMarzbanAccountsAndStoreSmart(
                 authorization,
-                sellerObj.Title,
+                sellerObj,
                 isAll
               );
             if (marzbanAccountsResult.failed) {
               return [];
             }
             const sellerAccounts = await AccountHelpers.GetSellerAccounts(
-              sellerObj.Title,
+              sellerObj,
               isAll
             );
             const mixed = await AccountHelpers.GetMixedAccount(
@@ -488,17 +486,25 @@ class AccountHelpers {
     } else {
       const sellerStart = Date.now();
       try {
+        const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
+        const sellerObj = await SellerModel.findOne({ Title: seller });
+
+        if (!sellerObj) {
+          return [];
+        }
+
         const marzbanAccountsResult =
           await AccountHelpers.GetMarzbanAccountsAndStoreSmart(
             authorization,
-            seller,
+            sellerObj,
             isAll
           );
         if (marzbanAccountsResult.failed) {
           return [];
         }
+
         const sellerAccounts = await AccountHelpers.GetSellerAccounts(
-          seller,
+          sellerObj,
           isAll
         );
         const mixed = await AccountHelpers.GetMixedAccount(
@@ -523,19 +529,20 @@ class AccountHelpers {
   // متد کش هوشمند برای گرفتن کاربران مرزبان و ذخیره در کش
   static GetMarzbanAccountsAndStoreSmart = async (
     authorization: string | undefined,
-    seller: string,
+    seller: ISeller,
     isAll: boolean
   ) => {
     const cacheKey = isAll ? "all" : "unpaid";
     const now = Date.now();
     if (
-      AccountHelpers.MarzbanAccountsList[seller]?.[cacheKey] &&
-      now - AccountHelpers.MarzbanAccountsList[seller][cacheKey].timestamp <
+      AccountHelpers.MarzbanAccountsList[seller.Title]?.[cacheKey] &&
+      now -
+        AccountHelpers.MarzbanAccountsList[seller.Title][cacheKey].timestamp <
         AccountHelpers.CACHE_TTL_MS
     ) {
       // console.error(`[GetMarzbanAccountsAndStoreSmart] seller=${seller} cache HIT`); // کامنت شد طبق درخواست
       return {
-        users: AccountHelpers.MarzbanAccountsList[seller][cacheKey].users,
+        users: AccountHelpers.MarzbanAccountsList[seller.Title][cacheKey].users,
         failed: false,
       };
     }
@@ -550,9 +557,9 @@ class AccountHelpers {
       // console.error(`[GetMarzbanAccountsAndStoreSmart] seller=${seller} Marzban API: ${marzbanEnd - marzbanStart} ms`); // کامنت شد طبق درخواست
       const sellerUsers = (resultMarzban.data as { users: MarzbanAccount[] })
         .users;
-      if (!AccountHelpers.MarzbanAccountsList[seller])
-        AccountHelpers.MarzbanAccountsList[seller] = {};
-      AccountHelpers.MarzbanAccountsList[seller][cacheKey] = {
+      if (!AccountHelpers.MarzbanAccountsList[seller.Title])
+        AccountHelpers.MarzbanAccountsList[seller.Title] = {};
+      AccountHelpers.MarzbanAccountsList[seller.Title][cacheKey] = {
         users: sellerUsers,
         timestamp: now,
       };
@@ -577,10 +584,16 @@ class AccountHelpers {
   // متد گرفتن کاربران مرزبان (با سرچ)
   static GetMarzbanAccounts = async (
     authorization: string | undefined,
-    username: string
+    seller: ISeller | undefined,
+    search: string = ""
   ) => {
     const apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/users";
-    const params = { search: username };
+    const params = { search: "" };
+
+    if (seller) params.search = seller.Title;
+
+    if (search != "") params.search = search;
+
     const config = {
       headers: { Authorization: authorization },
       params: params,

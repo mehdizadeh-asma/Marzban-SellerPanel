@@ -132,79 +132,38 @@ class MarzbanController {
     try {
       const seller = req.params.seller;
       const search = req.params.search;
-      const sellerSubscriptionUrl = await ConfigFile.GetSubscriptionURL();
-      const adminUsername = await ConfigFile.GetSellerAdminUsername();
-      const isAdmin = seller === adminUsername;
-      // اگر ادمین است باید روی همه سلرها جستجو شود
-      if (isAdmin) {
-        const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
-        const sellers = await SellerModel.find({});
-        let allMixed: object[] = [];
-        for (const sellerObj of sellers) {
-          // استفاده از مدل MarzbanAccount اصلی
 
-          // دریافت اکانت‌های مرزبان با سرچ برای هر سلر
-          const marzbanAccountsResult = await AccountHelpers.GetMarzbanAccounts(
-            req.headers.authorization,
-            search
-          );
-          const marzbanAccounts =
-            (
-              marzbanAccountsResult.data as {
-                users?: IAccount[];
-              }
-            )?.users || [];
-          // دریافت اکانت‌های دیتابیس فقط با همین سرچ
-          const AccountModel = await getModel<IAccount>(
-            "Account",
-            AccountSchema
-          );
-          const sellerAccounts = await AccountModel.find({
-            Seller: sellerObj._id,
-            Username: { $regex: search, $options: "i" },
-          });
-          const mixed = await AccountHelpers.GetMixedAccount(
-            marzbanAccounts as unknown as MarzbanAccount[],
-            sellerAccounts,
-            sellerObj.Title,
-            sellerSubscriptionUrl
-          );
-          allMixed = allMixed.concat(mixed);
-        }
-        const normalized = allMixed.map(AccountHelpers.normalizeAccountOutput);
-        // حذف لاگ خروجی
-        res.status(200).json(normalized);
-        return;
-      } else {
-        // فقط برای یک سلر خاص
-        const marzbanAccountsResult = await AccountHelpers.GetMarzbanAccounts(
-          req.headers.authorization,
-          search
-        );
-        const marzbanAccounts =
-          (marzbanAccountsResult.data as { users?: IAccount[] })?.users || [];
-        const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
-        const sellerDoc = await SellerModel.findOne({ Title: seller });
-        if (!sellerDoc) {
-          res.status(404).json({ message: "Seller not found" });
-          return;
-        }
-        const AccountModel = await getModel<IAccount>("Account", AccountSchema);
-        const sellerAccounts = await AccountModel.find({
-          Seller: sellerDoc._id,
-          Username: { $regex: search, $options: "i" },
-        });
-        const mixed = await AccountHelpers.GetMixedAccount(
-          marzbanAccounts as unknown as MarzbanAccount[],
-          sellerAccounts,
-          seller,
-          sellerSubscriptionUrl
-        );
-        const normalized = mixed.map(AccountHelpers.normalizeAccountOutput);
-        // حذف لاگ خروجی
-        res.status(200).json(normalized);
-        return;
-      }
+      const sellerSubscriptionUrl = await ConfigFile.GetSubscriptionURL();
+
+      let allMixed: object[] = [];
+      const marzbanAccountsResult = await AccountHelpers.GetMarzbanAccounts(
+        req.headers.authorization,
+        undefined,
+        search
+      );
+      const marzbanAccounts =
+        (
+          marzbanAccountsResult.data as {
+            users?: IAccount[];
+          }
+        )?.users || [];
+      // دریافت اکانت‌های دیتابیس فقط با همین سرچ
+      const AccountModel = await getModel<IAccount>("Account", AccountSchema);
+      const sellerAccounts = await AccountModel.find({
+        Username: { $regex: search, $options: "i" },
+      });
+      const mixed = await AccountHelpers.GetMixedAccount(
+        marzbanAccounts as unknown as MarzbanAccount[],
+        sellerAccounts,
+        seller,
+        sellerSubscriptionUrl
+      );
+      allMixed = allMixed.concat(mixed);
+
+      const normalized = allMixed.map(AccountHelpers.normalizeAccountOutput);
+      // حذف لاگ خروجی
+      res.status(200).json(normalized);
+      return;
     } catch (error) {
       next(error);
     }
