@@ -149,9 +149,7 @@ class MarzbanController {
         )?.users || [];
       // دریافت اکانت‌های دیتابیس فقط با همین سرچ
       const AccountModel = await getModel<IAccount>("Account", AccountSchema);
-      const sellerAccounts = await AccountModel.find({
-        Username: { $regex: search, $options: "i" },
-      });
+      const sellerAccounts = await AccountModel.find();
       const mixed = await AccountHelpers.GetMixedAccount(
         marzbanAccounts as unknown as MarzbanAccount[],
         sellerAccounts,
