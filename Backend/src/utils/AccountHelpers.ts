@@ -585,12 +585,18 @@ class AccountHelpers {
   static GetMarzbanAccounts = async (
     authorization: string | undefined,
     seller: ISeller | undefined,
-    search: string = ""
+    search = ""
   ) => {
     const apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/users";
     const params = { search: "" };
 
-    if (seller) params.search = seller.Title;
+    if (seller) {
+      const token = await this.LoginToMarzban(
+        seller.MarzbanUsername,
+        seller.MarzbanPassword
+      );
+      authorization = "Bearer " + token;
+    }
 
     if (search != "") params.search = search;
 
