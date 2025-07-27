@@ -591,11 +591,16 @@ class AccountHelpers {
     const params = { search: "" };
 
     if (seller) {
-      const token = await this.LoginToMarzban(
-        seller.MarzbanUsername,
-        seller.MarzbanPassword
-      );
-      authorization = "Bearer " + token;
+      const getAllUsersForAgent = await ConfigFile.GetAllUsersForAgent();
+      if (getAllUsersForAgent === "Yes") {
+        const token = await this.LoginToMarzban(
+          seller.MarzbanUsername,
+          seller.MarzbanPassword
+        );
+        authorization = "Bearer " + token;
+      } else {
+        params.search = seller.Title;
+      }
     }
 
     if (search != "") params.search = search;
