@@ -68,7 +68,7 @@ app.get("/", (req: Request, res: Response) => {
 
 // مدیریت خطاهای جهانی
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error(`[${new Date().toISOString()}] Global Error:`, err);
+  console.error(`[${new Date().toISOString()}] Global Error:`, err.message);
 
   if (res.headersSent) return next(err);
 
