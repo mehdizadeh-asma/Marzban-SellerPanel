@@ -12,6 +12,7 @@ import {
   GridRenderCellParams,
   GridToolbarColumnsButton,
   GridToolbarFilterButton,
+  useGridApiRef,
 } from "@mui/x-data-grid";
 import Box from "@mui/material/Box";
 import LinearProgress from "@mui/material/LinearProgress";
@@ -39,6 +40,7 @@ import { copyTextToClipboard } from "@/utils/Helper";
 import QRModal from "./QRModal";
 import { Button, Checkbox } from "@mui/material";
 import Footer from "../General/Footer";
+import Messages from "../General/Messages";
 
 interface PropsType {
   Loading: boolean;
@@ -72,6 +74,13 @@ const ExpandableAccountGrid = forwardRef<
 
   type QRModalHandle = ElementRef<typeof QRModal>;
   const refQRModal = useRef<QRModalHandle>(null);
+
+  // اضافه کردن apiRef برای کنترل DataGrid
+  const apiRef = useGridApiRef();
+
+  // اضافه کردن refMessages مثل GeneralAccountGrid
+  type MessagesHandle = ElementRef<typeof Messages>;
+  const refMessages = useRef<MessagesHandle>(null);
 
   useImperativeHandle(ref, () => ({
     SendBackUsernames: () => {
@@ -516,20 +525,84 @@ const ExpandableAccountGrid = forwardRef<
     const isChecked = event.target.checked;
     setSelectAll(isChecked);
 
-    const currentPageParentIds = rows
+    // گرفتن همه آی‌دی‌ها
+    const allRowIds = apiRef.current.getAllRowIds();
+
+    // گرفتن ردیف‌های واقعی
+    const allRows = allRowIds
+      .map((id) => apiRef.current.getRow(id))
+      .filter((row) => row !== undefined);
+
+    // گرفتن مدل فیلتر فعال از گرید
+    const filterModel = apiRef.current.state.filter.filterModel;
+
+    // اعمال همه فیلترها و اپراتورها روی داده‌ها
+    let filteredRows = allRows;
+    filterModel.items.forEach((filter) => {
+      if (filter.field && filter.operator) {
+        filteredRows = filteredRows.filter((row) => {
+          const cellValue = row[filter.field];
+          const value = filter.value ?? "";
+
+          switch (filter.operator) {
+            case "contains":
+              return cellValue?.toString().includes(value);
+            case "equals":
+              return cellValue?.toString() === value;
+            case "startsWith":
+              return cellValue?.toString().startsWith(value);
+            case "endsWith":
+              return cellValue?.toString().endsWith(value);
+            case "isEmpty":
+              return !cellValue || cellValue.toString().trim() === "";
+            case "isNotEmpty":
+              return cellValue && cellValue.toString().trim() !== "";
+            case "isAnyOf":
+              if (Array.isArray(value)) {
+                return value.includes(cellValue?.toString());
+              }
+              return false;
+            default:
+              return true;
+          }
+        });
+      }
+    });
+
+    // فقط والدها و صفحه فعلی
+    const start = page * pageSize;
+    const end = start + pageSize;
+    const currentPageParentRows = filteredRows
       .filter((row) => row.isParent)
-      .slice(page * pageSize, (page + 1) * pageSize)
-      .map((row) => row.id);
+      .slice(start, end);
+    const currentPageParentIds = currentPageParentRows.map((row) => row.id);
+
+    const selectedCount = isChecked ? currentPageParentIds.length : 0;
 
     setSelectedRows(() => {
       if (isChecked) {
-        return new Set(currentPageParentIds);
+        return new Set(currentPageParentIds.map((id) => String(id)));
       } else {
         return new Set();
       }
     });
 
-    setAccountIdsToPay(isChecked ? currentPageParentIds : []);
+    setAccountIdsToPay(
+      isChecked ? currentPageParentIds.map((id) => String(id)) : [],
+    );
+
+    setTimeout(() => {
+      if (refMessages.current) {
+        if (isChecked && selectedCount > 0) {
+          refMessages.current.Show(
+            "success",
+            `${selectedCount} accounts selected!`,
+          );
+        } else {
+          refMessages.current.Show("info", "No accounts selected.");
+        }
+      }
+    }, 0);
   };
 
   const onPaymentClick = (account: AccountType) => {
@@ -646,6 +719,7 @@ const ExpandableAccountGrid = forwardRef<
 
   return (
     <div>
+      <Messages ref={refMessages}></Messages>
       <QRModal ref={refQRModal}></QRModal>
       <DataGrid
         initialState={{
@@ -684,6 +758,7 @@ const ExpandableAccountGrid = forwardRef<
         getRowHeight={(params) =>
           params.id.toString().includes("-detail") ? 100 : null
         }
+        apiRef={apiRef}
         sx={{
           boxShadow: 2,
           border: 2,

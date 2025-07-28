@@ -13,6 +13,7 @@ import {
   GridRenderCellParams,
   GridToolbarColumnsButton,
   GridToolbarFilterButton,
+  useGridApiRef,
 } from "@mui/x-data-grid";
 import LinearProgress from "@mui/material/LinearProgress";
 import Box from "@mui/material/Box";
@@ -38,6 +39,7 @@ import AccountType from "@/models/AccountType";
 import { copyTextToClipboard } from "@/utils/Helper";
 import QRModal from "./QRModal";
 import Footer from "../General/Footer";
+import Messages from "../General/Messages";
 
 interface PropsType {
   Loading: boolean;
@@ -67,6 +69,12 @@ const GeneralAccountGrid = forwardRef<
 
   type QRModalHandle = ElementRef<typeof QRModal>;
   const refQRModal = useRef<QRModalHandle>(null);
+
+  type MessagesHandle = ElementRef<typeof Messages>;
+  const refMessages = useRef<MessagesHandle>(null);
+
+  // استفاده از apiRef برای گرفتن ردیف‌های واقعی صفحه فعلی بعد از فیلتر و صفحه‌بندی
+  const apiRef = useGridApiRef();
 
   const columns = [
     {
@@ -101,7 +109,6 @@ const GeneralAccountGrid = forwardRef<
       maxWidth: 250,
       resizable: true,
       getActions: (params: { row: AccountType }) => [
-        // فقط اکشن‌های غیر از چک‌باکس را اینجا نگه دار
         <GridActionsCellItem
           key="link"
           label="Link"
@@ -305,27 +312,88 @@ const GeneralAccountGrid = forwardRef<
   const onRevoke = (account: AccountType) => {
     props.onRevoke(account);
   };
+
+  // اصلاح انتخاب همه با استفاده از apiRef و گرفتن ردیف‌های واقعی صفحه فعلی
   const handleSelectAllChange = (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const isChecked = event.target.checked;
     setSelectAll(isChecked);
 
-    // فقط ردیف‌های صفحه جاری را انتخاب کن
-    const currentPageIds = props.Accounts.slice(
-      page * pageSize,
-      (page + 1) * pageSize,
-    ).map((row) => row.id);
+    // گرفتن همه آی‌دی‌ها
+    const allRowIds = apiRef.current.getAllRowIds();
+
+    // گرفتن ردیف‌های واقعی
+    const allRows = allRowIds
+      .map((id) => apiRef.current.getRow(id))
+      .filter((row) => row !== undefined);
+
+    // گرفتن مدل فیلتر فعال از گرید
+    const filterModel = apiRef.current.state.filter.filterModel;
+
+    // اعمال همه فیلترها و اپراتورها روی داده‌ها
+    let filteredRows = allRows;
+    filterModel.items.forEach((filter) => {
+      if (filter.field && filter.operator) {
+        filteredRows = filteredRows.filter((row) => {
+          const cellValue = row[filter.field];
+          const value = filter.value ?? "";
+
+          switch (filter.operator) {
+            case "contains":
+              return cellValue?.toString().includes(value);
+            case "equals":
+              return cellValue?.toString() === value;
+            case "startsWith":
+              return cellValue?.toString().startsWith(value);
+            case "endsWith":
+              return cellValue?.toString().endsWith(value);
+            case "isEmpty":
+              return !cellValue || cellValue.toString().trim() === "";
+            case "isNotEmpty":
+              return cellValue && cellValue.toString().trim() !== "";
+            case "isAnyOf":
+              if (Array.isArray(value)) {
+                return value.includes(cellValue?.toString());
+              }
+              return false;
+            default:
+              return true;
+          }
+        });
+      }
+    });
+
+    // صفحه فعلی
+    const start = page * pageSize;
+    const end = start + pageSize;
+    const currentPageRows = filteredRows.slice(start, end);
+    const currentPageIds = currentPageRows.map((row) => row.id);
+
+    const selectedCount = isChecked ? currentPageIds.length : 0;
 
     setSelectedRows(() => {
       if (isChecked) {
-        return new Set(currentPageIds);
+        return new Set(currentPageIds.map((id) => String(id)));
       } else {
         return new Set();
       }
     });
 
-    setAccountIdsToPay(isChecked ? currentPageIds : []);
+    setAccountIdsToPay(isChecked ? currentPageIds.map((id) => String(id)) : []);
+
+    setTimeout(() => {
+      if (refMessages.current) {
+        if (isChecked && selectedCount > 0) {
+          refMessages.current.Show(
+            "success",
+            `${selectedCount} accounts selected!`,
+          );
+        } else {
+          refMessages.current.Show("info", "No accounts selected.");
+        }
+      }
+    }, 0);
   };
 
   const onCheckPay = (account: AccountType) => {
@@ -457,7 +525,9 @@ const GeneralAccountGrid = forwardRef<
 
   return (
     <>
+      <Messages ref={refMessages}></Messages>
       <DataGrid
+        apiRef={apiRef}
         initialState={{
           pagination: { paginationModel: { pageSize: 10 } },
         }}
@@ -513,8 +583,8 @@ const GeneralAccountGrid = forwardRef<
           },
         }}
       />
-      <Footer></Footer>
-      <QRModal ref={refQRModal}></QRModal>
+      <Footer />
+      <QRModal ref={refQRModal} />
     </>
   );
 });
