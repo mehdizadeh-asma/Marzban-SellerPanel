@@ -613,7 +613,7 @@ class AccountHelpers {
     return axios.get(apiURL, config);
   };
 
-  static normalizeAccountOutput = (
+  static NormalizeAccountOutput = (
     account: unknown
   ): Record<string, unknown> => {
     if (typeof account !== "object" || account === null) {

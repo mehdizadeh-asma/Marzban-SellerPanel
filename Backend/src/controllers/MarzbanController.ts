@@ -74,7 +74,10 @@ class MarzbanController {
           );
 
           // فقط جمعه‌ها اجرا شود
-          if (new Date().getDay() === 5)
+          if (
+            new Date().getDay() === 5 &&
+            (await ConfigFile.GetDeletePaidAndRemovedUsers()) == "Yes"
+          )
             await AccountHelpers.RemoveDeletedAccountSeller(
               `Bearer ${token}`,
               seller
@@ -120,7 +123,7 @@ class MarzbanController {
         isAdmin
       );
       const normalized = Array.isArray(accounts)
-        ? accounts.map(AccountHelpers.normalizeAccountOutput)
+        ? accounts.map(AccountHelpers.NormalizeAccountOutput)
         : [];
       res.status(200).json(normalized);
     } catch (error) {
@@ -158,7 +161,7 @@ class MarzbanController {
       );
       allMixed = allMixed.concat(mixed);
 
-      const normalized = allMixed.map(AccountHelpers.normalizeAccountOutput);
+      const normalized = allMixed.map(AccountHelpers.NormalizeAccountOutput);
       // حذف لاگ خروجی
       res.status(200).json(normalized);
       return;

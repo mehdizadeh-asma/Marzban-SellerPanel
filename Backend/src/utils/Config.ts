@@ -11,6 +11,7 @@ interface ConfigType {
   SELLER_ADMIN_PASSWORD: string;
   IGNORE_TRAFFIC_TO_REMOVE: string;
   GET_ALL_USERS_FOR_AGENT: string;
+  DELETE_PAIDANDREMOVED_USERS: string;
   RENEW_FORCE_TO_PAID: string;
   RENEW_FORCE_TO_LIMITED_AND_EXPIRED: string;
   SERIALKEY: string;
@@ -77,7 +78,9 @@ class ConfigFile {
     if (this.config && this.config.RENEW_FORCE_TO_LIMITED_AND_EXPIRED)
       return this.config.RENEW_FORCE_TO_LIMITED_AND_EXPIRED;
 
-    throw new Error("RENEW_FORCE_TO_LIMITED_AND_EXPIRED doesn't exist in config File!");
+    throw new Error(
+      "RENEW_FORCE_TO_LIMITED_AND_EXPIRED doesn't exist in config File!"
+    );
   }
 
   static async GetAllUsersForAgent() {
@@ -87,7 +90,18 @@ class ConfigFile {
       return this.config.GET_ALL_USERS_FOR_AGENT;
 
     throw new Error("GET_ALL_USERS_FOR_AGENT doesn't exist in config File!");
-  }  
+  }
+
+  static async GetDeletePaidAndRemovedUsers() {
+    if (!this.config) await this.GetConfigFromFile();
+
+    if (this.config && this.config.DELETE_PAIDANDREMOVED_USERS)
+      return this.config.DELETE_PAIDANDREMOVED_USERS;
+
+    throw new Error(
+      "DELETE_PAIDANDREMOVED_USERS doesn't exist in config File!"
+    );
+  }
 
   static async GetMarzbanFlow() {
     if (!this.config) await this.GetConfigFromFile();
