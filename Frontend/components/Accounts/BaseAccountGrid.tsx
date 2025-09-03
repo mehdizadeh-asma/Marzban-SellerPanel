@@ -6,7 +6,12 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { DataGrid, useGridApiRef, GridColDef } from "@mui/x-data-grid";
+import {
+  DataGrid,
+  useGridApiRef,
+  GridColDef,
+  gridFilteredSortedRowIdsSelector,
+} from "@mui/x-data-grid";
 import Box from "@mui/material/Box";
 import Checkbox from "@mui/material/Checkbox";
 import CreditScoreRoundedIcon from "@mui/icons-material/CreditScoreRounded";
@@ -87,16 +92,14 @@ const BaseAccountGrid = forwardRef<BaseGridHandle, Props>((props, ref) => {
   const refMessages = useRef<ComponentRef<typeof Messages>>(null);
   const refQRModal = useRef<ComponentRef<typeof QRModal>>(null);
   const [selectedLink, setSelectedLink] = useState<string>("");
-  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [selectAll, setSelectAll] = useState(false);
-  const [accountIdsToPay, setAccountIdsToPay] = useState<string[]>([]);
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
 
   useImperativeHandle(ref, () => ({
     SendBackUsernames: () => {
-      const accountsId = [...accountIdsToPay];
-      setAccountIdsToPay([]);
+      const accountsId = Array.from(selectedRows);
       setSelectedRows(new Set());
       setSelectAll(false);
       return accountsId;
@@ -258,88 +261,72 @@ const BaseAccountGrid = forwardRef<BaseGridHandle, Props>((props, ref) => {
       else newSet.add(account.id);
       return newSet;
     });
-    setAccountIdsToPay((prev) =>
-      prev.includes(account.id)
-        ? prev.filter((id) => id !== account.id)
-        : [...prev, account.id],
-    );
   };
 
   const onSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
     const isChecked = event.target.checked;
     setSelectAll(isChecked);
+    let selectedCount = 0;
 
-    const api = apiRef.current;
-    if (!api) return;
+    if (isChecked) {
+      const api = apiRef.current;
+      if (!api) return;
 
-    let visibleSortedIds: string[] = [];
-    try {
-      if (typeof api.getAllRowIds === "function") {
-        visibleSortedIds = api.getAllRowIds().map(String);
-      } else if (typeof api.getRowModels === "function") {
-        visibleSortedIds = Array.from(
-          (api.getRowModels() as Map<any, any>).keys(),
-        ).map(String);
-      } else if ((api.state as any)?.rows?.filteredSortedRowIds) {
-        visibleSortedIds = (api.state as any).rows.filteredSortedRowIds.map(
-          String,
-        );
-      }
-    } catch (e) {
-      visibleSortedIds = [];
-    }
-
-    if (!visibleSortedIds || visibleSortedIds.length === 0) {
+      let visibleSortedIds: string[] = [];
       try {
-        visibleSortedIds = api.getAllRowIds
-          ? (api.getAllRowIds() as any[]).map(String)
-          : [];
+        if (
+          apiRef &&
+          apiRef.current &&
+          typeof gridFilteredSortedRowIdsSelector === "function"
+        ) {
+          const ids = gridFilteredSortedRowIdsSelector(
+            (api as any).state ?? apiRef.current.state,
+          );
+          if (Array.isArray(ids) && ids.length) {
+            visibleSortedIds = ids.map(String);
+            // console.log("gridFilteredSortedRowIdsSelector:", visibleSortedIds);
+          }
+        }
       } catch (e) {
         visibleSortedIds = [];
       }
-    }
 
-    const start = page * pageSize;
-    const end = start + pageSize;
-    const pageIds = visibleSortedIds.slice(start, end);
-
-    const currentPageParentIds = pageIds
-      .map((id) => {
+      if (!visibleSortedIds || visibleSortedIds.length === 0) {
         try {
-          const row = api.getRow ? api.getRow(id) : undefined;
-          if (!row) return null;
-          if (typeof row.isParent !== "undefined")
-            return row.isParent ? String(row.id) : null;
-          return String(row.id);
-        } catch {
-          return null;
+          visibleSortedIds = api.getAllRowIds
+            ? (api.getAllRowIds() as any[]).map(String)
+            : [];
+        } catch (e) {
+          visibleSortedIds = [];
         }
-      })
-      .filter(Boolean) as string[];
+      }
 
-    if (isChecked) {
-      setSelectedRows((prev) => {
-        const next = new Set(prev);
-        currentPageParentIds.forEach((id) => next.add(id));
-        return next;
-      });
-      setAccountIdsToPay((prev) => {
-        const next = new Set(prev);
-        currentPageParentIds.forEach((id) => next.add(id));
-        return Array.from(next);
-      });
+      const start = page * pageSize;
+      const end = start + pageSize;
+      const pageIds = visibleSortedIds.slice(start, end);
+
+      const currentPageParentIds = pageIds
+        .map((id) => {
+          try {
+            const row = api.getRow ? api.getRow(id) : undefined;
+            if (!row) return null;
+            if (typeof row.isParent !== "undefined")
+              return row.isParent ? String(row.id) : null;
+            return String(row.id);
+          } catch {
+            return null;
+          }
+        })
+        .filter(Boolean) as string[];
+
+      const selectedIds = new Set<string>();
+      currentPageParentIds.forEach((id) => selectedIds.add(id));
+      setSelectedRows(selectedIds);
+      selectedCount = isChecked ? currentPageParentIds.length : 0;
     } else {
-      setSelectedRows((prev) => {
-        const next = new Set(prev);
-        currentPageParentIds.forEach((id) => next.delete(id));
-        return next;
-      });
-      setAccountIdsToPay((prev) =>
-        prev.filter((id) => !currentPageParentIds.includes(id)),
-      );
+      setSelectedRows(new Set());
     }
 
-    const selectedCount = isChecked ? currentPageParentIds.length : 0;
     setTimeout(() => {
       if (refMessages.current) {
         if (isChecked && selectedCount > 0) {
