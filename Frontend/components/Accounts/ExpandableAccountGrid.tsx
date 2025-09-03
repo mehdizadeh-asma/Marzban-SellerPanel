@@ -1,46 +1,14 @@
 "use client";
-import {
-  ElementRef,
-  forwardRef,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from "react";
-import {
-  DataGrid,
-  GridActionsCellItem,
-  GridRenderCellParams,
-  GridToolbarColumnsButton,
-  GridToolbarFilterButton,
-  useGridApiRef,
-} from "@mui/x-data-grid";
-import Box from "@mui/material/Box";
-import LinearProgress from "@mui/material/LinearProgress";
-import DeleteIcon from "@mui/icons-material/Delete";
-import RenewIcon from "@mui/icons-material/RecyclingOutlined";
-import LinkIcon from "@mui/icons-material/Link";
-import CheckIcon from "@mui/icons-material/Check";
-import WatchLaterIcon from "@mui/icons-material/WatchLater";
-import CreditScoreRoundedIcon from "@mui/icons-material/CreditScoreRounded";
-import CreditCardOffRoundedIcon from "@mui/icons-material/CreditCardOffRounded";
-import GppMaybeRoundedIcon from "@mui/icons-material/GppMaybeRounded";
-import GppGoodRoundedIcon from "@mui/icons-material/GppGoodRounded";
-import GppBadRoundedIcon from "@mui/icons-material/GppBadRounded";
-import SafetyCheckRoundedIcon from "@mui/icons-material/SafetyCheckRounded";
-import CircleIcon from "@mui/icons-material/Circle";
-import ToggleOnIcon from "@mui/icons-material/ToggleOn";
-import ToggleOffIcon from "@mui/icons-material/ToggleOff";
-import QrCode2Icon from "@mui/icons-material/QrCode2";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { forwardRef, useState } from "react";
+import BaseAccountGrid, {
+  BaseGridHandle,
+  BaseGridHelpers,
+} from "./BaseAccountGrid";
+import { Box, Typography, Button } from "@mui/material";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
-import AutoModeIcon from "@mui/icons-material/AutoMode";
-
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AccountType from "@/models/AccountType";
-import { copyTextToClipboard } from "@/utils/Helper";
-import QRModal from "./QRModal";
-import { Button, Checkbox } from "@mui/material";
-import Footer from "../General/Footer";
-import Messages from "../General/Messages";
+import { GridColDef, GridActionsCellItem } from "@mui/x-data-grid";
 
 interface PropsType {
   Loading: boolean;
@@ -51,736 +19,302 @@ interface PropsType {
   onPaying: (accountId: string) => void;
   onRevoke: (account: AccountType) => void;
 }
-export interface ExpandableGridForwardRefHandle {
-  SendBackUsernames: () => string[];
-}
-
 interface GridRowData extends AccountType {
   isParent: boolean;
   isChecked: boolean;
 }
 
-const ExpandableAccountGrid = forwardRef<
-  ExpandableGridForwardRefHandle,
-  PropsType
->((props, ref) => {
-  const [selectedLink, setSelectedLink] = useState("");
-  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
-  const [selectAll, setSelectAll] = useState(false);
-  const [accountIdsToPay, setAccountIdsToPay] = useState<string[]>([]);
-  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
+const ExpandableAccountGrid = forwardRef<BaseGridHandle, PropsType>(
+  (props, _ref): any => {
+    const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
-  type QRModalHandle = ElementRef<typeof QRModal>;
-  const refQRModal = useRef<QRModalHandle>(null);
-
-  // اضافه کردن apiRef برای کنترل DataGrid
-  const apiRef = useGridApiRef();
-
-  // اضافه کردن refMessages مثل GeneralAccountGrid
-  type MessagesHandle = ElementRef<typeof Messages>;
-  const refMessages = useRef<MessagesHandle>(null);
-
-  useImperativeHandle(ref, () => ({
-    SendBackUsernames: () => {
-      const accountsId = [...accountIdsToPay];
-      setAccountIdsToPay([]);
-      return accountsId;
-    },
-  }));
-
-  const onRevoke = (account: AccountType) => {
-    props.onRevoke(account);
-  };
-  const onCheckPay = (account: AccountType) => {
-    // const tempAccount = account as GridRowData;
-    // tempAccount.isChecked = !tempAccount.isChecked;
-    if (account.id) {
-      setSelectedRows((prev) => {
-        const newSet = new Set(prev);
-        if (newSet.has(account.id)) newSet.delete(account.id);
-        else newSet.add(account.id);
-        return newSet;
+    const toggleRowExpansion = (username: string) => {
+      setExpandedRows((prev) => {
+        const updated = new Set(prev);
+        if (updated.has(username)) updated.delete(username);
+        else updated.add(username);
+        return updated;
       });
-      setAccountIdsToPay((prevAccountIds) =>
-        prevAccountIds.includes(account.id)
-          ? prevAccountIds.filter((myid) => myid !== account.id)
-          : [...prevAccountIds, account.id],
-      );
-    }
-  };
-
-  const columns = [
-    {
-      field: "toggle",
-      headerName: "",
-      headerClassName: "MUIGridHeader",
-      width: 10,
-      resizable: true,
-      renderCell: (params: GridRenderCellParams<GridRowData, string>) => {
-        const { username, isParent } = params.row;
-        if (isParent) {
-          return (
-            <Button onClick={() => toggleRowExpansion(username)}>
-              {expandedRows.has(username) ? (
-                <ExpandLessIcon className="text-danger"></ExpandLessIcon>
-              ) : (
-                <ExpandMoreIcon className="text-info"></ExpandMoreIcon>
-              )}
-            </Button>
-          );
-        }
-        return null;
-      },
-    },
-    {
-      headerClassName: "MUIGridHeader",
-      headerName: "",
-      field: "select",
-      type: "actions",
-      width: 30,
-      renderHeader: () => (
-        <Checkbox checked={selectAll} onChange={handleSelectAllChange} />
-      ),
-      getActions: (params: { row: GridRowData }) => {
-        const isParentRow = params.row.isParent;
-        return isParentRow
-          ? [
-              <GridActionsCellItem
-                key="checkPay"
-                label="Check To Pay"
-                icon={
-                  <Checkbox
-                    sx={{ fontSize: "25px" }}
-                    checked={selectedRows.has(params.row.id)}
-                    onChange={() => onCheckPay(params.row)}
-                  />
-                }
-              />,
-            ]
-          : [
-              <GridActionsCellItem
-                key="revoke"
-                label="Revoke"
-                icon={
-                  <AutoModeIcon
-                    className="text-warning"
-                    sx={{ fontSize: "25px" }}
-                  />
-                }
-                onClick={() => onRevoke(params.row)}
-              />,
-            ];
-      },
-    },
-
-    {
-      headerClassName: "MUIGridHeader",
-      headerName: "",
-      field: "link",
-      type: "actions",
-      width: 110,
-      getActions: (params: { row: GridRowData }) => {
-        const isParentRow = params.row.isParent;
-
-        return isParentRow
-          ? [
-              <GridActionsCellItem
-                key="link"
-                label="Link"
-                icon={
-                  params.row.username === selectedLink ? (
-                    <CheckIcon className="text-primary " />
-                  ) : (
-                    <LinkIcon className="text-primary" />
-                  )
-                }
-                onClick={() => onCopyLink(params.row)}
-              />,
-              <GridActionsCellItem
-                key="qr"
-                label="QR"
-                icon={<QrCode2Icon className="text-primary" />}
-                onClick={() => {
-                  onQRClick(params.row);
-                }}
-              />,
-              <GridActionsCellItem
-                key="renew"
-                label="Renew"
-                icon={<RenewIcon className="text-success" />}
-                onClick={() => onRenewClick(params.row)}
-              />,
-            ]
-          : [
-              <GridActionsCellItem
-                key="paid"
-                label="Paid"
-                icon={RenderPayment(params.row.payed)}
-                onClick={() => {
-                  onPaymentClick(params.row);
-                }}
-              />,
-              <GridActionsCellItem
-                key="disable"
-                label="disable"
-                icon={
-                  params.row.status === "disabled" ? (
-                    <ToggleOffIcon
-                      className="text-secondry "
-                      sx={{ fontSize: "28px" }}
-                    />
-                  ) : (
-                    <ToggleOnIcon
-                      sx={{ fontSize: "28px" }}
-                      className="text-success "
-                    />
-                  )
-                }
-                onClick={() => {
-                  onDisableAccount(params.row);
-                }}
-              />,
-              <GridActionsCellItem
-                key="delete"
-                label="Delete"
-                icon={
-                  <DeleteIcon
-                    sx={{ fontSize: "23px" }}
-                    className="text-danger"
-                  />
-                }
-                onClick={() => onDeleteClick(params.row)}
-              />,
-            ];
-      },
-    },
-    {
-      field: "username",
-      headerName: "Username",
-      width: 150,
-      minWidth: 50,
-      maxWidth: 160,
-      resizable: true,
-      headerClassName: "MUIGridHeader",
-      renderCell: (params: GridRenderCellParams<GridRowData, string>) => {
-        if (params.row.isParent) {
-          return params.row.username;
-        } else {
-          return (
-            <Box display="flex" flexDirection="column" alignItems="center">
-              <p
-                style={{
-                  margin: 0,
-                  fontWeight: "bold",
-                  textAlign: "center",
-                  wordWrap: "break-word",
-                  whiteSpace: "normal",
-                }}
-              >
-                Last Application
-              </p>
-              <div
-                style={{
-                  width: "100%",
-                  height: "1px",
-                  backgroundColor: "#ccc",
-                  margin: "4px 0",
-                }}
-              ></div>
-              <p
-                style={{
-                  margin: 0,
-                  textAlign: "center",
-                  wordWrap: "break-word",
-                  whiteSpace: "normal",
-                }}
-              >
-                {params.row.sub_last_user_agent
-                  ? `${params.row.sub_last_user_agent}`
-                  : "N/A"}
-              </p>
-            </Box>
-          );
-        }
-      },
-    },
-
-    {
-      field: "note",
-      headerName: "Note",
-      width: 100,
-      headerClassName: "MUIGridHeader",
-      renderCell: (params: GridRenderCellParams<GridRowData, string>) => {
-        return params.row.isParent ? params.row.note : "";
-      },
-    },
-    {
-      field: "status",
-      headerName: "Status",
-      width: 110,
-      headerClassName: "MUIGridHeader",
-      renderCell: (params: GridRenderCellParams<GridRowData, string>) => {
-        if (params.row.isParent) {
-          return RenderStatus(params.value);
-        } else {
-          return (
-            <Box display="flex" flexDirection="column" alignItems="center">
-              <p
-                style={{
-                  margin: 0,
-                  fontWeight: "bold",
-                  textAlign: "center",
-                  wordWrap: "break-word",
-                  whiteSpace: "normal",
-                }}
-              >
-                Last Update
-              </p>
-              <div
-                style={{
-                  width: "100%",
-                  height: "1px",
-                  backgroundColor: "#ccc",
-                  margin: "4px 0",
-                  textAlign: "center",
-                  wordWrap: "break-word",
-                  whiteSpace: "normal",
-                }}
-              ></div>
-              <p
-                style={{
-                  margin: 0,
-                  textAlign: "center",
-                  wordWrap: "break-word",
-                  whiteSpace: "normal",
-                }}
-              >
-                {params.row.sub_updated_at
-                  ? `${params.row.sub_updated_at}`
-                  : "N/A"}
-              </p>
-            </Box>
-          );
-        }
-      },
-    },
-    {
-      field: "online",
-      headerName: "Online",
-      width: 10,
-      renderCell: (params: GridRenderCellParams<GridRowData, string>) => {
-        return params.row.isParent ? RenderOnline(params.value) : "";
-      },
-
-      headerClassName: "MUIGridHeader",
-    },
-    {
-      field: "used_traffic_string",
-      headerName: "Usage",
-      width: 180,
-      headerClassName: "MUIGridHeader",
-      renderCell: (params: GridRenderCellParams<GridRowData, string>) => {
-        if (params.row.isParent) {
-          return RenderUsage(params.row);
-        } else {
-          return (
-            <Box display="flex" flexDirection="column" alignItems="center">
-              <p style={{ margin: 0, fontWeight: "bold" }}>Last Online</p>
-              <div
-                style={{
-                  width: "100%",
-                  height: "1px",
-                  backgroundColor: "#ccc",
-                  margin: "4px 0",
-                }}
-              ></div>
-              <p
-                style={{
-                  margin: 0,
-                  textAlign: "center",
-                  wordWrap: "break-word",
-                  whiteSpace: "normal",
-                }}
-              >
-                {params.row.online_at ? `${params.row.online_at}` : "N/A"}
-              </p>
-            </Box>
-          );
-        }
-      },
-    },
-    {
-      field: "expire_string",
-      headerName: "Expire",
-      width: 110,
-      headerClassName: "MUIGridHeader",
-      renderCell: (params: GridRenderCellParams<GridRowData, string>) => {
-        if (params.row.isParent) {
-          return params.value;
-        } else {
-          return (
-            <Box display="flex" flexDirection="column" alignItems="center">
-              <p style={{ margin: 0, fontWeight: "bold" }}>Package</p>
-              <div
-                style={{
-                  width: "100%",
-                  height: "1px",
-                  backgroundColor: "#ccc",
-                  margin: "4px 0",
-                }}
-              ></div>
-              <p
-                style={{
-                  margin: 0,
-                  textAlign: "center",
-                  wordWrap: "break-word",
-                  whiteSpace: "normal",
-                }}
-              >
-                {params.row.package ? `${params.row.package}` : "N/A"}
-              </p>
-            </Box>
-          );
-        }
-      },
-    },
-    {
-      field: "price",
-      headerName: "Price",
-      width: 60,
-      headerClassName: "MUIGridHeader",
-      renderCell: (params: GridRenderCellParams<GridRowData, string>) => {
-        if (params.row.isParent) return params.value;
-        return "";
-        // } else {
-        //   return (
-        //     <Box display="flex" flexDirection="column" alignItems="center">
-        //       <p style={{ margin: 0, fontWeight: "bold" }}>Price</p>
-        //       <div
-        //         style={{
-        //           width: "100%",
-        //           height: "1px",
-        //           backgroundColor: "#ccc",
-        //           margin: "4px 0",
-        //         }}
-        //       ></div>
-        //       <p
-        //         style={{
-        //           margin: 0,
-        //           textAlign: "center",
-        //           wordWrap: "break-word",
-        //           whiteSpace: "normal",
-        //         }}
-        //       >
-        //         {params.row.price ? `${params.row.price}` : "N/A"}
-        //       </p>
-        //     </Box>
-        //   );
-        // }
-      },
-    },
-  ];
-
-  const accounts = Array.isArray(props.Accounts) ? props.Accounts : [];
-
-  // ساختن آرایه rows برای DataGrid
-  const rows: GridRowData[] = accounts.flatMap((account) => {
-    const isExpanded = expandedRows.has(account.username);
-    const parentRow: GridRowData = {
-      ...account,
-      isParent: true,
-      isChecked: false,
     };
-    const detailRow: GridRowData | null = isExpanded
-      ? {
-          ...account,
-          id: `${account.id}-detail`,
-          isParent: false,
-          isChecked: false,
-          username: account.username,
-          price: account.price,
-          sub_last_user_agent: account.sub_last_user_agent,
-          sub_updated_at: account.sub_updated_at,
-          package: account.package,
-          online_at: account.online_at,
-        }
-      : null;
-    return detailRow ? [parentRow, detailRow] : [parentRow];
-  });
 
-  const toggleRowExpansion = (username: string) => {
-    setExpandedRows((prev) => {
-      const updated = new Set(prev);
-      if (updated.has(username)) updated.delete(username);
-      else updated.add(username);
-      return updated;
-    });
-  };
-
-  const handleSelectAllChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const isChecked = event.target.checked;
-    setSelectAll(isChecked);
-
-    // گرفتن همه آی‌دی‌ها
-    const allRowIds = apiRef.current.getAllRowIds();
-
-    // گرفتن ردیف‌های واقعی
-    const allRows = allRowIds
-      .map((id) => apiRef.current.getRow(id))
-      .filter((row) => row !== undefined);
-
-    // گرفتن مدل فیلتر فعال از گرید
-    const filterModel = apiRef.current.state.filter.filterModel;
-
-    // اعمال همه فیلترها و اپراتورها روی داده‌ها
-    let filteredRows = allRows;
-    filterModel.items.forEach((filter) => {
-      if (filter.field && filter.operator) {
-        filteredRows = filteredRows.filter((row) => {
-          const cellValue = row[filter.field];
-          const value = filter.value ?? "";
-
-          switch (filter.operator) {
-            case "contains":
-              return cellValue?.toString().includes(value);
-            case "equals":
-              return cellValue?.toString() === value;
-            case "startsWith":
-              return cellValue?.toString().startsWith(value);
-            case "endsWith":
-              return cellValue?.toString().endsWith(value);
-            case "isEmpty":
-              return !cellValue || cellValue.toString().trim() === "";
-            case "isNotEmpty":
-              return cellValue && cellValue.toString().trim() !== "";
-            case "isAnyOf":
-              if (Array.isArray(value)) {
-                return value.includes(cellValue?.toString());
-              }
-              return false;
-            default:
-              return true;
+    const buildColumns = (helpers: BaseGridHelpers): GridColDef[] => [
+      {
+        field: "toggle",
+        headerName: "",
+        width: 50,
+        renderCell: (params: any) => {
+          const r = params.row;
+          if (r.isParent) {
+            return (
+              <Button onClick={() => toggleRowExpansion(r.username)}>
+                {expandedRows.has(r.username) ? (
+                  <ExpandLessIcon className="text-danger" />
+                ) : (
+                  <ExpandMoreIcon className="text-info" />
+                )}
+              </Button>
+            );
           }
-        });
-      }
-    });
-
-    // فقط والدها و صفحه فعلی
-    const start = page * pageSize;
-    const end = start + pageSize;
-    const currentPageParentRows = filteredRows
-      .filter((row) => row.isParent)
-      .slice(start, end);
-    const currentPageParentIds = currentPageParentRows.map((row) => row.id);
-
-    const selectedCount = isChecked ? currentPageParentIds.length : 0;
-
-    setSelectedRows(() => {
-      if (isChecked) {
-        return new Set(currentPageParentIds.map((id) => String(id)));
-      } else {
-        return new Set();
-      }
-    });
-
-    setAccountIdsToPay(
-      isChecked ? currentPageParentIds.map((id) => String(id)) : [],
-    );
-
-    setTimeout(() => {
-      if (refMessages.current) {
-        if (isChecked && selectedCount > 0) {
-          refMessages.current.Show(
-            "success",
-            `${selectedCount} accounts selected!`,
-          );
-        } else {
-          refMessages.current.Show("info", "No accounts selected.");
-        }
-      }
-    }, 0);
-  };
-
-  const onPaymentClick = (account: AccountType) => {
-    const id = account.id.replace("-detail", "");
-    props.onPaying(id);
-  };
-
-  const RenderOnline = (online: string | undefined) => {
-    switch (online) {
-      case "Online":
-        return (
-          <span className="text-success  ">
-            <CircleIcon className="w-100 border border-3 border-success rounded-circle"></CircleIcon>
-          </span>
-        );
-      case "Offline":
-        return (
-          <span className="text-danger  ">
-            <CircleIcon className="w-100 border border-3 border-danger rounded-circle "></CircleIcon>
-          </span>
-        );
-      case "Never":
-        return (
-          <span className="text-warning">
-            <CircleIcon className="w-100 border border-3 border-secondary rounded-circle"></CircleIcon>
-          </span>
-        );
-    }
-  };
-
-  const RenderStatus = (status: string | undefined) => {
-    switch (status) {
-      case "active":
-        return (
-          <span className="text-success">
-            <GppGoodRoundedIcon></GppGoodRoundedIcon>Active
-          </span>
-        );
-      case "on_hold":
-        return (
-          <span className="text-purple">
-            <WatchLaterIcon></WatchLaterIcon>On Hold
-          </span>
-        );
-      case "disabled":
-        return (
-          <span className="text-secondary">
-            <GppBadRoundedIcon></GppBadRoundedIcon>Disabled
-          </span>
-        );
-      case "expired":
-        return (
-          <span className="text-primary">
-            <SafetyCheckRoundedIcon></SafetyCheckRoundedIcon>Expired
-          </span>
-        );
-      case "limited":
-        return (
-          <span className="text-danger">
-            <GppMaybeRoundedIcon></GppMaybeRoundedIcon>Limited
-          </span>
-        );
-    }
-  };
-
-  const RenderPayment = (payment: string | undefined) => {
-    return payment === "Paid" ? (
-      <span className="text-success">
-        <CreditScoreRoundedIcon
-          sx={{ fontSize: "20px" }}
-        ></CreditScoreRoundedIcon>
-      </span>
-    ) : (
-      <span className="text-secondary">
-        <CreditCardOffRoundedIcon
-          sx={{ fontSize: "20px" }}
-        ></CreditCardOffRoundedIcon>
-      </span>
-    );
-  };
-
-  const RenderUsage = (account: AccountType) => {
-    return (
-      <Box sx={{ width: "100%" }}>
-        {`${account.used_traffic_string} of ${account.data_limit / (1024 * 1024 * 1024)} GB`}
-        <LinearProgress
-          variant="determinate"
-          value={(account.used_traffic / account.data_limit) * 100}
-        />
-      </Box>
-    );
-  };
-
-  const onCopyLink = (account: AccountType) => {
-    copyTextToClipboard(account.subscription_url);
-    setSelectedLink(account.username);
-  };
-
-  const onRenewClick = (account: AccountType) => {
-    props.onRenewing(account);
-  };
-
-  const onQRClick = (account: AccountType) => {
-    refQRModal.current?.Show(account.subscription_url, account.username);
-  };
-
-  const onDeleteClick = (account: AccountType) => {
-    props.onDeleting(account);
-  };
-
-  const onDisableAccount = (account: AccountType) => {
-    props.onDisabling(account);
-  };
-
-  return (
-    <div>
-      <Messages ref={refMessages}></Messages>
-      <QRModal ref={refQRModal}></QRModal>
-      <DataGrid
-        initialState={{
-          pagination: { paginationModel: { pageSize: 10 } },
-        }}
-        pageSizeOptions={[10, 25, 50, 100]}
-        className="Grid"
-        rows={rows}
-        columns={columns}
-        getRowId={(row) => row.id}
-        loading={props.Loading}
-        paginationModel={{ page, pageSize }}
-        onPaginationModelChange={(model) => {
-          setPage(model.page);
-          setPageSize(model.pageSize);
-        }}
-        slots={{
-          toolbar: () => (
+          return null;
+        },
+      },
+      {
+        field: "select",
+        type: "actions",
+        width: 50,
+        renderHeader: () => helpers.RenderSelectHeader(),
+        getActions: (params: { row: any }) => {
+          const isParentRow = params.row.isParent;
+          return isParentRow
+            ? [
+                <GridActionsCellItem
+                  key="checkPay"
+                  label="Check To Pay"
+                  icon={helpers.RenderSelectCheckbox(params.row)}
+                />,
+              ]
+            : [
+                <GridActionsCellItem
+                  key="revoke"
+                  label="Revoke"
+                  icon={helpers.RenderRevokeIcon(params.row)}
+                  onClick={() => helpers.onRevokeClick(params.row)}
+                />,
+              ];
+        },
+      },
+      {
+        headerName: "",
+        field: "link",
+        type: "actions",
+        width: 110,
+        getActions: (params: { row: any }) => {
+          const isParentRow = params.row.isParent;
+          return isParentRow
+            ? [
+                <GridActionsCellItem
+                  key="link"
+                  label="Link"
+                  icon={helpers.RenderLinkIcon(params.row)}
+                  onClick={() => {
+                    helpers.onCopyLink(params.row);
+                  }}
+                />,
+                <GridActionsCellItem
+                  key="qr"
+                  label="QR"
+                  icon={helpers.RenderQRIcon(params.row)}
+                  onClick={() => helpers.onQRClick(params.row)}
+                />,
+                <GridActionsCellItem
+                  key="renew"
+                  label="Renew"
+                  icon={helpers.RenderRenewIcon(params.row)}
+                  onClick={() => helpers.onRenewClick(params.row)}
+                />,
+              ]
+            : [
+                <GridActionsCellItem
+                  key="paid"
+                  label="Paid"
+                  icon={helpers.RenderPayment?.(params.row.payed) ?? <div />}
+                  onClick={() => helpers.onPaymentClick(params.row)}
+                />,
+                <GridActionsCellItem
+                  key="disable"
+                  label="disable"
+                  icon={helpers.RenderToggleIcon(params.row)}
+                  onClick={() => helpers.onDisableClick(params.row)}
+                />,
+                <GridActionsCellItem
+                  key="delete"
+                  label="Delete"
+                  icon={helpers.RenderDeleteIcon(params.row)}
+                  onClick={() => helpers.onDeleteClick(params.row)}
+                />,
+              ];
+        },
+      },
+      {
+        field: "username",
+        headerName: "Username",
+        width: 160,
+        resizable: true,
+        renderCell: (params: any) => {
+          const r = params.row;
+          if (r.isParent) return <span>{params.value}</span>;
+          return (
             <Box
               sx={{
                 display: "flex",
-                justifyContent: "space-between",
-                padding: 1,
+                alignItems: "center",
+                height: "100%",
+                textAlign: "center",
               }}
             >
-              <GridToolbarFilterButton />
-              <GridToolbarColumnsButton />
+              <Box>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                  Last Application
+                </Typography>
+                <Typography variant="body2">{r.sub_last_user_agent}</Typography>
+              </Box>
             </Box>
-          ),
-        }}
-        sortingOrder={["asc", "desc"]}
-        getRowClassName={(params) =>
-          params.row.id.includes("-detail") ? "expanded-row" : ""
-        }
-        autoHeight
-        getRowHeight={(params) =>
-          params.id.toString().includes("-detail") ? 100 : null
-        }
-        apiRef={apiRef}
-        sx={{
-          boxShadow: 2,
-          border: 2,
-          borderColor: "purple",
+          );
+        },
+      },
+      {
+        field: "note",
+        headerName: "Note",
+        width: 160,
+        resizable: true,
+        renderCell: (params: any) => {
+          if (params.row.isParent) return <span>{params.value}</span>;
+          else
+            return (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  height: "100%",
+                  textAlign: "center",
+                }}
+              >
+                <Box>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                    Last Update
+                  </Typography>
+                  <Typography variant="body2">
+                    {params.row.sub_updated_at}
+                  </Typography>
+                </Box>
+              </Box>
+            );
+        },
+      },
+      {
+        field: "status",
+        headerName: "Status",
+        width: 110,
+        resizable: true,
+        renderCell: (params: any) => {
+          if (params.row.isParent) return helpers.RenderStatus(params.value);
+          return (
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                height: "100%",
+                textAlign: "center",
+                paddingLeft: "5px",
+              }}
+            >
+              <Box>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                  Package
+                </Typography>
+                <Typography variant="body2">{params.row.package}</Typography>
+              </Box>
+            </Box>
+          );
+        },
+      },
+      {
+        field: "online",
+        headerName: "",
+        width: 50,
+        renderCell: (params: any) => {
+          return params.row.isParent ? helpers.RenderOnline(params.value) : "";
+        },
+      },
+      {
+        field: "used_traffic_string",
+        headerName: "Usage",
+        width: 150,
+        resizable: true,
+        renderCell: (params: any) => {
+          if (params.row.isParent) return helpers.RenderUsage(params.row);
+          return (
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                height: "100%",
+                textAlign: "center",
+              }}
+            >
+              <Box>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                  Last Online
+                </Typography>
+                <Typography variant="body2">{params.row.online_at}</Typography>
+              </Box>
+            </Box>
+          );
+        },
+      },
+      {
+        field: "expire_string",
+        headerName: "Expire",
+        width: 100,
+        resizable: true,
+        renderCell: (params: any) =>
+          params.row.isParent ? <span>{params.value}</span> : "",
+      },
+      {
+        field: "price",
+        headerName: "Price",
+        width: 80,
+        resizable: true,
+        renderCell: (params: any) => (params.row.isParent ? params.value : ""),
+      },
+    ];
 
-          "& .MuiDataGrid-row:hover": {
-            backgroundColor: "lightgray",
-            color: "purple",
-            fontWeight: "bold",
-          },
-          "& .expanded-row": {
-            backgroundColor: "#fffaeb !important",
-          },
-          "& .MuiDataGrid-cell": {
-            textAlign: "center",
-          },
+    const accounts = Array.isArray(props.Accounts) ? props.Accounts : [];
+    const rows: GridRowData[] = accounts.flatMap((account) => {
+      const isExpanded = expandedRows.has(account.username);
+      const parentRow: GridRowData = {
+        ...account,
+        id: String(account.id),
+        isParent: true,
+        isChecked: false,
+      };
+      const detailRow: GridRowData | null = isExpanded
+        ? {
+            ...account,
+            id: `${account.id}-detail`,
+            isParent: false,
+            isChecked: false,
+          }
+        : null;
+      return detailRow ? [parentRow, detailRow] : [parentRow];
+    });
+
+    return (
+      <BaseAccountGrid
+        Accounts={rows}
+        columnsFactory={(helpers) =>
+          buildColumns({
+            ...helpers,
+          })
+        }
+        Loading={props.Loading}
+        dataGridProps={{
+          getRowId: (row: any) => row.id,
+          getRowClassName: (params: any) =>
+            params.row.id.includes("-detail") ? "expanded-row" : "",
+          autoHeight: true,
+          getRowHeight: (params: any) =>
+            params.id.toString().includes("-detail") ? 100 : null,
         }}
+        onDeleting={props.onDeleting}
+        onRenewing={props.onRenewing}
+        onDisabling={props.onDisabling}
+        onPaying={props.onPaying}
+        onRevoke={props.onRevoke}
       />
-      <Footer></Footer>
-    </div>
-  );
-});
+    );
+  },
+);
 
 ExpandableAccountGrid.displayName = "ExpandableAccountGrid";
 

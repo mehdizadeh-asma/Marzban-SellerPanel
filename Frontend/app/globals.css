@@ -1,7 +1,8 @@
 :root {
   --max-width: 1100px;
   --border-radius: 12px;
-  --font-mono: ui-monospace, Menlo, Monaco, "Cascadia Mono", "Segoe UI Mono",
+  --font-mono:
+    ui-monospace, Menlo, Monaco, "Cascadia Mono", "Segoe UI Mono",
     "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro",
     "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
 
@@ -58,167 +59,107 @@ a {
   }
 }
 
-.BgGrdColorizePurpleBack {
-  background: rgb(
-    90,
-    49,
-    90
-  ); /* fallback for old browsers */ /* Chrome 10-25, Safari 5.1-6 */
-  background: linear-gradient(
-    rgb(59, 41, 70),
-    rgb(141, 135, 145),
-    rgb(142, 132, 148),
-    rgb(221, 205, 221),
-    rgb(218, 213, 218),
-    rgb(141, 135, 145),
-    rgb(59, 41, 70)
-  );
-}
 @import url("https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,600;0,800;1,500&display=swap");
-.h50vh {
-  height: 50vh;
-}
-
-.h90vh {
-  height: 90vh;
-}
-
-.h65vh {
-  height: 65vh;
-}
-
-.h505vh {
-  height: 5.5vh;
-}
-
+/* Height Classes */
 .h2vh {
   height: 2vh;
 }
-
 .h3vh {
   height: 3vh;
-}
-
-.h305vh {
-  height: 3.5vh;
-}
-.h2vh {
-  height: 2vh;
 }
 .h5vh {
   height: 5vh;
 }
-
 .h6vh {
   height: 6vh;
 }
-
 .h8vh {
   height: 8vh;
 }
-
 .h10vh {
   height: 10vh;
 }
-
 .h12vh {
   height: 12vh;
 }
-
 .h13vh {
   height: 13vh;
 }
-
 .h15vh {
   height: 15vh;
 }
-
 .h18vh {
   height: 18vh;
 }
-
 .h20vh {
   height: 20vh;
 }
-
-.h2rem {
-  height: 3rem;
+.h50vh {
+  height: 50vh;
 }
-
-.hMin4vh {
-  min-height: 5vh;
-}
-
 .h65vh {
   height: 65vh;
 }
-
+.h90vh {
+  height: 90vh;
+}
 .h100vh {
   height: 100%;
 }
-.w100px {
-  width: 100px;
+
+/* Min Height Classes */
+.hMin5vh {
+  min-height: 5vh;
+} /* renamed from hMin4vh */
+.hMin50px {
+  min-height: 50px;
+}
+
+/* Fixed Height Classes */
+.h50px {
+  height: 50px;
+}
+.h100px {
+  height: 100px;
+}
+
+/* Width Classes */
+.w1vw {
+  width: 1vw;
+}
+.w2vw {
+  width: 2vw;
 }
 .w3vw {
   width: 3vw;
 }
-
-.w105vw {
-  width: 1.5vw;
-}
-
-.w1vw {
-  width: 1vw;
-}
-
-.w2vw {
-  width: 2vw;
-}
-
-.w205vw {
-  width: 2.5vw;
-}
-
 .w4vw {
   width: 4vw;
 }
-
 .w5vw {
   width: 5vw;
 }
-
 .w6vw {
   width: 6vw;
 }
-
-.w40Per {
-  width: 40%;
-}
-
 .w7vw {
   width: 7vw;
 }
-
 .w8vw {
   width: 8vw;
 }
-
 .w9vw {
   width: 9vw;
 }
-
 .w10vw {
   width: 10vw;
 }
-
 .w15vw {
   width: 15vw;
 }
-
 .w18vw {
   width: 18vw;
 }
-
 .w20vw {
   width: 20vw;
 }
@@ -226,107 +167,82 @@ a {
   width: 25vw;
 }
 .w30vw {
-  width: 32vw;
-}
+  width: 30vw;
+} /* fixed from 32vw */
 .w45vw {
-  width: 32vw;
+  width: 45vw;
 }
-.w80Per {
-  width: 80%;
-}
-
-.w90Per {
-  width: 90%;
-}
-
-.w98Per {
-  width: 98%;
-}
-
 .w64-5vw {
   width: 64.5vw;
 }
 
-.wpx {
-  width: 20px;
+/* Percentage Width Classes */
+.w40Per {
+  width: 40%;
+}
+.w80Per {
+  width: 80%;
+}
+.w90Per {
+  width: 90%;
+}
+.w98Per {
+  width: 98%;
 }
 
-.h100px {
-  height: 100px;
-}
-.h20px {
-  height: 50px;
-}
-.hMin50px {
-  min-height: 50px;
+/* Fixed Width Classes */
+.w100px {
+  width: 100px;
 }
 
-.hMin75per {
-  min-height: 75%;
+/* Font Size Classes */
+.fontsize05rem {
+  font-size: 0.5rem;
 }
-
+.fontsize065rem {
+  font-size: 0.65rem;
+}
+.fontsize07rem {
+  font-size: 0.7rem;
+}
+.fontsize08rem {
+  font-size: 0.8rem;
+}
+.fontsize09rem {
+  font-size: 0.9rem;
+} /* fixed from 0.85rem */
+.fontsize1rem {
+  font-size: 1rem;
+}
+.fontsize12rem {
+  font-size: 1.2rem;
+} /* renamed from fontsize102rem */
+.fontsize13rem {
+  font-size: 1.3rem;
+} /* renamed from fontsize103rem */
+.fontsize15rem {
+  font-size: 1.5rem;
+} /* renamed from fontsize105rem */
+.fontsize18rem {
+  font-size: 1.8rem;
+} /* renamed from fontsize108rem */
 .fontsize2rem {
   font-size: 2rem;
 }
 
-.fontsize102rem {
-  font-size: 1.2rem;
-}
-
-.fontsize103rem {
-  font-size: 1.3rem;
-}
-
-.fontsize105rem {
-  font-size: 1.5rem;
-}
-
-.fontsize108rem {
-  font-size: 1.8rem;
-}
-
-.fontsize05rem {
-  font-size: 0.5rem;
-}
-
-.fontsize065rem {
-  font-size: 0.65rem;
-}
-
-.fontsize08rem {
-  font-size: 0.8rem;
-}
-
-.fontsize07rem {
-  font-size: 0.7rem;
-}
-
-.fontsize09rem {
-  font-size: 0.85rem;
-}
-
-.fontsize1rem {
-  font-size: 1rem;
-}
-
+/* Font Family Classes */
 .BodyFont {
   font-family: "Segoe UI";
 }
-
 .HeaderFont {
   font-family: "Oswald";
 }
-
 .TahomaFont {
   font-family: Tahoma;
 }
 
+/* Background Classes */
 .BgGrdColorizePurple {
-  background: rgb(
-    90,
-    49,
-    90
-  ); /* fallback for old browsers */ /* Chrome 10-25, Safari 5.1-6 */
   background: linear-gradient(
     30deg,
     rgb(50, 1, 49),
@@ -337,25 +253,7 @@ a {
   ) !important;
 }
 
-.BgGrdColorizePurpleBack {
-  background: rgb(
-    90,
-    49,
-    90
-  ); /* fallback for old browsers */ /* Chrome 10-25, Safari 5.1-6 */
-  background: linear-gradient(
-    rgb(59, 41, 70),
-    rgb(141, 135, 145),
-    rgb(142, 132, 148),
-    rgb(221, 205, 221),
-    rgb(218, 213, 218),
-    rgb(141, 135, 145),
-    rgb(59, 41, 70)
-  );
-}
-
 .BtnGrdPurple {
-  background: #4e54c8; /* fallback for old browsers */ /* Chrome 10-25, Safari 5.1-6 */
   background: linear-gradient(
     to right,
     rgb(90, 49, 90),
@@ -365,11 +263,6 @@ a {
 }
 
 .BtnGrdOrange {
-  background: rgb(
-    199,
-    126,
-    9
-  ); /* fallback for old browsers */ /* Chrome 10-25, Safari 5.1-6 */
   background: linear-gradient(
     to right,
     rgb(199, 126, 9),
@@ -379,115 +272,53 @@ a {
   );
 }
 
+/* Color & Border Classes */
 .colorizeLightPurple {
   background-color: #f7f3fd;
   border: 1px solid #f1f0f3;
 }
 
-.colorizeLightx {
-  background: rgb(
-    254,
-    243,
-    225
-  ); /* fallback for old browsers */ /* Chrome 10-25, Safari 5.1-6 */
-  background: linear-gradient(
-    to bottom,
-    rgb(252, 255, 255),
-    rgb(255, 255, 255),
-    rgb(255, 255, 255),
-    rgb(255, 255, 255)
-  );
-}
-
 .LightGray {
   background-color: rgb(252, 246, 255);
 }
+.DarkPurpleColor {
+  color: #4c4752;
+}
+.PurpleColor {
+  color: rgb(208, 206, 208);
+}
+.LightRed {
+  color: rgb(253, 170, 170);
+}
 
+/* Box Shadow */
 .BoxShadowLightPurple {
   box-shadow:
     0 2px 2px 0 rgba(130, 133, 139, 0.2),
     0 2px 2px 0 rgba(201, 200, 239, 0.19);
 }
 
-.DarkPurpleColor {
-  color: #4c4752;
-}
-
-.FullPurpleColor {
-  color: rgb(67, 14, 67);
-  font-weight: 50%;
-}
-
-.LightRed {
-  color: rgb(253, 170, 170);
-}
-
-.SmallProfileBorder {
-  border: 2px solid rgb(167, 149, 167);
-}
-
-.PurpleColor {
-  color: rgb(208, 206, 208);
-}
-
-.HeadLine {
-  font-family: "Oswald";
-  text-align: center;
-}
-
-.MenuAwsomeIcon {
-  width: 0.8rem;
-  color: rgb(98, 98, 104);
-  margin-left: 5px;
-  margin-right: 5px;
-}
-
-.OverviewAwsomeIcon {
-  width: 1rem;
-  color: rgb(98, 98, 104);
-  margin-left: 5px;
-  margin-right: 5px;
-}
-
+/* Button & Border Styles */
 .BtnMain {
   color: #fff;
-  border: 0px;
+  border: 0;
   border-radius: 3px;
-}
-
-.ContainerGrid {
-  height: 635px;
-  width: "100%";
-  background-color: "#eff1fa";
-}
-
-.Grid {
-  background-color: "white";
 }
 
 .MainBox {
-  border: 0px;
+  border: 0;
   border-radius: 3px;
 }
+
 .BorderPurple {
   border-color: purple;
 }
-
 .BorderOrange {
   border-color: rgb(224, 136, 21);
   color: rgb(187, 84, 0);
 }
-.MUIGridHeader {
-  background-color: #66366f;
-  color: white;
-  font-size: 1rem;
-  text-align: center;
-}
-.MUIGridHeader:hover {
-  background-color: #ebdaf6;
-  color: black;
-  font-size: 0.9rem;
-}
+
+/* Component Styles */
 .ActiveComponentName {
   color: purple;
   font-weight: 500;
@@ -496,873 +327,60 @@ a {
   vertical-align: middle;
   padding-right: 2px;
 }
+
 .ActiveComponentNameRow {
   background: linear-gradient(rgba(253, 183, 54, 0.471), rgb(246, 241, 215));
 }
-@media screen and (min-width: 768px) {
-  #divHeader .flex-container {
-    display: flex;
-    flex-direction: row;
-    flex-grow: 1;
-    flex-wrap: wrap;
-  }
-  #divHeader #divSearch {
-    height: 100%;
-  }
-  #divHeader #divProfile {
-    height: 100%;
-  }
-}
-#divProfile {
-  height: 300px;
-}
-@media screen and (max-width: 577px) {
-  #divDrop .tariffDrop {
-    width: 100%;
-  }
-  .divButton {
-    display: flex;
-    justify-content: center;
-    height: 100%;
-  }
-  .btnAdd {
-    width: 100%;
-  }
-}
-@media screen and (min-width: 577px) and (max-width: 768px) {
-  #divDrop .tariffDrop {
-    width: 100%;
-  }
-  .divButton {
-    display: flex;
-    justify-content: center;
-    height: 100%;
-    align-items: center;
-  }
-  .btnAdd {
-    width: 100px;
-  }
-}
-@media screen and (min-width: 768px) {
-  .divButton {
-    display: flex;
-    justify-content: left;
-    height: 100%;
-  }
-  .btnAdd {
-    width: 100px;
-  }
-}
-.linking {
-  background-color: red;
-  color: red;
+
+/* Icon Styles */
+.MenuIcon {
+  /* renamed from MenuAwsomeIcon */
+  width: 0.8rem;
+  color: rgb(98, 98, 104);
+  margin: 0 5px;
 }
 
-@media screen and (max-width: 768px) {
-  #divHeader .flex-container {
-    display: flex;
-    flex-direction: row;
-    flex-grow: 1;
-    flex-wrap: wrap;
-  }
-  #divHeader #divSearch {
-    order: 2;
-    height: 50%;
-  }
-  #divHeader #divProfile {
-    order: 1;
-    height: 50%;
-  }
+.OverviewIcon {
+  /* renamed from OverviewAwsomeIcon */
+  width: 1rem;
+  color: rgb(98, 98, 104);
+  margin: 0 5px;
 }
 
-.HoverRescale,
-.HoverAndRescaleToWhite {
-  transition: transform scale 1s;
-  transition-timing-function: linear;
-}
-.HoverRescale:hover,
-.HoverAndRescaleToWhite:hover {
-  transform: scale(1.05, 1.05);
-}
-
-.HoverAndRescaleToWhite {
-  transition: transform scale 1s;
-  transition-timing-function: linear;
-}
-.HoverAndRescaleToWhite:hover {
-  color: #fff;
-}
-.HoverAndRescaleToWhite:active {
-  color: rgb(248, 227, 123);
+/* Force DataGrid header purple + white text for marzban-data-grid */
+.marzban-data-grid .MuiDataGrid-columnHeaders {
+  background: linear-gradient(
+    30deg,
+    rgb(50, 1, 49),
+    rgb(90, 49, 90),
+    rgb(126, 74, 126)
+  ) !important;
+  color: #fff !important;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.06) !important;
 }
 
-@media (min-width: 1100px) {
-  .RedirectRow {
-    width: 50%;
-  }
-  .RedirectRow .MeetBtn {
-    width: 18vw;
-  }
-}
-@media (max-width: 1100px) {
-  .RedirectRow {
-    width: 80%;
-  }
-  .RedirectRow .MeetBtn {
-    width: 30vw;
-  }
+/* Ensure each header cell title stays centered and white in all states */
+.marzban-data-grid .MuiDataGrid-columnHeader,
+.marzban-data-grid .MuiDataGrid-columnHeader:hover,
+.marzban-data-grid .MuiDataGrid-columnHeader:focus,
+.marzban-data-grid .MuiDataGrid-columnHeader:focus-within {
+  color: #fff !important;
+  text-align: center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: transparent !important; /* keep gradient from .MuiDataGrid-columnHeaders */
 }
 
-@media (max-width: 570px) {
-  .RedirectRow {
-    width: 95%;
-    padding-bottom: 10px;
-  }
-  .RedirectRow .MeetBtn {
-    width: 45vw;
-    font-size: 0.9rem;
-  }
-  .RedirectRow .seconddiv {
-    visibility: hidden;
-  }
-  .RedirectRow .firstdiv {
-    width: 100%;
-    margin-top: 5px;
-    margin-bottom: 5px;
-  }
-  .RedirectRow .firstdiv #txtusername {
-    font-size: 0.9rem;
-  }
-  .RedirectRow .firstdiv #txtpassword {
-    font-size: 0.9rem;
-  }
-}
-@media (max-width: 380px) {
-  .RedirectRow {
-    width: 99%;
-  }
-  .RedirectRow .MeetBtn {
-    width: 45vw;
-  }
-}
-@media (max-width: 380px) {
-  .RedirectRow {
-    width: 99%;
-  }
-  .RedirectRow .MeetBtn {
-    width: 45vw;
-    font-size: 0.7rem;
-  }
-  .RedirectRow .ExploreDiv {
-    font-size: 1rem;
-  }
-}
-@media (max-width: 375px) {
-  .RedirectRow {
-    width: 99%;
-    padding-bottom: 10px;
-  }
-  .RedirectRow .MeetBtn {
-    width: 45vw;
-    font-size: 0.9rem;
-  }
-  .RedirectRow .seconddiv {
-    visibility: hidden;
-  }
-  .RedirectRow .firstdiv {
-    width: 100%;
-    margin-top: 5px;
-    margin-bottom: 5px;
-  }
-  .RedirectRow .firstdiv #txtusername {
-    font-size: 0.9rem;
-  }
-  .RedirectRow .firstdiv #txtpassword {
-    font-size: 0.9rem;
-  }
-}
-@media (min-width: 1500px) {
-  .NavResponsive .NavLink {
-    width: 25vw;
-    height: 5vh;
-    margin-left: 1.2vw;
-  }
-  .NavResponsive .Pane {
-    width: 51.2vw;
-    margin-left: 1.8vw;
-  }
-}
-@media (min-width: 1300px) {
-  .NavResponsive .NavLink {
-    width: 25vw;
-    height: 5vh;
-    margin-left: 1.2vw;
-  }
-  .NavResponsive .Pane {
-    width: 51.2vw;
-    margin-left: 2vw;
-  }
-}
-@media (min-width: 1200px) {
-  .NavResponsive .NavLink {
-    width: 25vw;
-    height: 5vh;
-    margin-left: 1.2vw;
-  }
-  .NavResponsive .Pane {
-    width: 51.2vw;
-    margin-left: 2.15vw;
-  }
-}
-@media (max-width: 1200px) {
-  .NavResponsive .NavLink {
-    width: 25vw;
-    height: 5vh;
-    margin-left: 1vw;
-  }
-  .NavResponsive .Pane {
-    width: 51.2vw;
-    margin-left: 2.1vw;
-  }
-}
-@media (max-width: 990px) {
-  .NavResponsive .NavLink {
-    width: 31vw;
-    height: 5vh;
-    margin-left: 0.4vw;
-  }
-  .NavResponsive .NavLink .TabAwsomeIcon {
-    width: 3vw;
-  }
-  .NavResponsive .NavLink .small {
-    font-size: 1rem;
-    margin-left: 15px;
-  }
-  .NavResponsive .Pane {
-    width: 63vw;
-    margin-left: 1.8vw;
-  }
-}
-@media (max-width: 799px) {
-  .NavResponsive .NavLink {
-    width: 30vw;
-    height: 40px;
-    margin-left: 0.7vw;
-  }
-  .NavResponsive .NavLink .TabAwsomeIcon {
-    width: 3vw;
-  }
-  .NavResponsive .NavLink .small {
-    font-size: 1rem;
-  }
-  .NavResponsive .Pane {
-    width: 80vw;
-    margin-left: 1.9vw;
-  }
-  .NavResponsive {
-    margin-right: 80px;
-  }
-}
-@media (max-width: 656px) {
-  .NavResponsive .NavLink {
-    width: 33vw;
-    height: 40px;
-    margin-left: 0.5vw;
-  }
-  .NavResponsive .NavLink .TabAwsomeIcon {
-    width: 2.8vw;
-  }
-  .NavResponsive .NavLink .small {
-    font-size: 0.6rem;
-  }
-  .NavResponsive .Pane {
-    width: 80vw;
-    margin-left: 1.9vw;
-  }
-}
-@media (max-width: 576px) {
-  .NavResponsive {
-    margin-right: 20px;
-  }
-  .NavResponsive .NavLink {
-    margin-top: 0;
-    width: 22vw;
-    height: 40px;
-    margin-left: 2vw;
-  }
-  .NavResponsive .NavLink .TabAwsomeIcon {
-    width: 5vw;
-  }
-  .NavResponsive .NavLink .small {
-    display: none;
-  }
-  .NavResponsive .Pane {
-    width: 60vw;
-  }
+/* Title element */
+.marzban-data-grid .MuiDataGrid-columnHeader .MuiDataGrid-columnHeaderTitle {
+  color: #fff !important;
+  width: 100% !important;
+  text-align: center !important;
 }
 
-@media (min-width: 1400px) {
-  .ResponsiveSearch .ResponsiveBtn {
-    font-size: 1.3rem;
-    width: 10vw;
-    height: 5vh;
-  }
-  .ResponsiveSearch .ResponsiveIcon {
-    width: 1.3vw;
-  }
-  .ResponsiveSearch .ResponsiveInput {
-    width: 35vw;
-  }
-}
-@media (max-width: 1400px) {
-  .ResponsiveSearch .ResponsiveBtn {
-    font-size: 1.2rem;
-    width: 10vw;
-    height: 5vh;
-  }
-  .ResponsiveSearch .ResponsiveIcon {
-    width: 1.3vw;
-  }
-  .ResponsiveSearch .ResponsiveInput {
-    width: 35vw;
-  }
-}
-@media (max-width: 1100px) {
-  .ResponsiveSearch .ResponsiveBtn {
-    font-size: 1.1rem;
-    width: auto;
-    height: auto;
-  }
-  .ResponsiveSearch .ResponsiveIcon {
-    width: 1.3vw;
-  }
-}
-@media (max-width: 978px) {
-  .ResponsiveSearch .ResponsiveBtn {
-    font-size: 1rem;
-    width: 10vw;
-    height: auto;
-  }
-  .ResponsiveSearch .ResponsiveIcon {
-    width: 1.1vw;
-  }
-}
-@media (max-width: 940px) {
-  .ResponsiveSearch .ResponsiveIcon {
-    display: none;
-  }
-  .ResponsiveSearch .ResponsiveBtn {
-    width: auto;
-    height: 5vh;
-    min-height: 35px;
-  }
-  .ResponsiveSearch .ResponsiveInput {
-    width: 33vw;
-    min-height: 35px;
-  }
-}
-@media (max-width: 766px) {
-  .ResponsiveSearch .ResponsiveInput {
-    width: 50vw;
-    min-height: 35px;
-  }
-  .ResponsiveSearch .ResponsiveBtn {
-    font-size: 1rem;
-    width: 16vw;
-    height: 4vh;
-    min-height: 35px;
-  }
-  .ResponsiveSearch .ResponsiveIcon {
-    display: inline-block;
-    width: 1.5vw;
-  }
-}
-@media (max-width: 630px) {
-  .ResponsiveSearch .ResponsiveBtn {
-    font-size: 0.8rem;
-    width: 26vw;
-    align-self: center;
-    height: 5vh;
-    font-weight: 80%;
-    min-height: 35px;
-  }
-  .ResponsiveSearch .ResponsiveIcon {
-    display: inline-block;
-    width: 1.5vw;
-  }
-}
-@media (max-width: 578px) {
-  .ResponsiveSearch .ResponsiveInput {
-    width: 65vw;
-    height: 5vh;
-    min-height: 35px;
-  }
-  .ResponsiveSearch .ResponsiveBtn {
-    font-size: 1.2rem;
-    width: 22vw;
-    align-self: center;
-    height: 5vh;
-    font-weight: 80%;
-    min-height: 35px;
-  }
-  .ResponsiveSearch .ResponsiveIcon {
-    display: inline-block;
-    width: 3vw;
-  }
-}
-@media (max-width: 540px) {
-  .ResponsiveSearch .ResponsiveInput {
-    width: 65vw;
-    height: 6vh;
-    min-height: 35px;
-  }
-  .ResponsiveSearch .ResponsiveBtn {
-    font-size: 1.1rem;
-    width: 30vw;
-    align-self: center;
-    height: 6vh;
-    font-weight: 80%;
-    min-height: 35px;
-  }
-  .ResponsiveSearch .ResponsiveIcon {
-    display: inline-block;
-    width: 3vw;
-  }
-}
-
-@media (min-width: 1200px) {
-  .ResponsiveProfileSmall .ResponsiveProfileSmall {
-    width: 23vw;
-  }
-  .ResponsiveProfileSmall .ResponsiveProfileSmall .ResponsiveUserLabel,
-  .ResponsiveProfileSmall .ResponsiveProfileSmall .ResponsiveName {
-    font-size: 1rem;
-  }
-  .ResponsiveProfileSmall .ResponsiveSmallProfImage {
-    width: 5vw;
-  }
-}
-@media (max-width: 1200px) {
-  .ResponsiveProfileSmall .ResponsiveProfileSmall {
-    width: 30vw;
-  }
-  .ResponsiveProfileSmall .ResponsiveProfileSmall .ResponsiveUserLabel,
-  .ResponsiveProfileSmall .ResponsiveProfileSmall .ResponsiveName {
-    font-size: 0.8rem;
-  }
-  .ResponsiveProfileSmall .ResponsiveSmallProfImage {
-    width: 8vw;
-  }
-  .ResponsiveProfileSmall .ResponsiveSmallProfText {
-    font-size: 1rem;
-  }
-}
-@media (max-width: 768px) {
-  .ResponsiveProfileSmall .ResponsiveProfileSmall {
-    width: 100%;
-  }
-  .ResponsiveProfileSmall .ResponsiveProfileSmall .ResponsiveUserLabel,
-  .ResponsiveProfileSmall .ResponsiveProfileSmall .ResponsiveName {
-    font-size: 1rem;
-  }
-  .ResponsiveProfileSmall .ResponsiveSmallProfImage {
-    width: 12vw;
-  }
-}
-@media (max-width: 576px) {
-  .ResponsiveProfileSmall .ResponsiveProfileSmall {
-    width: 100%;
-  }
-  .ResponsiveProfileSmall .ResponsiveProfileSmall .ResponsiveUserLabel,
-  .ResponsiveProfileSmall .ResponsiveProfileSmall .ResponsiveName {
-    font-size: 1rem;
-  }
-  .ResponsiveProfileSmall .ResponsiveSmallProfImage {
-    width: 18vw;
-  }
-}
-
-@media (min-width: 1200px) {
-  .ResponsiveProfileBig {
-    height: auto;
-    padding-bottom: 30px;
-  }
-  .ResponsiveProfileBig .ResponsiveBigProfImage {
-    width: 20vw;
-    border: 1px solid rgb(164, 164, 164);
-  }
-  .ResponsiveProfileBig .ResponsiveBigProfText {
-    font-size: 2rem;
-  }
-  .ResponsiveProfileBig .ResponsiveFollwer {
-    width: 85%;
-    background-color: rgb(216, 206, 226);
-    border-radius: 5px;
-    color: #443456;
-  }
-  .ResponsiveProfileBig .ResponsiveFollwer .ResponsiveContentOne {
-    text-align: center;
-    font-size: 0.7rem;
-  }
-  .ResponsiveProfileBig .ResponsiveFollwer .ResponsiveIconTwo {
-    width: 1.5vw;
-  }
-  .ResponsiveProfileBig .ResponsiveFollwer .ResponsiveIconOne {
-    width: 1.5vw;
-  }
-  .ResponsiveProfileBig .ResponsiveFollwer .ResponsiveContentTwo {
-    text-align: center;
-    font-size: 0.7rem;
-  }
-}
-@media (max-width: 1200px) {
-  .ResponsiveProfileBig {
-    height: auto;
-    padding-bottom: 30px;
-  }
-  .ResponsiveProfileBig .ResponsiveBigProfImage {
-    width: 40vw;
-  }
-  .ResponsiveProfileBig .ResponsiveBigProfText {
-    font-size: 1.5rem;
-  }
-  .ResponsiveProfileBig .ResponsiveFollwer {
-    width: 85%;
-    background-color: rgb(216, 206, 226);
-    border-radius: 5px;
-    color: #443456;
-  }
-  .ResponsiveProfileBig .ResponsiveFollwer .ResponsiveIconTwo {
-    width: 6vw;
-  }
-  .ResponsiveProfileBig .ResponsiveFollwer .ResponsiveIconOne {
-    width: 6vw;
-  }
-  .ResponsiveProfileBig .ResponsiveFollwer .ResponsiveContentOne {
-    text-align: center;
-    font-size: 0.7rem;
-  }
-  .ResponsiveProfileBig .ResponsiveFollwer .ResponsiveContentTwo {
-    text-align: center;
-    font-size: 0.7rem;
-  }
-}
-@media (max-width: 1180px) {
-  .ResponsiveProfileBig {
-    height: auto;
-    padding-bottom: 30px;
-  }
-  .ResponsiveProfileBig .ResponsiveBigProfImage {
-    width: 18vw;
-  }
-  .ResponsiveProfileBig .ResponsiveBigProfText {
-    font-size: 1.5rem;
-  }
-  .ResponsiveProfileBig .ResponsiveFollwer {
-    width: 85%;
-    background-color: rgb(216, 206, 226);
-    border-radius: 5px;
-    color: #443456;
-  }
-  .ResponsiveProfileBig .ResponsiveFollwer .ResponsiveIconTwo {
-    width: 10vw;
-  }
-  .ResponsiveProfileBig .ResponsiveFollwer .ResponsiveIconOne {
-    width: 10vw;
-  }
-  .ResponsiveProfileBig .ResponsiveFollwer .ResponsiveContentOne {
-    text-align: center;
-    font-size: 0.6rem;
-  }
-  .ResponsiveProfileBig .ResponsiveFollwer .ResponsiveContentTwo {
-    text-align: center;
-    font-size: 0.6rem;
-  }
-}
-@media (max-width: 995px) {
-  .ResponsiveProfileBig {
-    height: 17vh;
-    padding-bottom: 0;
-    margin-bottom: 0;
-  }
-  .ResponsiveProfileBig .ImageContainer {
-    width: 50%;
-  }
-  .ResponsiveProfileBig .ImageRow {
-    width: 100%;
-    height: 95%;
-  }
-  .ResponsiveProfileBig .ResponsiveFollwer .ResponsiveContentOne {
-    text-align: center;
-    font-size: 1rem;
-  }
-  .ResponsiveProfileBig .ResponsiveFollwer .ResponsiveContentTwo {
-    text-align: center;
-    font-size: 1rem;
-  }
-  .ResponsiveProfileBig .ResponsiveFollwer .ResponsiveIconTwo {
-    width: 4vw;
-  }
-  .ResponsiveProfileBig .ResponsiveFollwer .ResponsiveIconOne {
-    width: 4vw;
-  }
-  .ResponsiveProfileBig .ResponsiveBigProfImage {
-    width: 15vw;
-  }
-  .ResponsiveProfileBig .ResponsiveBigProfText {
-    font-size: 1.4rem;
-  }
-}
-@media (max-width: 850px) {
-  .ResponsiveProfileBig .ResponsiveBigProfImage {
-    width: 17vw;
-  }
-}
-@media (max-width: 766px) {
-  .ResponsiveProfileBig .ResponsiveBigProfImage {
-    width: 20vw;
-  }
-  .ResponsiveProfileBig .ResponsiveBigProfText {
-    font-size: 1.2rem;
-  }
-  .ResponsiveProfileBig .ResponsiveFollwer {
-    text-align: center;
-    width: 100%;
-  }
-  .ResponsiveProfileBig .ResponsiveFollwer .ResponsiveContentOne {
-    text-align: center;
-    font-size: 0.8rem;
-    margin-top: 1vh;
-  }
-  .ResponsiveProfileBig .ResponsiveFollwer .ResponsiveContentTwo {
-    text-align: center;
-    font-size: 0.8rem;
-  }
-  .ResponsiveProfileBig .ResponsiveFollwer .ResponsiveIconTwo {
-    width: 3vw;
-  }
-  .ResponsiveProfileBig .ResponsiveFollwer .ResponsiveIconOne {
-    width: 3vw;
-  }
-}
-@media (max-width: 620px) {
-  .ResponsiveProfileBig {
-    height: 150px;
-    padding-bottom: 0;
-    margin-bottom: 0;
-    min-height: 50px;
-  }
-  .ResponsiveProfileBig .ResponsiveBigProfImage {
-    width: 20vw;
-  }
-  .ResponsiveProfileBig .ResponsiveBigProfText {
-    font-size: 1rem;
-  }
-  .ResponsiveProfileBig .ResponsiveFollwer {
-    text-align: center;
-    width: 100%;
-    height: 62px;
-  }
-  .ResponsiveProfileBig .ResponsiveFollwer .ResponsiveContentOne {
-    text-align: center;
-    font-size: 0.8rem;
-  }
-  .ResponsiveProfileBig .ResponsiveFollwer .ResponsiveContentTwo {
-    text-align: center;
-    font-size: 0.8rem;
-  }
-  .ResponsiveProfileBig .ResponsiveFollwer .ResponsiveIconTwo {
-    width: 2.5vw;
-  }
-  .ResponsiveProfileBig .ResponsiveFollwer .ResponsiveIconOne {
-    width: 2.5vw;
-  }
-}
-@media (max-width: 576px) {
-  .ResponsiveProfileBig {
-    height: 330px;
-  }
-  .ResponsiveProfileBig .ImageContainer {
-    width: 100%;
-  }
-  .ResponsiveProfileBig .ResponsiveBigProfImage {
-    width: 150px;
-  }
-  .ResponsiveProfileBig .ResponsiveFollwer {
-    height: 60px;
-  }
-  .ResponsiveProfileBig .ResponsiveFollwer .ResponsiveContentOne {
-    text-align: center;
-    font-size: 0.7rem;
-    margin-top: 1vh;
-  }
-  .ResponsiveProfileBig .ResponsiveFollwer .ResponsiveContentTwo {
-    text-align: center;
-    font-size: 0.7rem;
-  }
-}
-
-.MenuResponsive .nav-link:hover {
-  color: rgb(216, 133, 0);
-}
-.MenuResponsive .nav-link:active {
-  color: rgb(177, 5, 177);
-}
-.MenuResponsive .nav-link:link {
-  color: rgb(46, 22, 46);
-}
-.MenuResponsive {
-  min-height: 50px;
-}
-
-@media (max-width: 450px) {
-  .MenuResponsive {
-    height: 125px;
-    text-align: center;
-    justify-content: center;
-  }
-  .MenuResponsive .nav-item {
-    width: 85px;
-  }
-  .MenuResponsive .nav-item .nav-link {
-    font-size: 0.8rem;
-    text-align: center;
-  }
-}
-
-@media (max-width: 992px) {
-  .RepoResponsive .ResponsiveTitle {
-    font-size: smaller;
-  }
-  .RepoResponsive .ResponsiveVisibilty {
-    width: 12vw;
-  }
-}
-@media (max-width: 768px) {
-  .RepoResponsive .ResponsiveDate {
-    font-size: smaller;
-  }
-  .RepoResponsive .ResponsiveTitle {
-    font-size: smaller;
-  }
-  .RepoResponsive .ResponsiveVisibilty {
-    width: 15vw;
-    margin-top: 1vh;
-    margin-bottom: 1vh;
-    height: 30px;
-  }
-}
-@media (max-width: 576px) {
-  .RepoResponsive {
-    width: 100%;
-    align-self: center;
-    margin-left: 4vh;
-  }
-  .RepoResponsive .ResponsiveDate {
-    font-size: smaller;
-  }
-  .RepoResponsive .ResponsiveTitle {
-    font-size: small;
-  }
-  .RepoResponsive .ResponsiveVisibilty {
-    font-size: 0.7rem;
-    height: 30px;
-    width: 36vw;
-    margin-top: 1vh;
-    margin-bottom: 1vh;
-    text-align: center;
-    justify-content: center;
-  }
-}
-
-@media (max-width: 576px) {
-  .ResponsiveOrg .ResponsiveOrgIcon {
-    width: 35px;
-  }
-}
-
-@media (max-width: 768px) {
-  .ResponiveFooter .ResponsiveImageDiv {
-    width: 100%;
-  }
-  .ResponiveFooter .ResponsiveImage {
-    width: 11vw;
-  }
-  .ResponiveFooter .ResponsiveExplore {
-    font-size: 1.5rem;
-  }
-  .ResponiveFooter .ResponsiveDescription {
-    width: 100%;
-  }
-  .ResponiveFooter .ResponsiveGreple {
-    justify-content: center;
-    width: 100%;
-  }
-  .ResponiveFooter .ResponsiveHr {
-    width: 100%;
-  }
-}
-
-@media (min-width: 1000px) {
-  .moduleContainer {
-    width: 35%;
-  }
-}
-@media (min-width: 850px) and (max-width: 1000px) {
-  .moduleContainer {
-    width: 35%;
-  }
-}
-@media (min-width: 600px) and (max-width: 850px) {
-  .moduleContainer {
-    width: 70%;
-  }
-}
-@media (min-width: 400px) and (max-width: 600px) {
-  .moduleContainer {
-    width: 95%;
-  }
-}
-@media (max-width: 400px) {
-  .moduleContainer {
-    width: 100%;
-  }
-}
-.moduleContainerStyle {
-  border: solid 2px purple;
-}
-
-@media (min-width: 800px) {
-  .GridSellerContainer {
-    width: 1130px;
-  }
-}
-@media (min-width: 300px) and (max-width: 800px) {
-  .GridSellerContainer {
-    width: 100%;
-    min-width: 300px;
-  }
-}
-@media (min-width: 1000px) {
-  .GridTariffContainer {
-    width: 1000px;
-  }
-}
-@media (min-width: 300px) and (max-width: 1000px) {
-  .GridTariffContainer {
-    width: 100%;
-  }
-}
-/* @media (max-width: 576px)   {
-  .SearchButton {
-    width: 30px;
-  }
-} */
-
-.text-purple {
-  color: #6f42c1;
-}
-.expanded-row2 {
-  background-color: rgb(169, 149, 165); /* Mild orange color */
-  color: #16022e;
+/* Keep header checkboxes/icons visible (white-ish) */
+.marzban-data-grid .MuiDataGrid-columnHeader .MuiCheckbox-root,
+.marzban-data-grid .MuiDataGrid-columnHeader .MuiSvgIcon-root {
+  color: rgba(255, 255, 255, 0.95) !important;
 }

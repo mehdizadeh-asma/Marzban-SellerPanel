@@ -15,22 +15,19 @@ import RenewModal from "./RenewModal";
 import AccountType from "@/models/AccountType";
 import TariffType from "@/models/TariffType";
 import Messages from "../General/Messages";
-import ExpandableAccountGrid, {
-  ExpandableGridForwardRefHandle,
-} from "./ExpandableAccountGrid";
-import GeneralAccountGrid, {
-  GeneralAccountGridForwardRefHandle,
-} from "./GeneralAccountGrid";
+import { BaseGridHandle } from "./BaseAccountGrid";
+import ExpandableAccountGrid from "./ExpandableAccountGrid";
+import GeneralAccountGrid from "./GeneralAccountGrid";
 
 export default function AccountManagement() {
   const { user, config, setUser } = useMyContext();
-  const gridGeneralRef = useRef<GeneralAccountGridForwardRefHandle>(null);
-  const gridExpandableRef = useRef<ExpandableGridForwardRefHandle>(null);
+  const gridGeneralRef = useRef<BaseGridHandle>(null);
+  const gridExpandableRef = useRef<BaseGridHandle>(null);
   const [loading, setLoading] = useState(false);
   const [accountList, setAccountList] = useState<AccountType[]>([]);
   const [selectedAccount, setSelectedAccount] = useState<AccountType>();
   const [searchText, setSearchText] = useState("");
-  const [gridType, setgridType] = useState("Expandable"); //General
+  const [gridType, setgridType] = useState("Expandable");
 
   type DeleteModalHandle = ElementRef<typeof DeleteModal>;
   const refDeleteModal = useRef<DeleteModalHandle>(null);
@@ -245,7 +242,7 @@ export default function AccountManagement() {
           headers: { Authorization: "Bearer " + user.Token },
         });
         const accounts = resultAccounts.data;
-        setAccountList(accounts || []); // اصلاح این خط
+        setAccountList(accounts || []);
       } catch (error) {
         console.log(error);
       } finally {
@@ -344,15 +341,15 @@ export default function AccountManagement() {
 
   return (
     <div className="container-fluid bg-primery  ">
-      {user.IsAdmin ? (
-        ""
-      ) : (
+      {!user.IsAdmin ? (
         <AddAccount
           onAdding={OnAddClick}
           Mode="Add"
           Loading={loading}
           StartLoading={StartLoading}
         />
+      ) : (
+        ""
       )}
       <div className="row">
         <div className="col justify-content-start d-flex mt-1  w-100">
