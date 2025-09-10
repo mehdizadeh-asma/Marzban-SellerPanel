@@ -1,4 +1,4 @@
-import { ElementRef, useRef, useState } from "react";
+import { ComponentRef, useRef, useState } from "react";
 
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/joy/Typography";
@@ -20,7 +20,7 @@ export default function AddTariff(props: PropsType) {
   const [isFree, setIsFree] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
 
-  type MessagesHandle = ElementRef<typeof Messages>;
+  type MessagesHandle = ComponentRef<typeof Messages>;
   const refMessages = useRef<MessagesHandle>(null);
 
   const BtnAdd_Click = () => {

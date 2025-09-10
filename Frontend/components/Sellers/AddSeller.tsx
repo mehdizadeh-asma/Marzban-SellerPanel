@@ -1,5 +1,5 @@
 import {
-  ElementRef,
+  ComponentRef,
   useEffect,
   useImperativeHandle,
   useRef,
@@ -27,7 +27,7 @@ const AddSeller = forwardRef(
     const txtMarzbanUsername = useRef<HTMLInputElement | null>(null);
     const txtMarzbanPassword = useRef<HTMLInputElement | null>(null);
 
-    type MessagesHandle = ElementRef<typeof Messages>;
+    type MessagesHandle = ComponentRef<typeof Messages>;
     const refMessages = useRef<MessagesHandle>(null);
 
     useEffect(() => {
@@ -43,7 +43,7 @@ const AddSeller = forwardRef(
 
     const handleInputChange = (
       field: keyof SellerType,
-      ref: RefObject<HTMLInputElement>,
+      ref: RefObject<HTMLInputElement | null>,
     ) => {
       if (ref.current) {
         onFieldChange(field, ref.current.value);

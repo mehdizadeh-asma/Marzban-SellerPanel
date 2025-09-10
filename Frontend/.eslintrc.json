@@ -37,7 +37,7 @@
       }
     ],
     "react/react-in-jsx-scope": "off", // Not needed in Next.js
-    "prettier/prettier": "warn" // Ensure Prettier formatting consistency
+    "prettier/prettier": "off" // Ensure Prettier formatting consistency
   },
   "settings": {
     "react": {

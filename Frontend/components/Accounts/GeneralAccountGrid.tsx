@@ -1,10 +1,15 @@
 "use client";
 import { forwardRef } from "react";
+import {
+  GridActionsCellItem,
+  GridColDef,
+  GridRowParams,
+  GridRenderCellParams,
+} from "@mui/x-data-grid";
 import BaseAccountGrid, {
   BaseGridHandle,
   BaseGridHelpers,
 } from "./BaseAccountGrid";
-import { GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import AccountType from "@/models/AccountType";
 
 interface PropsType {
@@ -26,7 +31,7 @@ const GeneralAccountGrid = forwardRef<BaseGridHandle, PropsType>(
         type: "actions",
         width: 50,
         renderHeader: () => helpers.RenderSelectHeader(),
-        getActions: (params: { row: AccountType }) => [
+        getActions: (params: GridRowParams<AccountType>) => [
           <GridActionsCellItem
             key="checkPay"
             label="Check To Pay"
@@ -41,7 +46,7 @@ const GeneralAccountGrid = forwardRef<BaseGridHandle, PropsType>(
         width: 250,
         minWidth: 50,
         maxWidth: 200,
-        getActions: (params: { row: AccountType }) => [
+        getActions: (params: GridRowParams<AccountType>) => [
           <GridActionsCellItem
             key="link"
             label="Link"
@@ -83,7 +88,9 @@ const GeneralAccountGrid = forwardRef<BaseGridHandle, PropsType>(
         field: "online",
         headerName: "",
         width: 40,
-        renderCell: (params: any) => helpers.RenderOnline(params.value),
+        renderCell: (
+          params: GridRenderCellParams<AccountType, string | undefined>,
+        ) => helpers.RenderOnline(params.value),
       },
       {
         field: "online_at",
@@ -100,7 +107,9 @@ const GeneralAccountGrid = forwardRef<BaseGridHandle, PropsType>(
         minWidth: 80,
         maxWidth: 150,
         resizable: true,
-        renderCell: (params: any) => helpers.RenderStatus(params.value),
+        renderCell: (
+          params: GridRenderCellParams<AccountType, string | undefined>,
+        ) => helpers.RenderStatus(params.value),
       },
       {
         field: "package",
@@ -133,7 +142,8 @@ const GeneralAccountGrid = forwardRef<BaseGridHandle, PropsType>(
         minWidth: 50,
         maxWidth: 170,
         resizable: true,
-        renderCell: (params: any) => helpers.RenderUsage(params.row),
+        renderCell: (params: GridRenderCellParams<AccountType, unknown>) =>
+          helpers.RenderUsage(params.row),
       },
       {
         field: "expire_string",
@@ -167,7 +177,7 @@ const GeneralAccountGrid = forwardRef<BaseGridHandle, PropsType>(
         minWidth: 50,
         maxWidth: 160,
         resizable: true,
-        getActions: (params: { row: AccountType }) => [
+        getActions: (params: GridRowParams<AccountType>) => [
           <GridActionsCellItem
             key="paid"
             label="Paid"

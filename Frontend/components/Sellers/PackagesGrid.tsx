@@ -6,7 +6,7 @@ import {
   useState,
 } from "react";
 import axios from "axios";
-import { DataGrid, GridActionsCellItem } from "@mui/x-data-grid";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import ToggleOnIcon from "@mui/icons-material/ToggleOn";
 import ToggleOffIcon from "@mui/icons-material/ToggleOff";
 
@@ -122,7 +122,7 @@ const PackagesGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
         />,
       ],
     },
-  ];
+  ] as GridColDef<TariffSellerGridType>[];
 
   return (
     <div className="container  my-3">

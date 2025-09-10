@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { DataGrid, GridActionsCellItem } from "@mui/x-data-grid";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import ToggleOnIcon from "@mui/icons-material/ToggleOn";
 import ToggleOffIcon from "@mui/icons-material/ToggleOff";
 import AssignInboundIcon from "@mui/icons-material/AccountTree";
@@ -27,7 +27,7 @@ export default function TariffGrid(props: PropsType) {
     }
   }, [selectedTariff]);
 
-  const columns = [
+  const columns: GridColDef<TariffType>[] = [
     {
       field: "Title",
       headerName: "Title",

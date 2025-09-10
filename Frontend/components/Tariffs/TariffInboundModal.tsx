@@ -2,7 +2,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { Button, Modal } from "react-bootstrap";
 import axios from "axios";
-import { DataGrid, GridActionsCellItem } from "@mui/x-data-grid";
+import {
+  DataGrid,
+  GridActionsCellItem,
+  GridColDef,
+  GridActionsColDef,
+} from "@mui/x-data-grid";
 import ToggleOnIcon from "@mui/icons-material/ToggleOn";
 import ToggleOffIcon from "@mui/icons-material/ToggleOff";
 
@@ -27,7 +32,10 @@ const TariffInboundModal = (props: PropsType) => {
     TariffInboundType[]
   >([]);
 
-  const columns = [
+  const columns: (
+    | GridColDef<TariffInboundType>
+    | GridActionsColDef<TariffInboundType>
+  )[] = [
     {
       field: "InboundTag",
       headerName: "Tag",

@@ -1,6 +1,6 @@
 "use client";
 import axios from "axios";
-import { ElementRef, useCallback, useEffect, useRef, useState } from "react";
+import { ComponentRef, useCallback, useEffect, useRef, useState } from "react";
 
 import { useMyContext } from "@/context/MyContext";
 import AddTariff from "./AddTariff";
@@ -13,7 +13,7 @@ const TariffManagement = () => {
   const [tariffList, setTariffList] = useState<TariffType[]>([]);
   const [loading, setLoading] = useState(false);
 
-  type MessagesHandle = ElementRef<typeof Messages>;
+  type MessagesHandle = ComponentRef<typeof Messages>;
   const refMessages = useRef<MessagesHandle>(null);
 
   const LaodTariff = useCallback(async () => {

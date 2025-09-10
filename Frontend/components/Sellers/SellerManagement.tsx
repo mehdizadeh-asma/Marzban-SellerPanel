@@ -1,6 +1,6 @@
 "use client";
 import axios, { AxiosError } from "axios";
-import { ElementRef, useCallback, useEffect, useRef, useState } from "react";
+import { ComponentRef, useCallback, useEffect, useRef, useState } from "react";
 
 import { useMyContext } from "@/context/MyContext";
 import AddSeller from "./AddSeller";
@@ -19,14 +19,13 @@ const SellerManagement = () => {
   const [isAssignPackagesModalOpen, setAssignPackagesModalOpen] =
     useState(false);
 
-  type MessagesHandle = ElementRef<typeof Messages>;
+  type MessagesHandle = ComponentRef<typeof Messages>;
   const refMessages = useRef<MessagesHandle>(null);
-
-  const addSellerRef = useRef<AddSellerHandle | null>(null);
 
   type AddSellerHandle = {
     resetFields: () => void;
   };
+  const addSellerRef = useRef<AddSellerHandle | null>(null);
 
   const LaodSeller = useCallback(async () => {
     setLoading(true);

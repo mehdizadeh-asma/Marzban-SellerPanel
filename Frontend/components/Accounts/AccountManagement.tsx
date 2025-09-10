@@ -1,6 +1,6 @@
 "use client";
 import axios from "axios";
-import { ElementRef, useCallback, useEffect, useRef, useState } from "react";
+import { ComponentRef, useCallback, useEffect, useRef, useState } from "react";
 import { TextField } from "@mui/material";
 import FilterAltOffIcon from "@mui/icons-material/FilterAltOff";
 import SearchRounded from "@mui/icons-material/SearchRounded";
@@ -29,13 +29,13 @@ export default function AccountManagement() {
   const [searchText, setSearchText] = useState("");
   const [gridType, setgridType] = useState("Expandable");
 
-  type DeleteModalHandle = ElementRef<typeof DeleteModal>;
+  type DeleteModalHandle = ComponentRef<typeof DeleteModal>;
   const refDeleteModal = useRef<DeleteModalHandle>(null);
 
-  type RenewModalHandle = ElementRef<typeof RenewModal>;
+  type RenewModalHandle = ComponentRef<typeof RenewModal>;
   const refRenewModal = useRef<RenewModalHandle>(null);
 
-  type MessagesHandle = ElementRef<typeof Messages>;
+  type MessagesHandle = ComponentRef<typeof Messages>;
   const refMessages = useRef<MessagesHandle>(null);
 
   const txtSearch = useRef<HTMLInputElement | null>(null);

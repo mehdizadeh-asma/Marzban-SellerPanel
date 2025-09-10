@@ -11,7 +11,13 @@ import {
   useGridApiRef,
   GridColDef,
   gridFilteredSortedRowIdsSelector,
+  GridValidRowModel,
+  GridRowIdGetter,
+  GridRowClassNameParams,
+  GridRowHeightParams,
+  GridRowHeightReturnValue,
 } from "@mui/x-data-grid";
+import type { SxProps, Theme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import Checkbox from "@mui/material/Checkbox";
 import CreditScoreRoundedIcon from "@mui/icons-material/CreditScoreRounded";
@@ -50,13 +56,13 @@ export interface BaseGridHelpers {
   onCopyLink: (account: AccountType) => void;
   onQRClick: (account: AccountType) => void;
   RenderSelectHeader: () => React.ReactElement;
-  RenderSelectCheckbox: (row: any) => React.ReactElement;
-  RenderRevokeIcon: (row: any) => React.ReactElement;
-  RenderLinkIcon: (row: any) => React.ReactElement;
-  RenderToggleIcon: (row: any) => React.ReactElement;
-  RenderQRIcon: (row: any) => React.ReactElement;
-  RenderRenewIcon: (row: any) => React.ReactElement;
-  RenderDeleteIcon: (row: any) => React.ReactElement;
+  RenderSelectCheckbox: (row: AccountType) => React.ReactElement;
+  RenderRevokeIcon: (row: AccountType) => React.ReactElement;
+  RenderLinkIcon: (row: AccountType) => React.ReactElement;
+  RenderToggleIcon: (row: AccountType) => React.ReactElement;
+  RenderQRIcon: (row: AccountType) => React.ReactElement;
+  RenderRenewIcon: (row: AccountType) => React.ReactElement;
+  RenderDeleteIcon: (row: AccountType) => React.ReactElement;
 }
 
 interface Props {
@@ -69,6 +75,7 @@ interface Props {
   onPaying?: (accountId: string) => void;
   onRevoke?: (account: AccountType) => void;
   dataGridProps?: Partial<React.ComponentProps<typeof DataGrid>>;
+  hasDetailRows?: boolean;
 }
 
 export interface BaseGridHandle {
@@ -77,7 +84,7 @@ export interface BaseGridHandle {
 
 const BaseAccountGrid = forwardRef<BaseGridHandle, Props>((props, ref) => {
   const {
-    Accounts: Accounts,
+    Accounts,
     columnsFactory,
     Loading: loading = false,
     dataGridProps,
@@ -274,29 +281,23 @@ const BaseAccountGrid = forwardRef<BaseGridHandle, Props>((props, ref) => {
 
       let visibleSortedIds: string[] = [];
       try {
-        if (
-          apiRef &&
-          apiRef.current &&
-          typeof gridFilteredSortedRowIdsSelector === "function"
-        ) {
-          const ids = gridFilteredSortedRowIdsSelector(
-            (api as any).state ?? apiRef.current.state,
-          );
+        if (typeof gridFilteredSortedRowIdsSelector === "function") {
+          const ids = gridFilteredSortedRowIdsSelector(apiRef);
           if (Array.isArray(ids) && ids.length) {
             visibleSortedIds = ids.map(String);
-            // console.log("gridFilteredSortedRowIdsSelector:", visibleSortedIds);
           }
         }
-      } catch (e) {
+      } catch {
         visibleSortedIds = [];
       }
 
       if (!visibleSortedIds || visibleSortedIds.length === 0) {
         try {
-          visibleSortedIds = api.getAllRowIds
-            ? (api.getAllRowIds() as any[]).map(String)
-            : [];
-        } catch (e) {
+          visibleSortedIds =
+            typeof api.getAllRowIds === "function"
+              ? (api.getAllRowIds() ?? []).map(String)
+              : [];
+        } catch {
           visibleSortedIds = [];
         }
       }
@@ -308,11 +309,17 @@ const BaseAccountGrid = forwardRef<BaseGridHandle, Props>((props, ref) => {
       const currentPageParentIds = pageIds
         .map((id) => {
           try {
-            const row = api.getRow ? api.getRow(id) : undefined;
+            const row =
+              typeof api.getRow === "function" ? api.getRow(id) : undefined;
             if (!row) return null;
-            if (typeof row.isParent !== "undefined")
-              return row.isParent ? String(row.id) : null;
-            return String(row.id);
+            const r = row as GridValidRowModel & {
+              isParent?: boolean;
+              id?: string | number;
+            };
+            if (typeof r.isParent !== "undefined") {
+              return r.isParent ? String(r.id) : null;
+            }
+            return String(r.id);
           } catch {
             return null;
           }
@@ -342,10 +349,14 @@ const BaseAccountGrid = forwardRef<BaseGridHandle, Props>((props, ref) => {
   };
 
   const helpers: BaseGridHelpers = {
-    onRevokeClick: (account: AccountType) =>
-      onRevoke ? onRevoke(account) : undefined,
+    onRevokeClick: (account: AccountType) => onRevoke?.(account),
     onPaymentClick: (account: AccountType) =>
-      onPaying ? onPaying(account.id) : undefined,
+      onPaying?.(
+        account.id.includes("-detail")
+          ? account.id.replace("-detail", "")
+          : account.id,
+      ),
+
     RenderOnline,
     RenderStatus,
     RenderPayment,
@@ -354,66 +365,99 @@ const BaseAccountGrid = forwardRef<BaseGridHandle, Props>((props, ref) => {
       copyTextToClipboard(account.subscription_url);
       setSelectedLink(account.username);
     },
-    onRenewClick: (account: AccountType) =>
-      onRenewing ? onRenewing(account) : undefined,
+    onRenewClick: (account: AccountType) => onRenewing?.(account),
     onQRClick: (account: AccountType) =>
       refQRModal.current?.Show(account.subscription_url, account.username),
-    onDeleteClick: (account: AccountType) => {
-      onDeleting ? onDeleting(account) : undefined;
-    },
-    onDisableClick: (account: AccountType) =>
-      onDisabling ? onDisabling(account) : undefined,
+    onDeleteClick: (account: AccountType) => onDeleting?.(account),
+    onDisableClick: (account: AccountType) => onDisabling?.(account),
     RenderSelectHeader: () => (
       <Checkbox checked={selectAll} onChange={onSelectAll} />
     ),
-    RenderSelectCheckbox: (row: any) => (
+    RenderSelectCheckbox: (row: AccountType) => (
       <Checkbox
         sx={{ fontSize: "25px" }}
         checked={selectedRows.has(String(row?.id))}
         onChange={() => onCheckClick(row)}
       />
     ),
-    RenderRevokeIcon: (row: any) => (
+    RenderRevokeIcon: (_row: AccountType) => (
       <AutoModeIcon className="text-warning" sx={{ fontSize: "25px" }} />
     ),
-    RenderLinkIcon: (row: any) =>
+    RenderLinkIcon: (row: AccountType) =>
       row?.username === selectedLink ? (
         <CheckIcon className="text-primary" />
       ) : (
         <LinkIcon className="text-primary" />
       ),
-    RenderToggleIcon: (row: any) =>
+    RenderToggleIcon: (row: AccountType) =>
       row?.status === "disabled" ? (
-        <ToggleOffIcon sx={{ fontSize: "30px" }} className="text-secondry" />
+        <ToggleOffIcon sx={{ fontSize: "30px" }} className="text-secondary" />
       ) : (
         <ToggleOnIcon sx={{ fontSize: "30px" }} className="text-success" />
       ),
-    RenderQRIcon: (row: any) => <QrCode2Icon className="text-primary" />,
-    RenderRenewIcon: (row: any) => <RenewIcon className="text-success" />,
-    RenderDeleteIcon: (row: any) => (
-      <DeleteIcon sx={{ fontSize: "25px" }} className="text-danger" />
+    RenderQRIcon: (row: AccountType) => (
+      <QrCode2Icon
+        className="text-primary"
+        sx={{ fontSize: "25px", cursor: "pointer" }}
+        onClick={() =>
+          refQRModal.current?.Show(row.subscription_url, row.username)
+        }
+      />
+    ),
+    RenderRenewIcon: (row: AccountType) => (
+      <RenewIcon
+        className="text-success"
+        sx={{ fontSize: "25px", cursor: "pointer" }}
+        onClick={() => onRenewing?.(row)}
+      />
+    ),
+    RenderDeleteIcon: (row: AccountType) => (
+      <DeleteIcon
+        className="text-danger"
+        sx={{ fontSize: "25px", cursor: "pointer" }}
+        onClick={() => onDeleting?.(row)}
+      />
     ),
   };
 
-  const existingSx = (dataGridProps as any)?.sx ?? {};
-  const mergedSx = {
-    ...(existingSx as any),
-    ...({
-      "& .MuiDataGrid-cell": {
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      },
-      "& .MuiDataGrid-columnHeader": {
-        width: "100%",
-        alignItems: "center",
-        justifyContent: "center",
-        textAlign: "center",
-      },
-    } as any),
+  const existingSx: SxProps<Theme> | undefined = dataGridProps?.sx;
+  const customSx = {
+    "& .MuiDataGrid-cell": {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    "& .MuiDataGrid-columnHeader": {
+      width: "100%",
+      alignItems: "center",
+      justifyContent: "center",
+      textAlign: "center",
+    },
   };
-  const dataGridPropsWithoutSx = { ...(dataGridProps as any) };
-  if (dataGridPropsWithoutSx.sx) delete dataGridPropsWithoutSx.sx;
+  const mergedSx: SxProps<Theme> = (
+    Array.isArray(existingSx)
+      ? [...existingSx, customSx]
+      : [existingSx ?? {}, customSx]
+  ) as SxProps<Theme>;
+
+  const { sx: _sx, ...dataGridPropsWithoutSx } = dataGridProps ?? {};
+
+  const injectedRowHelpers: Partial<React.ComponentProps<typeof DataGrid>> = {};
+  if (props.hasDetailRows) {
+    const getRowIdTyped: GridRowIdGetter<GridValidRowModel> = (row) =>
+      String(row.id);
+    const getRowClassNameTyped = (
+      params: GridRowClassNameParams<GridValidRowModel>,
+    ) => (String(params.row.id).includes("-detail") ? "expanded-row" : "");
+    const getRowHeightTyped = (
+      params: GridRowHeightParams,
+    ): GridRowHeightReturnValue =>
+      String(params.id).includes("-detail") ? 100 : undefined;
+
+    injectedRowHelpers.getRowId = getRowIdTyped;
+    injectedRowHelpers.getRowClassName = getRowClassNameTyped;
+    injectedRowHelpers.getRowHeight = getRowHeightTyped;
+  }
 
   const columns = columnsFactory(helpers);
 
@@ -438,7 +482,15 @@ const BaseAccountGrid = forwardRef<BaseGridHandle, Props>((props, ref) => {
         }}
         sortingOrder={["asc", "desc"]}
         sx={mergedSx}
-        {...(dataGridPropsWithoutSx as any)}
+        {...(injectedRowHelpers as Partial<
+          React.ComponentProps<typeof DataGrid>
+        >)}
+        {...(dataGridPropsWithoutSx as Partial<
+          React.ComponentProps<typeof DataGrid>
+        >)}
+        getRowHeight={(params) =>
+          String(params.id).includes("-detail") ? 100 : undefined
+        }
       />
       <Footer></Footer>
     </>

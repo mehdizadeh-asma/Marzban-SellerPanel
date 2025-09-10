@@ -1,4 +1,9 @@
-import { DataGrid, GridActionsCellItem } from "@mui/x-data-grid";
+import {
+  DataGrid,
+  GridActionsCellItem,
+  GridColDef,
+  GridActionsColDef,
+} from "@mui/x-data-grid";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ToggleOnIcon from "@mui/icons-material/ToggleOn";
@@ -18,7 +23,7 @@ interface PropsType {
 }
 
 export default function SellerGrid(props: PropsType) {
-  const columns = [
+  const columns: (GridColDef<SellerType> | GridActionsColDef<SellerType>)[] = [
     {
       field: "Title",
       headerName: "Title",

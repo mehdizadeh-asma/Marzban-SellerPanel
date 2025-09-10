@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, ElementRef, FC } from "react";
+import { useState, useRef, useEffect, ComponentRef, FC } from "react";
 import { Button, Modal } from "react-bootstrap";
 
 import SellerType from "@/models/SellerType";
@@ -14,7 +14,7 @@ interface PropsType {
 
 const EditModal: FC<PropsType> = ({ isOpen, onClose, seller, onEditing }) => {
   const [currentSeller, setCurrentSeller] = useState<SellerType | null>(seller);
-  type MessagesHandle = ElementRef<typeof Messages>;
+  type MessagesHandle = ComponentRef<typeof Messages>;
   const refMessages = useRef<MessagesHandle>(null);
 
   useEffect(() => {

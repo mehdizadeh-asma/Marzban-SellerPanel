@@ -1,14 +1,19 @@
 "use client";
 import { forwardRef, useState } from "react";
-import BaseAccountGrid, {
-  BaseGridHandle,
-  BaseGridHelpers,
-} from "./BaseAccountGrid";
+import {
+  GridColDef,
+  GridActionsCellItem,
+  GridRenderCellParams,
+  GridRowParams,
+} from "@mui/x-data-grid";
 import { Box, Typography, Button } from "@mui/material";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AccountType from "@/models/AccountType";
-import { GridColDef, GridActionsCellItem } from "@mui/x-data-grid";
+import BaseAccountGrid, {
+  BaseGridHandle,
+  BaseGridHelpers,
+} from "./BaseAccountGrid";
 
 interface PropsType {
   Loading: boolean;
@@ -25,7 +30,7 @@ interface GridRowData extends AccountType {
 }
 
 const ExpandableAccountGrid = forwardRef<BaseGridHandle, PropsType>(
-  (props, _ref): any => {
+  function ExpandableAccountGrid(props, ref) {
     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
     const toggleRowExpansion = (username: string) => {
@@ -42,7 +47,7 @@ const ExpandableAccountGrid = forwardRef<BaseGridHandle, PropsType>(
         field: "toggle",
         headerName: "",
         width: 50,
-        renderCell: (params: any) => {
+        renderCell: (params: GridRenderCellParams<GridRowData, unknown>) => {
           const r = params.row;
           if (r.isParent) {
             return (
@@ -63,7 +68,7 @@ const ExpandableAccountGrid = forwardRef<BaseGridHandle, PropsType>(
         type: "actions",
         width: 50,
         renderHeader: () => helpers.RenderSelectHeader(),
-        getActions: (params: { row: any }) => {
+        getActions: (params: GridRowParams<GridRowData>) => {
           const isParentRow = params.row.isParent;
           return isParentRow
             ? [
@@ -88,7 +93,7 @@ const ExpandableAccountGrid = forwardRef<BaseGridHandle, PropsType>(
         field: "link",
         type: "actions",
         width: 110,
-        getActions: (params: { row: any }) => {
+        getActions: (params: GridRowParams<GridRowData>) => {
           const isParentRow = params.row.isParent;
           return isParentRow
             ? [
@@ -96,9 +101,7 @@ const ExpandableAccountGrid = forwardRef<BaseGridHandle, PropsType>(
                   key="link"
                   label="Link"
                   icon={helpers.RenderLinkIcon(params.row)}
-                  onClick={() => {
-                    helpers.onCopyLink(params.row);
-                  }}
+                  onClick={() => helpers.onCopyLink(params.row)}
                 />,
                 <GridActionsCellItem
                   key="qr"
@@ -117,7 +120,7 @@ const ExpandableAccountGrid = forwardRef<BaseGridHandle, PropsType>(
                 <GridActionsCellItem
                   key="paid"
                   label="Paid"
-                  icon={helpers.RenderPayment?.(params.row.payed) ?? <div />}
+                  icon={helpers.RenderPayment(params.row.payed)}
                   onClick={() => helpers.onPaymentClick(params.row)}
                 />,
                 <GridActionsCellItem
@@ -140,7 +143,9 @@ const ExpandableAccountGrid = forwardRef<BaseGridHandle, PropsType>(
         headerName: "Username",
         width: 160,
         resizable: true,
-        renderCell: (params: any) => {
+        renderCell: (
+          params: GridRenderCellParams<GridRowData, string | undefined>,
+        ) => {
           const r = params.row;
           if (r.isParent) return <span>{params.value}</span>;
           return (
@@ -167,28 +172,27 @@ const ExpandableAccountGrid = forwardRef<BaseGridHandle, PropsType>(
         headerName: "Note",
         width: 160,
         resizable: true,
-        renderCell: (params: any) => {
-          if (params.row.isParent) return <span>{params.value}</span>;
-          else
-            return (
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  height: "100%",
-                  textAlign: "center",
-                }}
-              >
-                <Box>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                    Last Update
-                  </Typography>
-                  <Typography variant="body2">
-                    {params.row.sub_updated_at}
-                  </Typography>
-                </Box>
+        renderCell: (params: GridRenderCellParams<GridRowData, unknown>) => {
+          if (params.row.isParent) return <span>{String(params.value)}</span>;
+          return (
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                height: "100%",
+                textAlign: "center",
+              }}
+            >
+              <Box>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                  Last Update
+                </Typography>
+                <Typography variant="body2">
+                  {params.row.sub_updated_at}
+                </Typography>
               </Box>
-            );
+            </Box>
+          );
         },
       },
       {
@@ -196,7 +200,9 @@ const ExpandableAccountGrid = forwardRef<BaseGridHandle, PropsType>(
         headerName: "Status",
         width: 110,
         resizable: true,
-        renderCell: (params: any) => {
+        renderCell: (
+          params: GridRenderCellParams<GridRowData, string | undefined>,
+        ) => {
           if (params.row.isParent) return helpers.RenderStatus(params.value);
           return (
             <Box
@@ -222,16 +228,16 @@ const ExpandableAccountGrid = forwardRef<BaseGridHandle, PropsType>(
         field: "online",
         headerName: "",
         width: 50,
-        renderCell: (params: any) => {
-          return params.row.isParent ? helpers.RenderOnline(params.value) : "";
-        },
+        renderCell: (
+          params: GridRenderCellParams<GridRowData, string | undefined>,
+        ) => (params.row.isParent ? helpers.RenderOnline(params.value) : ""),
       },
       {
         field: "used_traffic_string",
         headerName: "Usage",
         width: 150,
         resizable: true,
-        renderCell: (params: any) => {
+        renderCell: (params: GridRenderCellParams<GridRowData, unknown>) => {
           if (params.row.isParent) return helpers.RenderUsage(params.row);
           return (
             <Box
@@ -257,15 +263,20 @@ const ExpandableAccountGrid = forwardRef<BaseGridHandle, PropsType>(
         headerName: "Expire",
         width: 100,
         resizable: true,
-        renderCell: (params: any) =>
-          params.row.isParent ? <span>{params.value}</span> : "",
+        renderCell: (params: GridRenderCellParams<GridRowData, unknown>) =>
+          params.row.isParent ? <span>{String(params.value)}</span> : "",
       },
       {
         field: "price",
         headerName: "Price",
         width: 80,
         resizable: true,
-        renderCell: (params: any) => (params.row.isParent ? params.value : ""),
+        renderCell: (
+          params: GridRenderCellParams<
+            GridRowData,
+            number | string | undefined
+          >,
+        ) => (params.row.isParent ? params.value : ""),
       },
     ];
 
@@ -291,6 +302,7 @@ const ExpandableAccountGrid = forwardRef<BaseGridHandle, PropsType>(
 
     return (
       <BaseAccountGrid
+        ref={ref}
         Accounts={rows}
         columnsFactory={(helpers) =>
           buildColumns({
@@ -298,13 +310,9 @@ const ExpandableAccountGrid = forwardRef<BaseGridHandle, PropsType>(
           })
         }
         Loading={props.Loading}
+        hasDetailRows={true}
         dataGridProps={{
-          getRowId: (row: any) => row.id,
-          getRowClassName: (params: any) =>
-            params.row.id.includes("-detail") ? "expanded-row" : "",
           autoHeight: true,
-          getRowHeight: (params: any) =>
-            params.id.toString().includes("-detail") ? 100 : null,
         }}
         onDeleting={props.onDeleting}
         onRenewing={props.onRenewing}
