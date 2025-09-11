@@ -1,13 +1,8 @@
-name: Build & Push Docker Image
+name: Build & Push Docker Images
 
 on:
-  # اجرای دستی از داخل GitHub
   workflow_dispatch:
 
-  # اجرای خودکار روی تگ خاص (مثلا v1.0.0)
-  push:
-    tags:
-      - "v*.*.*"
 jobs:
   docker:
     runs-on: ubuntu-latest
@@ -25,11 +20,22 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and Push Multi-Arch Image
+      - name: Build and Push Frontend
         uses: docker/build-push-action@v6
         with:
+          context: ./Frontend
+          file: ./Frontend/Dockerfile
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
             marzbansellerpanel/msp-frontend:dev
-            marzbansellerpanel/msp-frontend:${{ github.ref_name }}
+
+      - name: Build and Push Backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./Backend
+          file: ./Backend/Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            marzbansellerpanel/msp-backend:dev
