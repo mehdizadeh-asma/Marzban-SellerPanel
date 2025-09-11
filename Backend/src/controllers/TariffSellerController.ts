@@ -9,19 +9,12 @@ import AccountHelpers from "../utils/AccountHelpers";
 import { getModel } from "../utils/MongooseModel";
 
 class TariffSellerController {
-  static GetTariffSellerListBySellerId: RequestHandler = async (
-    req,
-    res,
-    next,
-  ) => {
+  static GetTariffSellerListBySellerId: RequestHandler = async (req, res, next) => {
     try {
       if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
         throw new Error("Invalid Token");
 
-      const TariffSellerModel = await getModel<ITariffSeller>(
-        "TariffSeller",
-        TariffSellerSchema,
-      );
+      const TariffSellerModel = await getModel<ITariffSeller>("TariffSeller", TariffSellerSchema);
       const TariffModel = await getModel<ITariff>("Tariff", TariffSchema);
       const sellerId: string = req.params.sellerId;
       const sellerTariffs = await TariffSellerModel.find({
@@ -29,17 +22,13 @@ class TariffSellerController {
       });
       const sellerTariffIds = new Set(
         sellerTariffs.map((ts) =>
-          ts.TariffId instanceof Types.ObjectId
-            ? ts.TariffId.toString()
-            : ts.TariffId,
+          ts.TariffId instanceof Types.ObjectId ? ts.TariffId.toString() : ts.TariffId,
         ),
       );
       const allTariffs = await TariffModel.find();
       const tariffList = [
         ...allTariffs
-          .filter((tariff) =>
-            sellerTariffIds.has((tariff.id as Types.ObjectId).toString()),
-          )
+          .filter((tariff) => sellerTariffIds.has((tariff.id as Types.ObjectId).toString()))
           .map((tariff) => ({
             TariffId: tariff._id,
             Title: tariff.Title,
@@ -47,10 +36,7 @@ class TariffSellerController {
             Price: tariff.Price,
           })),
         ...allTariffs
-          .filter(
-            (tariff) =>
-              !sellerTariffIds.has((tariff.id as Types.ObjectId).toString()),
-          )
+          .filter((tariff) => !sellerTariffIds.has((tariff.id as Types.ObjectId).toString()))
           .map((tariff) => ({
             TariffId: tariff._id,
             Title: tariff.Title,
@@ -68,10 +54,7 @@ class TariffSellerController {
       if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
         throw new Error("Invalid Token");
 
-      const TariffSellerModel = await getModel<ITariffSeller>(
-        "TariffSeller",
-        TariffSellerSchema,
-      );
+      const TariffSellerModel = await getModel<ITariffSeller>("TariffSeller", TariffSellerSchema);
       const id: string = req.params.id;
       const tariffSeller = await TariffSellerModel.findOne({
         _id: new Types.ObjectId(id),
@@ -87,10 +70,7 @@ class TariffSellerController {
       if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
         throw new Error("Invalid Token");
 
-      const TariffSellerModel = await getModel<ITariffSeller>(
-        "TariffSeller",
-        TariffSellerSchema,
-      );
+      const TariffSellerModel = await getModel<ITariffSeller>("TariffSeller", TariffSellerSchema);
       const { TariffID, SellerID } = req.body as {
         TariffID: string | undefined;
         SellerID: string | undefined;
@@ -110,10 +90,7 @@ class TariffSellerController {
       if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
         throw new Error("Invalid Token");
 
-      const TariffSellerModel = await getModel<ITariffSeller>(
-        "TariffSeller",
-        TariffSellerSchema,
-      );
+      const TariffSellerModel = await getModel<ITariffSeller>("TariffSeller", TariffSellerSchema);
       const sellerId: string = req.params.sellerid;
       const tariffIds = (req.body as { TariffIds: string[] }).TariffIds;
       await TariffSellerModel.deleteMany({
@@ -132,19 +109,12 @@ class TariffSellerController {
       next(error);
     }
   };
-  static RemoveTariffSellerBySellerId: RequestHandler = async (
-    req,
-    res,
-    next,
-  ) => {
+  static RemoveTariffSellerBySellerId: RequestHandler = async (req, res, next) => {
     try {
       if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
         throw new Error("Invalid Token");
 
-      const TariffSellerModel = await getModel<ITariffSeller>(
-        "TariffSeller",
-        TariffSellerSchema,
-      );
+      const TariffSellerModel = await getModel<ITariffSeller>("TariffSeller", TariffSellerSchema);
       const id: string = req.params.sellerid;
       const result = await TariffSellerModel.deleteMany({
         SellerId: new Types.ObjectId(id),
@@ -159,10 +129,7 @@ class TariffSellerController {
       if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
         throw new Error("Invalid Token");
 
-      const TariffSellerModel = await getModel<ITariffSeller>(
-        "TariffSeller",
-        TariffSellerSchema,
-      );
+      const TariffSellerModel = await getModel<ITariffSeller>("TariffSeller", TariffSellerSchema);
       const _id = new Types.ObjectId(req.params.id);
       const tariffSeller = await TariffSellerModel.findOne({ _id: _id });
       if (tariffSeller) {
@@ -170,8 +137,7 @@ class TariffSellerController {
         else tariffSeller.Status = "Active";
         await tariffSeller.save();
         res.status(200).json({
-          result:
-            "The Status Changed To" + tariffSeller.Status + " Successfully!",
+          result: "The Status Changed To" + tariffSeller.Status + " Successfully!",
         });
       }
     } catch (error) {

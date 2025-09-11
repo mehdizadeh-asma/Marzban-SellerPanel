@@ -67,13 +67,8 @@ class MongooseDbManagement {
 
           const isMain =
             this.mainConnection &&
-            (this.mainConnection as ConnectionWithClient).client?.s?.url ===
-              connectionString;
-          if (
-            connection.readyState === mongoose.ConnectionStates.connected &&
-            isIdle &&
-            !isMain
-          ) {
+            (this.mainConnection as ConnectionWithClient).client?.s?.url === connectionString;
+          if (connection.readyState === mongoose.ConnectionStates.connected && isIdle && !isMain) {
             console.log(`Closing idle Main connection`);
             await this.closeConnection(connectionString);
           }
@@ -93,9 +88,7 @@ class MongooseDbManagement {
   // اتصال به دیتابیس اصلی
   static async connectMainDatabase(): Promise<void> {
     if (this.mainConnection) {
-      if (
-        this.mainConnection.readyState !== mongoose.ConnectionStates.connected
-      ) {
+      if (this.mainConnection.readyState !== mongoose.ConnectionStates.connected) {
         try {
           await this.mainConnection.close();
         } catch (e) {
@@ -183,10 +176,7 @@ class MongooseDbManagement {
     poolSize = 10,
   ): Promise<Connection> {
     const cachedConnection = this.activeConnections.get(connectionString);
-    if (
-      cachedConnection &&
-      cachedConnection.readyState === mongoose.ConnectionStates.connected
-    ) {
+    if (cachedConnection && cachedConnection.readyState === mongoose.ConnectionStates.connected) {
       this.connectionLastUsedMap.set(cachedConnection, Date.now());
       return cachedConnection;
     }
@@ -229,10 +219,7 @@ class MongooseDbManagement {
   }
 
   // تنظیم مانیتورینگ اتصال
-  private static setupConnectionMonitoring(
-    connection: Connection,
-    name: string,
-  ): void {
+  private static setupConnectionMonitoring(connection: Connection, name: string): void {
     connection.on("connected", () => {
       console.log(`[${name}] MongoDB connected`);
       this.connectionLastUsedMap.set(connection, Date.now());
@@ -277,10 +264,7 @@ class MongooseDbManagement {
 
   // متدهای مدیریت رشته اتصال
   static getDbPanelConnectionString(): string {
-    return this.BASE_CONNECTION_STRING.replace(
-      "##CLUSTER##",
-      "marzbansellerpanel.ghtzkr3",
-    )
+    return this.BASE_CONNECTION_STRING.replace("##CLUSTER##", "marzbansellerpanel.ghtzkr3")
       .replace("##DB##", "MarzbanSellerPanel")
       .replace("##USERNAME##", "marzbansellerpanel")
       .replace("##PASSWORD##", "bwvOIYFifBShAtIj");
@@ -292,10 +276,7 @@ class MongooseDbManagement {
     username: string,
     password: string,
   ): void {
-    this.dbWholeSalerConnectionString = this.BASE_CONNECTION_STRING.replace(
-      "##CLUSTER##",
-      cluster,
-    )
+    this.dbWholeSalerConnectionString = this.BASE_CONNECTION_STRING.replace("##CLUSTER##", cluster)
       .replace("##DB##", database)
       .replace("##USERNAME##", username)
       .replace("##PASSWORD##", password);
@@ -312,11 +293,7 @@ class MongooseDbManagement {
     const connectionString = this.getDbPanelConnectionString();
 
     try {
-      const connection = await this.getConnection(
-        connectionString,
-        "LicenseDB",
-        5,
-      );
+      const connection = await this.getConnection(connectionString, "LicenseDB", 5);
 
       const WholeSalerModel = connection.model("WholeSaler", WholeSalerSchema);
       const wholeSaler = await WholeSalerModel.findOne({
@@ -343,19 +320,13 @@ class MongooseDbManagement {
   }
 
   // کپی دیتابیس
-  static async copyDatabase(
-    destinationConnectionString: string,
-  ): Promise<void> {
+  static async copyDatabase(destinationConnectionString: string): Promise<void> {
     try {
       if (!this.mainConnection) {
         throw new Error("اتصال به دیتابیس اصلی برقرار نشده است");
       }
 
-      const targetConnection = await this.getConnection(
-        destinationConnectionString,
-        "CopyDB",
-        5,
-      );
+      const targetConnection = await this.getConnection(destinationConnectionString, "CopyDB", 5);
 
       console.log("شروع فرآیند کپی دیتابیس...");
 
@@ -378,26 +349,14 @@ class MongooseDbManagement {
       );
 
       await this.copyCollection<ITariffInbound>(
-        this.mainConnection.model<ITariffInbound>(
-          "TariffInbound",
-          TariffInboundSchema,
-        ),
-        targetConnection.model<ITariffInbound>(
-          "TariffInbound",
-          TariffInboundSchema,
-        ),
+        this.mainConnection.model<ITariffInbound>("TariffInbound", TariffInboundSchema),
+        targetConnection.model<ITariffInbound>("TariffInbound", TariffInboundSchema),
         "TariffInbounds",
       );
 
       await this.copyCollection<ITariffSeller>(
-        this.mainConnection.model<ITariffSeller>(
-          "TariffSeller",
-          TariffSellerSchema,
-        ),
-        targetConnection.model<ITariffSeller>(
-          "TariffSeller",
-          TariffSellerSchema,
-        ),
+        this.mainConnection.model<ITariffSeller>("TariffSeller", TariffSellerSchema),
+        targetConnection.model<ITariffSeller>("TariffSeller", TariffSellerSchema),
         "TariffSellers",
       );
 

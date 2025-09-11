@@ -51,9 +51,7 @@ app.use("/api", tariffInboundRouter);
 app.get("/health", (req: Request, res: Response) => {
   res.status(200).json({
     status: "UP",
-    dbConnection: MongooseDbManagement.getMainConnection()
-      ? "CONNECTED"
-      : "DISCONNECTED",
+    dbConnection: MongooseDbManagement.getMainConnection() ? "CONNECTED" : "DISCONNECTED",
     timestamp: new Date().toISOString(),
   });
 });
@@ -75,10 +73,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 
   res.status(500).json({
     error: "Internal Server Error",
-    message:
-      process.env.NODE_ENV === "production"
-        ? "An unexpected error occurred"
-        : err.message,
+    message: process.env.NODE_ENV === "production" ? "An unexpected error occurred" : err.message,
   });
 });
 

@@ -37,14 +37,8 @@ class MarzbanController {
         try {
           const marzbanUsername = await ConfigFile.GetMarzbanUsername();
           const marzbanPassword = await ConfigFile.GetMarzbanPassword();
-          const token = await AccountHelpers.LoginToMarzban(
-            marzbanUsername,
-            marzbanPassword,
-          );
-          const totalUnpaid = await AccountHelpers.GetTotalUnpaid(
-            undefined,
-            true,
-          );
+          const token = await AccountHelpers.LoginToMarzban(marzbanUsername, marzbanPassword);
+          const totalUnpaid = await AccountHelpers.GetTotalUnpaid(undefined, true);
 
           res.status(200).json({
             Token: token,
@@ -80,15 +74,9 @@ class MarzbanController {
             new Date().getDay() === 5 &&
             (await ConfigFile.GetDeletePaidAndRemovedUsers()) == "Yes"
           )
-            await AccountHelpers.RemoveDeletedAccountSeller(
-              `Bearer ${token}`,
-              seller,
-            );
+            await AccountHelpers.RemoveDeletedAccountSeller(`Bearer ${token}`, seller);
 
-          const totalUnpaid = await AccountHelpers.GetTotalUnpaid(
-            seller,
-            false,
-          );
+          const totalUnpaid = await AccountHelpers.GetTotalUnpaid(seller, false);
 
           res.status(200).json({
             Token: token,
@@ -246,11 +234,10 @@ class MarzbanController {
         req.headers.authorization,
       );
 
-      const { proxies, inbounds } =
-        await AccountHelpers.GenerateProxiesAndInbounds(
-          req.headers.authorization,
-          tariff,
-        );
+      const { proxies, inbounds } = await AccountHelpers.GenerateProxiesAndInbounds(
+        req.headers.authorization,
+        tariff,
+      );
 
       const result = await axios.post(
         apiURL,
@@ -292,8 +279,7 @@ class MarzbanController {
       if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
         throw new Error("Invalid Token");
 
-      const apiURL =
-        (await ConfigFile.GetMarzbanURL()) + "/api/user/" + req.params.username;
+      const apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/user/" + req.params.username;
       const { status } = req.body as { status: string };
       if (!req.params.username && req.params.username === "") {
         res.status(404).json("Username not Found");
@@ -313,9 +299,7 @@ class MarzbanController {
       const account = await AccountModel.findOne({
         Username: req.params.username,
       });
-      const seller = account
-        ? await SellerModel.findOne({ _id: account.Seller })
-        : null;
+      const seller = account ? await SellerModel.findOne({ _id: account.Seller }) : null;
       if (seller) AccountHelpers.InvalidateSellerAllCache(seller.Title);
       res.status(200).json(result.data);
     } catch (error) {
@@ -328,8 +312,7 @@ class MarzbanController {
       if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
         throw new Error("Invalid Token");
 
-      const apiURL =
-        (await ConfigFile.GetMarzbanURL()) + "/api/user/" + req.params.username;
+      const apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/user/" + req.params.username;
       const { status } = req.body as { status: string };
       if (!req.params.username && req.params.username === "") {
         res.status(404).json("Username not Found");
@@ -345,9 +328,7 @@ class MarzbanController {
       const account = await AccountModel.findOne({
         Username: req.params.username,
       });
-      const seller = account
-        ? await SellerModel.findOne({ _id: account.Seller })
-        : null;
+      const seller = account ? await SellerModel.findOne({ _id: account.Seller }) : null;
       if (seller) AccountHelpers.InvalidateSellerAllCache(seller.Title);
       res.status(200).json(result.data);
     } catch (error) {
@@ -431,8 +412,7 @@ class MarzbanController {
         },
       );
 
-      apiURL =
-        (await ConfigFile.GetMarzbanURL()) + "/api/user/" + username + "/reset";
+      apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/user/" + username + "/reset";
       await axios.post(
         apiURL,
         {},
@@ -471,8 +451,7 @@ class MarzbanController {
         res.status(404).json({ message: "Account Not Found!" });
         return;
       }
-      const apiURL =
-        (await ConfigFile.GetMarzbanURL()) + "/api/user/" + req.params.username;
+      const apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/user/" + req.params.username;
       try {
         await axios.delete(apiURL, {
           headers: { Authorization: req.headers.authorization },
@@ -533,9 +512,7 @@ class MarzbanController {
       const account = await AccountModel.findOne({
         Username: req.params.username,
       });
-      const seller = account
-        ? await SellerModel.findOne({ _id: account.Seller })
-        : null;
+      const seller = account ? await SellerModel.findOne({ _id: account.Seller }) : null;
       if (seller) AccountHelpers.InvalidateSellerAllCache(seller.Title);
 
       res.status(200).json({ message: "Revoke Success!" });

@@ -37,12 +37,11 @@ class AccountHelpers {
         shadowsocks: { tag: string }[];
       };
 
-      const formattedInbounds = Object.entries(inbounds).flatMap(
-        ([inboundType, inboundTags]) =>
-          inboundTags.map(({ tag }) => ({
-            InboundType: inboundType,
-            InboundTag: tag,
-          })),
+      const formattedInbounds = Object.entries(inbounds).flatMap(([inboundType, inboundTags]) =>
+        inboundTags.map(({ tag }) => ({
+          InboundType: inboundType,
+          InboundTag: tag,
+        })),
       );
 
       return formattedInbounds;
@@ -56,10 +55,7 @@ class AccountHelpers {
   ) => {
     const vlessUUID = uuidv4();
     const vmessUUID = uuidv4();
-    const TariffInboundModel = await getModel<ITariffInbound>(
-      "TariffInbound",
-      TariffInboundSchema,
-    );
+    const TariffInboundModel = await getModel<ITariffInbound>("TariffInbound", TariffInboundSchema);
     const tariffInbounds = await TariffInboundModel.find({
       TariffId: tariff._id,
     });
@@ -80,13 +76,10 @@ class AccountHelpers {
     } = {};
 
     // Handle vmess
-    const vmessInbounds = getInbound.filter(
-      (inbound) => inbound.InboundType === "vmess",
-    );
+    const vmessInbounds = getInbound.filter((inbound) => inbound.InboundType === "vmess");
     if (
       vmessInbounds.length > 0 &&
-      tariffInbounds.filter((inbound) => inbound.InboundType === "vmess")
-        .length > 0
+      tariffInbounds.filter((inbound) => inbound.InboundType === "vmess").length > 0
     ) {
       proxies.vmess = { id: vmessUUID };
 
@@ -102,13 +95,10 @@ class AccountHelpers {
     }
 
     // Handle vless
-    const vlessInbounds = getInbound.filter(
-      (inbound) => inbound.InboundType === "vless",
-    );
+    const vlessInbounds = getInbound.filter((inbound) => inbound.InboundType === "vless");
     if (
       vlessInbounds.length > 0 &&
-      tariffInbounds.filter((inbound) => inbound.InboundType === "vless")
-        .length > 0
+      tariffInbounds.filter((inbound) => inbound.InboundType === "vless").length > 0
     ) {
       const flow = await ConfigFile.GetMarzbanFlow();
       proxies.vless = {
@@ -128,13 +118,10 @@ class AccountHelpers {
     }
 
     // Handle trojan
-    const trojanInbounds = getInbound.filter(
-      (inbound) => inbound.InboundType === "trojan",
-    );
+    const trojanInbounds = getInbound.filter((inbound) => inbound.InboundType === "trojan");
     if (
       trojanInbounds.length > 0 &&
-      tariffInbounds.filter((inbound) => inbound.InboundType === "trojan")
-        .length > 0
+      tariffInbounds.filter((inbound) => inbound.InboundType === "trojan").length > 0
     ) {
       proxies.trojan = { password: Helper.GenerateRandomPassword(12) };
 
@@ -155,8 +142,7 @@ class AccountHelpers {
     );
     if (
       shadowsocksInbounds.length > 0 &&
-      tariffInbounds.filter((inbound) => inbound.InboundType === "shadowsocks")
-        .length > 0
+      tariffInbounds.filter((inbound) => inbound.InboundType === "shadowsocks").length > 0
     ) {
       proxies.shadowsocks = {
         password: Helper.GenerateRandomPassword(22),
@@ -165,9 +151,7 @@ class AccountHelpers {
 
       const shadowsocksInboundTags = new Set(
         tariffInbounds
-          .filter(
-            (tariffInbound) => tariffInbound.InboundType === "shadowsocks",
-          )
+          .filter((tariffInbound) => tariffInbound.InboundType === "shadowsocks")
           .map((tariffInbound) => tariffInbound.InboundTag),
       );
 
@@ -218,15 +202,9 @@ class AccountHelpers {
     seller: ISeller,
   ) => {
     if (seller) {
-      const resultMarzban = await AccountHelpers.GetMarzbanAccounts(
-        authorization,
-        seller,
-      );
-      const sellerUsers = (resultMarzban.data as { users: MarzbanAccount[] })
-        .users;
-      const marzbanUsernames = new Set(
-        sellerUsers.map((user) => user.username),
-      );
+      const resultMarzban = await AccountHelpers.GetMarzbanAccounts(authorization, seller);
+      const sellerUsers = (resultMarzban.data as { users: MarzbanAccount[] }).users;
+      const marzbanUsernames = new Set(sellerUsers.map((user) => user.username));
 
       const AccountModel = await getModel<IAccount>("Account", AccountSchema);
       const sellerAccounts = await AccountModel.find({
@@ -235,9 +213,7 @@ class AccountHelpers {
       });
 
       // پیدا کردن اکانت‌هایی که در مرزبان نیستند
-      const accountsToDelete = sellerAccounts.filter(
-        (acc) => !marzbanUsernames.has(acc.Username),
-      );
+      const accountsToDelete = sellerAccounts.filter((acc) => !marzbanUsernames.has(acc.Username));
 
       // حذف اکانت‌ها
       await AccountModel.deleteMany({
@@ -246,10 +222,7 @@ class AccountHelpers {
     }
   };
 
-  static GetTotalUnpaid = async (
-    seller: Document | undefined,
-    IsAdmin: boolean,
-  ) => {
+  static GetTotalUnpaid = async (seller: Document | undefined, IsAdmin: boolean) => {
     let totalLimitUnpaid = 0;
     let totalPriceUnpaid = 0;
     const AccountModel = await getModel<IAccount>("Account", AccountSchema);
@@ -284,8 +257,7 @@ class AccountHelpers {
     try {
       do {
         seller.Counter++;
-        generateUsername =
-          username + seller.Counter.toString().padStart(3, "0");
+        generateUsername = username + seller.Counter.toString().padStart(3, "0");
 
         await axios.get(apiURL + generateUsername, {
           headers: { Authorization: authorization },
@@ -300,15 +272,10 @@ class AccountHelpers {
     throw new Error("Username is Empty");
   };
 
-  static GetSubscriptionUrl = (
-    marzbanSubscriptionUrl: string,
-    sellerSubscriptionUrl: string,
-  ) => {
+  static GetSubscriptionUrl = (marzbanSubscriptionUrl: string, sellerSubscriptionUrl: string) => {
     const url =
       sellerSubscriptionUrl.trim() !== ""
-        ? sellerSubscriptionUrl +
-          "/sub/" +
-          marzbanSubscriptionUrl.split("/sub/")[1]
+        ? sellerSubscriptionUrl + "/sub/" + marzbanSubscriptionUrl.split("/sub/")[1]
         : marzbanSubscriptionUrl;
 
     return url;
@@ -344,9 +311,7 @@ class AccountHelpers {
     const tariffIds = sellerAccounts.map((item) => item.TariffId);
     const TariffModel = await getModel<ITariff>("Tariff", TariffSchema);
     const tariffs = await TariffModel.find({ _id: { $in: tariffIds } }).lean();
-    const tariffMap = new Map(
-      tariffs.map((tariff) => [tariff._id.toString(), tariff]),
-    );
+    const tariffMap = new Map(tariffs.map((tariff) => [tariff._id.toString(), tariff]));
 
     const accounts = sellerAccounts.map((item) => {
       const tariffIdString =
@@ -366,18 +331,12 @@ class AccountHelpers {
       }
 
       // Pre-calculate data-related fields
-      const dataLimitString = Helper.CalculateTraffic(
-        marzbanAccount.data_limit,
-      );
-      const usedTrafficString = Helper.CalculateTraffic(
-        marzbanAccount.used_traffic,
-      );
+      const dataLimitString = Helper.CalculateTraffic(marzbanAccount.data_limit);
+      const usedTrafficString = Helper.CalculateTraffic(marzbanAccount.used_traffic);
       const expireString = Helper.CalculateRemainDate(marzbanAccount.expire);
       const isOnline = Helper.IsOnline(marzbanAccount.online_at);
       const onlineAt = Helper.CalculateOnlineDate(marzbanAccount.online_at);
-      const subUpdatedAt = Helper.CalculateUpdateSubscriptionDate(
-        marzbanAccount.sub_updated_at,
-      );
+      const subUpdatedAt = Helper.CalculateUpdateSubscriptionDate(marzbanAccount.sub_updated_at);
 
       return {
         id: item._id,
@@ -440,19 +399,15 @@ class AccountHelpers {
       const allAccountsResults = await Promise.all(
         sellers.map(async (sellerObj) => {
           try {
-            const marzbanAccountsResult =
-              await AccountHelpers.GetMarzbanAccountsAndStoreSmart(
-                authorization,
-                sellerObj,
-                isAll,
-              );
-            if (marzbanAccountsResult.failed) {
-              return [];
-            }
-            const sellerAccounts = await AccountHelpers.GetSellerAccounts(
+            const marzbanAccountsResult = await AccountHelpers.GetMarzbanAccountsAndStoreSmart(
+              authorization,
               sellerObj,
               isAll,
             );
+            if (marzbanAccountsResult.failed) {
+              return [];
+            }
+            const sellerAccounts = await AccountHelpers.GetSellerAccounts(sellerObj, isAll);
             const mixed = await AccountHelpers.GetMixedAccount(
               marzbanAccountsResult.users,
               sellerAccounts,
@@ -462,12 +417,9 @@ class AccountHelpers {
 
             // --- لاگ اکانت‌های حذف‌شده و پرداخت‌نشده فقط برای ادمین ---
             // اکانت‌های حذف‌شده و پرداخت‌نشده (در دیتابیس Payed=false و در مرزبان نیستند)
-            const marzbanUsernames = new Set(
-              marzbanAccountsResult.users.map((u) => u.username),
-            );
+            const marzbanUsernames = new Set(marzbanAccountsResult.users.map((u) => u.username));
             const deletedAndUnpaidAccounts = sellerAccounts.filter(
-              (acc) =>
-                !marzbanUsernames.has(acc.Username) && acc.Payed === false,
+              (acc) => !marzbanUsernames.has(acc.Username) && acc.Payed === false,
             );
             if (deletedAndUnpaidAccounts.length > 0) {
               console.log(
@@ -484,9 +436,7 @@ class AccountHelpers {
       );
       const result = allAccountsResults.flat();
       const endTime = Date.now();
-      console.log(
-        `[GetAccountsSmart] Total time (all sellers): ${endTime - startTime} ms`,
-      );
+      console.log(`[GetAccountsSmart] Total time (all sellers): ${endTime - startTime} ms`);
       return result;
     } else {
       const sellerStart = Date.now();
@@ -498,20 +448,16 @@ class AccountHelpers {
           return [];
         }
 
-        const marzbanAccountsResult =
-          await AccountHelpers.GetMarzbanAccountsAndStoreSmart(
-            authorization,
-            sellerObj,
-            isAll,
-          );
+        const marzbanAccountsResult = await AccountHelpers.GetMarzbanAccountsAndStoreSmart(
+          authorization,
+          sellerObj,
+          isAll,
+        );
         if (marzbanAccountsResult.failed) {
           return [];
         }
 
-        const sellerAccounts = await AccountHelpers.GetSellerAccounts(
-          sellerObj,
-          isAll,
-        );
+        const sellerAccounts = await AccountHelpers.GetSellerAccounts(sellerObj, isAll);
         const mixed = await AccountHelpers.GetMixedAccount(
           marzbanAccountsResult.users,
           sellerAccounts,
@@ -519,9 +465,7 @@ class AccountHelpers {
           sellerSubscriptionUrl,
         );
         const endTime = Date.now();
-        console.log(
-          `[GetAccountsSmart] Total time (single seller): ${endTime - sellerStart} ms`,
-        );
+        console.log(`[GetAccountsSmart] Total time (single seller): ${endTime - sellerStart} ms`);
         return mixed;
       } catch {
         return [];
@@ -539,8 +483,7 @@ class AccountHelpers {
     const now = Date.now();
     if (
       AccountHelpers.MarzbanAccountsList[seller.Title]?.[cacheKey] &&
-      now -
-        AccountHelpers.MarzbanAccountsList[seller.Title][cacheKey].timestamp <
+      now - AccountHelpers.MarzbanAccountsList[seller.Title][cacheKey].timestamp <
         AccountHelpers.CACHE_TTL_MS
     ) {
       // console.error(`[GetMarzbanAccountsAndStoreSmart] seller=${seller} cache HIT`); // کامنت شد طبق درخواست
@@ -552,14 +495,10 @@ class AccountHelpers {
     // اگر کش نبود یا منقضی شده بود، از مرزبان بگیر
     try {
       //const marzbanStart = Date.now();
-      const resultMarzban = await AccountHelpers.GetMarzbanAccounts(
-        authorization,
-        seller,
-      );
+      const resultMarzban = await AccountHelpers.GetMarzbanAccounts(authorization, seller);
       //const marzbanEnd = Date.now();
       // console.error(`[GetMarzbanAccountsAndStoreSmart] seller=${seller} Marzban API: ${marzbanEnd - marzbanStart} ms`); // کامنت شد طبق درخواست
-      const sellerUsers = (resultMarzban.data as { users: MarzbanAccount[] })
-        .users;
+      const sellerUsers = (resultMarzban.data as { users: MarzbanAccount[] }).users;
       if (!AccountHelpers.MarzbanAccountsList[seller.Title])
         AccountHelpers.MarzbanAccountsList[seller.Title] = {};
       AccountHelpers.MarzbanAccountsList[seller.Title][cacheKey] = {
@@ -596,10 +535,7 @@ class AccountHelpers {
     if (seller) {
       const getAllUsersForAgent = await ConfigFile.GetAllUsersForAgent();
       if (getAllUsersForAgent === "Yes") {
-        const token = await this.LoginToMarzban(
-          seller.MarzbanUsername,
-          seller.MarzbanPassword,
-        );
+        const token = await this.LoginToMarzban(seller.MarzbanUsername, seller.MarzbanPassword);
         authorization = "Bearer " + token;
       } else {
         params.search = seller.Title;
@@ -616,9 +552,7 @@ class AccountHelpers {
     return axios.get(apiURL, config);
   };
 
-  static NormalizeAccountOutput = (
-    account: unknown,
-  ): Record<string, unknown> => {
+  static NormalizeAccountOutput = (account: unknown): Record<string, unknown> => {
     if (typeof account !== "object" || account === null) {
       return {};
     }
@@ -665,9 +599,7 @@ class AccountHelpers {
       online_at: acc.online_at ?? null,
       sub_updated_at: acc.sub_updated_at ?? null,
       sub_last_user_agent: acc.sub_last_user_agent ?? null,
-      payed:
-        acc.payed ??
-        (acc.Payed === true ? "Paid" : acc.Payed === false ? "Unpaid" : null),
+      payed: acc.payed ?? (acc.Payed === true ? "Paid" : acc.Payed === false ? "Unpaid" : null),
       note: acc.note ?? null,
     };
   };

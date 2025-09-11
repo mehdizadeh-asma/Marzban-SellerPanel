@@ -18,10 +18,7 @@ class TariffController {
 
       const TariffModel = await getModel<ITariff>("Tariff", TariffSchema);
       const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
-      const TariffSellerModel = await getModel<ITariffSeller>(
-        "TariffSeller",
-        TariffSellerSchema,
-      );
+      const TariffSellerModel = await getModel<ITariffSeller>("TariffSeller", TariffSellerSchema);
       if (req.params.isall === "false") {
         if (!req.params.title) {
           res.status(404).json({ result: "Seller Not Found!" });
@@ -62,15 +59,14 @@ class TariffController {
       if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
         throw new Error("Invalid Token");
 
-      const { Title, DataLimit, Duration, Price, IsFree, IsVisible } =
-        req.body as {
-          Title: string | undefined;
-          DataLimit: number | undefined;
-          Duration: number | undefined;
-          Price: number | undefined;
-          IsFree: boolean | undefined;
-          IsVisible: boolean | undefined;
-        };
+      const { Title, DataLimit, Duration, Price, IsFree, IsVisible } = req.body as {
+        Title: string | undefined;
+        DataLimit: number | undefined;
+        Duration: number | undefined;
+        Price: number | undefined;
+        IsFree: boolean | undefined;
+        IsVisible: boolean | undefined;
+      };
       const TariffModel = await getModel<ITariff>("Tariff", TariffSchema);
       const tariff = new TariffModel({
         Title: Title,

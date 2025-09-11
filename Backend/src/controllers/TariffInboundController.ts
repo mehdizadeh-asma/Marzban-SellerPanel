@@ -7,11 +7,7 @@ import AccountHelpers from "../utils/AccountHelpers";
 import { getModel } from "../utils/MongooseModel";
 
 class TariffInboundController {
-  static GetTariffInboundListByTariffId: RequestHandler = async (
-    req,
-    res,
-    next,
-  ) => {
+  static GetTariffInboundListByTariffId: RequestHandler = async (req, res, next) => {
     try {
       if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
         throw new Error("Invalid Token");
@@ -24,26 +20,18 @@ class TariffInboundController {
       const tariffInbounds = await TariffInboundModel.find({
         TariffId: new Types.ObjectId(tariffId),
       });
-      const tariffInboundTags = new Set(
-        tariffInbounds.map((ts) => ts.InboundTag?.toString()),
-      );
-      const allInbound = await AccountHelpers.GetInbounds(
-        req.headers.authorization,
-      );
+      const tariffInboundTags = new Set(tariffInbounds.map((ts) => ts.InboundTag?.toString()));
+      const allInbound = await AccountHelpers.GetInbounds(req.headers.authorization);
       const FinalList = [
         ...allInbound
-          .filter((inbound) =>
-            tariffInboundTags.has(inbound.InboundTag.toString()),
-          )
+          .filter((inbound) => tariffInboundTags.has(inbound.InboundTag.toString()))
           .map((inbound) => ({
             InboundTag: inbound.InboundTag,
             InboundType: inbound.InboundType,
             TariffId: tariffId,
           })),
         ...allInbound
-          .filter(
-            (inbound) => !tariffInboundTags.has(inbound.InboundTag.toString()),
-          )
+          .filter((inbound) => !tariffInboundTags.has(inbound.InboundTag.toString()))
           .map((inbound) => ({
             InboundTag: inbound.InboundTag,
             InboundType: inbound.InboundType,

@@ -19,10 +19,7 @@ class SellerController {
 
       const customSellers = await Promise.all(
         result.map(async (seller) => {
-          const totalUnpaid = await AccountHelpers.GetTotalUnpaid(
-            seller,
-            false,
-          );
+          const totalUnpaid = await AccountHelpers.GetTotalUnpaid(seller, false);
 
           return {
             ...seller.toObject(), // Convert mongoose doc to plain object
@@ -54,14 +51,7 @@ class SellerController {
 
   static AddSeller: RequestHandler = async (req, res, next) => {
     try {
-      const {
-        Title,
-        Limit,
-        Username,
-        Password,
-        MarzbanUsername,
-        MarzbanPassword,
-      } = req.body as {
+      const { Title, Limit, Username, Password, MarzbanUsername, MarzbanPassword } = req.body as {
         Title: string | undefined;
         Limit: string;
         Username: string | undefined;
@@ -86,9 +76,7 @@ class SellerController {
           config,
         );
       } catch (error) {
-        res
-          .status(404)
-          .json({ Message: "Invalid Marzban Account Information" });
+        res.status(404).json({ Message: "Invalid Marzban Account Information" });
         next(error);
         return;
       }
@@ -113,14 +101,7 @@ class SellerController {
       const id = req.params.id;
       if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
         throw new Error("Invalid Token");
-      const {
-        Title,
-        Limit,
-        Username,
-        Password,
-        MarzbanUsername,
-        MarzbanPassword,
-      } = req.body as {
+      const { Title, Limit, Username, Password, MarzbanUsername, MarzbanPassword } = req.body as {
         Title: string;
         Limit: number;
         Username: string;
@@ -142,9 +123,7 @@ class SellerController {
           config,
         );
       } catch (error) {
-        res
-          .status(404)
-          .json({ Message: "Invalid Marzban Account Information" });
+        res.status(404).json({ Message: "Invalid Marzban Account Information" });
         next(error);
         return;
       }
@@ -157,9 +136,7 @@ class SellerController {
         _id: { $ne: id },
       });
       if (existingSeller) {
-        return res
-          .status(400)
-          .json({ error: "Title Or Username Already Exists!" });
+        return res.status(400).json({ error: "Title Or Username Already Exists!" });
       }
       const tempSeller = new SellerModel({
         _id: id,
@@ -178,14 +155,10 @@ class SellerController {
       if (Password) updateFields.Password = Password;
       if (MarzbanUsername) updateFields.MarzbanUsername = MarzbanUsername;
       if (MarzbanPassword) updateFields.MarzbanPassword = MarzbanPassword;
-      const updatedSeller = await SellerModel.findByIdAndUpdate(
-        id,
-        updateFields,
-        {
-          new: true,
-          runValidators: true,
-        },
-      );
+      const updatedSeller = await SellerModel.findByIdAndUpdate(id, updateFields, {
+        new: true,
+        runValidators: true,
+      });
       if (!updatedSeller) {
         return res.status(404).json({ error: "Seller Not Found" });
       }
