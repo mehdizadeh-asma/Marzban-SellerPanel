@@ -1,7 +1,17 @@
 name: Build & Push Docker Images
 
 on:
+  push:
+    branches:
+      - main
+    tags:
+      - "dev-*" # فقط وقتی روی development تگ بزنی مثل dev-123
   workflow_dispatch:
+    inputs:
+      docker_tag:
+        description: "Docker image tag to use (e.g. dev, latest, v2.5.4)"
+        required: true
+        default: "dev"
 
 jobs:
   docker:
@@ -20,6 +30,17 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Set Docker tag
+        id: vars
+        run: |
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            echo "TAG=${{ github.event.inputs.docker_tag }}" >> $GITHUB_ENV
+          elif [[ "${GITHUB_REF}" == refs/heads/main ]]; then
+            echo "TAG=latest" >> $GITHUB_ENV
+          elif [[ "${GITHUB_REF}" == refs/tags/dev-* ]]; then
+            echo "TAG=dev" >> $GITHUB_ENV
+          fi
+
       - name: Build and Push Frontend
         uses: docker/build-push-action@v6
         with:
@@ -28,7 +49,7 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            marzbansellerpanel/msp-frontend:dev
+            marzbansellerpanel/msp-frontend:${{ env.TAG }}
 
       - name: Build and Push Backend
         uses: docker/build-push-action@v6
@@ -38,4 +59,4 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            marzbansellerpanel/msp-backend:dev
+            marzbansellerpanel/msp-backend:${{ env.TAG }}
