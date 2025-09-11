@@ -1,5 +1,5 @@
-import path from "path";
 import { promises as fs } from "fs";
+import path from "path";
 
 interface ConfigType {
   MARZBAN_URL: string;
@@ -79,7 +79,7 @@ class ConfigFile {
       return this.config.RENEW_FORCE_TO_LIMITED_AND_EXPIRED;
 
     throw new Error(
-      "RENEW_FORCE_TO_LIMITED_AND_EXPIRED doesn't exist in config File!"
+      "RENEW_FORCE_TO_LIMITED_AND_EXPIRED doesn't exist in config File!",
     );
   }
 
@@ -99,7 +99,7 @@ class ConfigFile {
       return this.config.DELETE_PAIDANDREMOVED_USERS;
 
     throw new Error(
-      "DELETE_PAIDANDREMOVED_USERS doesn't exist in config File!"
+      "DELETE_PAIDANDREMOVED_USERS doesn't exist in config File!",
     );
   }
 

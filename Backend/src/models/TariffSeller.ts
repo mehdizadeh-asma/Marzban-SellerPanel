@@ -1,6 +1,8 @@
-import { Document, Types, Schema } from "mongoose";
-import { ITariff } from "./Tariff";
-import { ISeller } from "./Seller";
+import type { Document } from "mongoose";
+import { Types, Schema } from "mongoose";
+
+import type { ISeller } from "./Seller";
+import type { ITariff } from "./Tariff";
 
 export interface ITariffSeller extends Document {
   _id: Types.ObjectId;

@@ -1,8 +1,10 @@
-import { RequestHandler } from "express";
+import type { RequestHandler } from "express";
 import { Types } from "mongoose";
-import { getModel } from "../utils/MongooseModel";
-import { IAccount, AccountSchema } from "../models/Account";
+
+import type { IAccount } from "../models/Account";
+import { AccountSchema } from "../models/Account";
 import AccountHelpers from "../utils/AccountHelpers";
+import { getModel } from "../utils/MongooseModel";
 
 class AccountController {
   static GetAccountList: RequestHandler = async (req, res, next) => {

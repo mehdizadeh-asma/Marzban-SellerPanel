@@ -1,6 +1,8 @@
-import { Document, Types, Schema } from "mongoose";
-import { ISeller } from "./Seller";
-import { ITariff } from "./Tariff";
+import type { Document } from "mongoose";
+import { Types, Schema } from "mongoose";
+
+import type { ISeller } from "./Seller";
+import type { ITariff } from "./Tariff";
 
 export interface IAccount extends Document {
   _id: Types.ObjectId;

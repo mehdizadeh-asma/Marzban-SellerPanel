@@ -1,16 +1,17 @@
-import express, { NextFunction, Request, Response } from "express";
-import bodyParser from "body-parser";
-import cors from "cors";
 import http from "http";
 import https from "https";
 
+import bodyParser from "body-parser";
+import cors from "cors";
+import type { NextFunction, Request, Response } from "express";
+import express from "express";
+
+import accountRouter from "./routes/AccountRouter";
 import marzbanRouter from "./routes/MarzbanRouter";
 import sellerRouter from "./routes/SellerRouter";
-import tariffRouter from "./routes/TariffRouter";
-import accountRouter from "./routes/AccountRouter";
-import tariffSellerRouter from "./routes/TariffSellerRouter";
 import tariffInboundRouter from "./routes/TariffInboundRouter";
-
+import tariffRouter from "./routes/TariffRouter";
+import tariffSellerRouter from "./routes/TariffSellerRouter";
 import Certificate from "./utils/Certificate";
 import MongooseDbManagement from "./utils/MongooseDbManagement";
 
@@ -33,7 +34,7 @@ app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header(
     "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization",
   );
   next();
 });

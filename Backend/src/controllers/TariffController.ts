@@ -1,10 +1,14 @@
-import { RequestHandler } from "express";
+import type { RequestHandler } from "express";
 import { Types } from "mongoose";
-import { ISeller, SellerSchema } from "../models/Seller";
-import { ITariff, TariffSchema } from "../models/Tariff";
-import { ITariffSeller, TariffSellerSchema } from "../models/TariffSeller";
-import { getModel } from "../utils/MongooseModel";
+
+import type { ISeller } from "../models/Seller";
+import { SellerSchema } from "../models/Seller";
+import type { ITariff } from "../models/Tariff";
+import { TariffSchema } from "../models/Tariff";
+import type { ITariffSeller } from "../models/TariffSeller";
+import { TariffSellerSchema } from "../models/TariffSeller";
 import AccountHelpers from "../utils/AccountHelpers";
+import { getModel } from "../utils/MongooseModel";
 
 class TariffController {
   static GetTariffList: RequestHandler = async (req, res, next) => {
@@ -16,7 +20,7 @@ class TariffController {
       const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
       const TariffSellerModel = await getModel<ITariffSeller>(
         "TariffSeller",
-        TariffSellerSchema
+        TariffSellerSchema,
       );
       if (req.params.isall === "false") {
         if (!req.params.title) {

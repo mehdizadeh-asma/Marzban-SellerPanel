@@ -1,15 +1,18 @@
-import { RequestHandler } from "express";
+import type { RequestHandler } from "express";
 import { Types } from "mongoose";
-import { getModel } from "../utils/MongooseModel";
-import { ITariffSeller, TariffSellerSchema } from "../models/TariffSeller";
-import { ITariff, TariffSchema } from "../models/Tariff";
+
+import type { ITariff } from "../models/Tariff";
+import { TariffSchema } from "../models/Tariff";
+import type { ITariffSeller } from "../models/TariffSeller";
+import { TariffSellerSchema } from "../models/TariffSeller";
 import AccountHelpers from "../utils/AccountHelpers";
+import { getModel } from "../utils/MongooseModel";
 
 class TariffSellerController {
   static GetTariffSellerListBySellerId: RequestHandler = async (
     req,
     res,
-    next
+    next,
   ) => {
     try {
       if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
@@ -17,7 +20,7 @@ class TariffSellerController {
 
       const TariffSellerModel = await getModel<ITariffSeller>(
         "TariffSeller",
-        TariffSellerSchema
+        TariffSellerSchema,
       );
       const TariffModel = await getModel<ITariff>("Tariff", TariffSchema);
       const sellerId: string = req.params.sellerId;
@@ -28,14 +31,14 @@ class TariffSellerController {
         sellerTariffs.map((ts) =>
           ts.TariffId instanceof Types.ObjectId
             ? ts.TariffId.toString()
-            : ts.TariffId
-        )
+            : ts.TariffId,
+        ),
       );
       const allTariffs = await TariffModel.find();
       const tariffList = [
         ...allTariffs
           .filter((tariff) =>
-            sellerTariffIds.has((tariff.id as Types.ObjectId).toString())
+            sellerTariffIds.has((tariff.id as Types.ObjectId).toString()),
           )
           .map((tariff) => ({
             TariffId: tariff._id,
@@ -46,7 +49,7 @@ class TariffSellerController {
         ...allTariffs
           .filter(
             (tariff) =>
-              !sellerTariffIds.has((tariff.id as Types.ObjectId).toString())
+              !sellerTariffIds.has((tariff.id as Types.ObjectId).toString()),
           )
           .map((tariff) => ({
             TariffId: tariff._id,
@@ -67,7 +70,7 @@ class TariffSellerController {
 
       const TariffSellerModel = await getModel<ITariffSeller>(
         "TariffSeller",
-        TariffSellerSchema
+        TariffSellerSchema,
       );
       const id: string = req.params.id;
       const tariffSeller = await TariffSellerModel.findOne({
@@ -86,7 +89,7 @@ class TariffSellerController {
 
       const TariffSellerModel = await getModel<ITariffSeller>(
         "TariffSeller",
-        TariffSellerSchema
+        TariffSellerSchema,
       );
       const { TariffID, SellerID } = req.body as {
         TariffID: string | undefined;
@@ -109,7 +112,7 @@ class TariffSellerController {
 
       const TariffSellerModel = await getModel<ITariffSeller>(
         "TariffSeller",
-        TariffSellerSchema
+        TariffSellerSchema,
       );
       const sellerId: string = req.params.sellerid;
       const tariffIds = (req.body as { TariffIds: string[] }).TariffIds;
@@ -132,7 +135,7 @@ class TariffSellerController {
   static RemoveTariffSellerBySellerId: RequestHandler = async (
     req,
     res,
-    next
+    next,
   ) => {
     try {
       if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
@@ -140,7 +143,7 @@ class TariffSellerController {
 
       const TariffSellerModel = await getModel<ITariffSeller>(
         "TariffSeller",
-        TariffSellerSchema
+        TariffSellerSchema,
       );
       const id: string = req.params.sellerid;
       const result = await TariffSellerModel.deleteMany({
@@ -158,7 +161,7 @@ class TariffSellerController {
 
       const TariffSellerModel = await getModel<ITariffSeller>(
         "TariffSeller",
-        TariffSellerSchema
+        TariffSellerSchema,
       );
       const _id = new Types.ObjectId(req.params.id);
       const tariffSeller = await TariffSellerModel.findOne({ _id: _id });

@@ -1,9 +1,10 @@
+import type { Schema, Model, Connection, Document } from "mongoose";
+
 import Mongoose from "./MongooseDbManagement";
-import { Schema, Model, Connection, Document } from "mongoose";
 
 export async function getModel<T extends Document>(
   name: string,
-  schema: Schema
+  schema: Schema,
 ): Promise<Model<T>> {
   await Mongoose.connectMainDatabase();
   const mainConn: Connection | null = Mongoose.getMainConnection();

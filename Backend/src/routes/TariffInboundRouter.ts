@@ -6,12 +6,12 @@ const router = Router();
 
 router.get(
   "/TariffInbound/:tariffId",
-  TariffInboundController.GetTariffInboundListByTariffId
+  TariffInboundController.GetTariffInboundListByTariffId,
 );
 
 router.put(
   "/TariffInbound/:tariffid",
-  TariffInboundController.AssignTariffInbound
+  TariffInboundController.AssignTariffInbound,
 );
 
 export default router;

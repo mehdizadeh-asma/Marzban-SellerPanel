@@ -1,9 +1,11 @@
-import { RequestHandler } from "express";
-import { Types } from "mongoose";
-import { ISeller, SellerSchema } from "../models/Seller";
-import ConfigFile from "../utils/Config";
 import axios from "axios";
+import type { RequestHandler } from "express";
+import { Types } from "mongoose";
+
+import type { ISeller } from "../models/Seller";
+import { SellerSchema } from "../models/Seller";
 import AccountHelpers from "../utils/AccountHelpers";
+import ConfigFile from "../utils/Config";
 import { getModel } from "../utils/MongooseModel";
 
 class SellerController {
@@ -19,14 +21,14 @@ class SellerController {
         result.map(async (seller) => {
           const totalUnpaid = await AccountHelpers.GetTotalUnpaid(
             seller,
-            false
+            false,
           );
 
           return {
             ...seller.toObject(), // Convert mongoose doc to plain object
             TotalPrice: totalUnpaid.TotalPriceUnpaid,
           };
-        })
+        }),
       );
 
       res.status(200).json(customSellers);
@@ -81,7 +83,7 @@ class SellerController {
             username: MarzbanUsername,
             password: MarzbanPassword,
           },
-          config
+          config,
         );
       } catch (error) {
         res
@@ -137,7 +139,7 @@ class SellerController {
             username: MarzbanUsername,
             password: MarzbanPassword,
           },
-          config
+          config,
         );
       } catch (error) {
         res
@@ -182,7 +184,7 @@ class SellerController {
         {
           new: true,
           runValidators: true,
-        }
+        },
       );
       if (!updatedSeller) {
         return res.status(404).json({ error: "Seller Not Found" });

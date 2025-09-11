@@ -1,14 +1,16 @@
-import { RequestHandler } from "express";
+import type { RequestHandler } from "express";
 import { Types } from "mongoose";
-import { getModel } from "../utils/MongooseModel";
-import { ITariffInbound, TariffInboundSchema } from "../models/TariffInbound";
+
+import type { ITariffInbound } from "../models/TariffInbound";
+import { TariffInboundSchema } from "../models/TariffInbound";
 import AccountHelpers from "../utils/AccountHelpers";
+import { getModel } from "../utils/MongooseModel";
 
 class TariffInboundController {
   static GetTariffInboundListByTariffId: RequestHandler = async (
     req,
     res,
-    next
+    next,
   ) => {
     try {
       if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
@@ -16,22 +18,22 @@ class TariffInboundController {
 
       const TariffInboundModel = await getModel<ITariffInbound>(
         "TariffInbound",
-        TariffInboundSchema
+        TariffInboundSchema,
       );
       const tariffId: string = req.params.tariffId;
       const tariffInbounds = await TariffInboundModel.find({
         TariffId: new Types.ObjectId(tariffId),
       });
       const tariffInboundTags = new Set(
-        tariffInbounds.map((ts) => ts.InboundTag?.toString())
+        tariffInbounds.map((ts) => ts.InboundTag?.toString()),
       );
       const allInbound = await AccountHelpers.GetInbounds(
-        req.headers.authorization
+        req.headers.authorization,
       );
       const FinalList = [
         ...allInbound
           .filter((inbound) =>
-            tariffInboundTags.has(inbound.InboundTag.toString())
+            tariffInboundTags.has(inbound.InboundTag.toString()),
           )
           .map((inbound) => ({
             InboundTag: inbound.InboundTag,
@@ -40,7 +42,7 @@ class TariffInboundController {
           })),
         ...allInbound
           .filter(
-            (inbound) => !tariffInboundTags.has(inbound.InboundTag.toString())
+            (inbound) => !tariffInboundTags.has(inbound.InboundTag.toString()),
           )
           .map((inbound) => ({
             InboundTag: inbound.InboundTag,
@@ -61,7 +63,7 @@ class TariffInboundController {
 
       const TariffInboundModel = await getModel<ITariffInbound>(
         "TariffInbound",
-        TariffInboundSchema
+        TariffInboundSchema,
       );
       const tariffId = req.params.tariffid;
       const InboundList = req.body as ITariffInbound[];

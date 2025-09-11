@@ -1,5 +1,7 @@
-import { Document, Types, Schema } from "mongoose";
-import { ITariff } from "./Tariff";
+import type { Document } from "mongoose";
+import { Types, Schema } from "mongoose";
+
+import type { ITariff } from "./Tariff";
 
 export interface ITariffInbound extends Document {
   _id: Types.ObjectId;

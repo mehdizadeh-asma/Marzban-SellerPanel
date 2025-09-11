@@ -1,4 +1,5 @@
-import { Document, Types, Schema } from "mongoose";
+import type { Document, Types } from "mongoose";
+import { Schema } from "mongoose";
 
 export interface ISeller extends Document {
   _id: Types.ObjectId;

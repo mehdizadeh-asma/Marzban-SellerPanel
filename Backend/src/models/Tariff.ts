@@ -1,4 +1,5 @@
-import { Document, Schema, Types } from "mongoose";
+import type { Document, Types } from "mongoose";
+import { Schema } from "mongoose";
 
 export interface ITariff extends Document {
   _id: Types.ObjectId;

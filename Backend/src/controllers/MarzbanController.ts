@@ -1,15 +1,18 @@
-import { RequestHandler } from "express";
-import { Types } from "mongoose";
 import axios from "axios";
+import type { RequestHandler } from "express";
+import { Types } from "mongoose";
 
+import type { IAccount } from "../models/Account";
+import { AccountSchema } from "../models/Account";
+import type MarzbanAccount from "../models/MarzbanAccount";
+import type { ISeller } from "../models/Seller";
+import { SellerSchema } from "../models/Seller";
+import type { ITariff } from "../models/Tariff";
+import { TariffSchema } from "../models/Tariff";
+import AccountHelpers from "../utils/AccountHelpers";
 import ConfigFile from "../utils/Config";
 import MongooseDbManagement from "../utils/MongooseDbManagement";
 import { getModel } from "../utils/MongooseModel";
-import MarzbanAccount from "../models/MarzbanAccount";
-import AccountHelpers from "../utils/AccountHelpers";
-import { ISeller, SellerSchema } from "../models/Seller";
-import { ITariff, TariffSchema } from "../models/Tariff";
-import { IAccount, AccountSchema } from "../models/Account";
 
 class MarzbanController {
   static Login: RequestHandler = async (req, res, next) => {
@@ -36,12 +39,11 @@ class MarzbanController {
           const marzbanPassword = await ConfigFile.GetMarzbanPassword();
           const token = await AccountHelpers.LoginToMarzban(
             marzbanUsername,
-            marzbanPassword
+            marzbanPassword,
           );
-
           const totalUnpaid = await AccountHelpers.GetTotalUnpaid(
             undefined,
-            true
+            true,
           );
 
           res.status(200).json({
@@ -70,7 +72,7 @@ class MarzbanController {
         try {
           const token = await AccountHelpers.LoginToMarzban(
             seller.MarzbanUsername,
-            seller.MarzbanPassword
+            seller.MarzbanPassword,
           );
 
           // فقط جمعه‌ها اجرا شود
@@ -80,12 +82,12 @@ class MarzbanController {
           )
             await AccountHelpers.RemoveDeletedAccountSeller(
               `Bearer ${token}`,
-              seller
+              seller,
             );
 
           const totalUnpaid = await AccountHelpers.GetTotalUnpaid(
             seller,
-            false
+            false,
           );
 
           res.status(200).json({
@@ -120,7 +122,7 @@ class MarzbanController {
         isAll,
         seller,
         sellerSubscriptionUrl,
-        isAdmin
+        isAdmin,
       );
       const normalized = Array.isArray(accounts)
         ? accounts.map(AccountHelpers.NormalizeAccountOutput)
@@ -142,7 +144,7 @@ class MarzbanController {
       const marzbanAccountsResult = await AccountHelpers.GetMarzbanAccounts(
         req.headers.authorization,
         undefined,
-        search
+        search,
       );
       const marzbanAccounts =
         (
@@ -157,7 +159,7 @@ class MarzbanController {
         marzbanAccounts as unknown as MarzbanAccount[],
         sellerAccounts,
         seller,
-        sellerSubscriptionUrl
+        sellerSubscriptionUrl,
       );
       allMixed = allMixed.concat(mixed);
 
@@ -241,13 +243,13 @@ class MarzbanController {
       const generateUsername = await AccountHelpers.GetUsernameAvailable(
         seller,
         username,
-        req.headers.authorization
+        req.headers.authorization,
       );
 
       const { proxies, inbounds } =
         await AccountHelpers.GenerateProxiesAndInbounds(
           req.headers.authorization,
-          tariff
+          tariff,
         );
 
       const result = await axios.post(
@@ -265,7 +267,7 @@ class MarzbanController {
         },
         {
           headers: { Authorization: req.headers.authorization },
-        }
+        },
       );
 
       const account = new AccountModel();
@@ -304,7 +306,7 @@ class MarzbanController {
         },
         {
           headers: { Authorization: req.headers.authorization },
-        }
+        },
       );
       const AccountModel = await getModel<IAccount>("Account", AccountSchema);
       const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
@@ -336,7 +338,7 @@ class MarzbanController {
       const result = await axios.put(
         apiURL,
         { status: status },
-        { headers: { Authorization: req.headers.authorization } }
+        { headers: { Authorization: req.headers.authorization } },
       );
       const AccountModel = await getModel<IAccount>("Account", AccountSchema);
       const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
@@ -413,7 +415,7 @@ class MarzbanController {
 
       const { inbounds } = await AccountHelpers.GenerateProxiesAndInbounds(
         req.headers.authorization,
-        tariff
+        tariff,
       );
 
       let apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/user/" + username;
@@ -426,7 +428,7 @@ class MarzbanController {
         },
         {
           headers: { Authorization: req.headers.authorization },
-        }
+        },
       );
 
       apiURL =
@@ -436,7 +438,7 @@ class MarzbanController {
         {},
         {
           headers: { Authorization: req.headers.authorization },
-        }
+        },
       );
 
       const account = new AccountModel();
@@ -522,7 +524,7 @@ class MarzbanController {
         {},
         {
           headers: { Authorization: req.headers.authorization },
-        }
+        },
       );
 
       // invalidate کش seller مربوط به این یوزر

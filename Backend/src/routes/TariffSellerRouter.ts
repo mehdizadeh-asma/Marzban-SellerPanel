@@ -6,7 +6,7 @@ const router = Router();
 
 router.get(
   "/tariffSeller/:sellerId",
-  TariffSellerController.GetTariffSellerListBySellerId
+  TariffSellerController.GetTariffSellerListBySellerId,
 );
 // router.get("/tariffSeller/:id", TariffSellerController.GetTariffSeller);
 router.post("/tariffSeller", TariffSellerController.AddTariffSeller);
@@ -16,11 +16,11 @@ router.post("/tariffSeller", TariffSellerController.AddTariffSeller);
 // );
 router.put(
   "/tariffSeller/:sellerid",
-  TariffSellerController.AssignTariffSeller
+  TariffSellerController.AssignTariffSeller,
 );
 router.delete(
   "/tariffSeller/:sellerid",
-  TariffSellerController.RemoveTariffSellerBySellerId
+  TariffSellerController.RemoveTariffSellerBySellerId,
 );
 
 export default router;
