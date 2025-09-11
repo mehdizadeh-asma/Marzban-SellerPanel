@@ -1,7 +1,7 @@
 {
   "name": "marzban-seller-panel",
   "version": "2.5.4",
-  "description": "Marzban Seller Panel",   
+  "description": "Marzban Seller Panel",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -12,7 +12,6 @@
     "@emotion/react": "^11",
     "@emotion/styled": "^11",
     "@mui/icons-material": "^7",
-    "@mui/joy": "^5.0.0-beta.52",
     "@mui/material": "^7",
     "@mui/x-data-grid": "^8",
     "axios": "^1",

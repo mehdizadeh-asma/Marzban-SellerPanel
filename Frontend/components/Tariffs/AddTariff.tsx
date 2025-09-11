@@ -1,8 +1,8 @@
 import { ComponentRef, useRef, useState } from "react";
 
 import TextField from "@mui/material/TextField";
-import Typography from "@mui/joy/Typography";
-import Switch from "@mui/joy/Switch";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Switch from "@mui/material/Switch";
 
 import TariffType from "@/models/TariffType";
 import Messages from "../General/Messages";
@@ -130,35 +130,32 @@ export default function AddTariff(props: PropsType) {
         </div>
         <div className="row py-3 my-1">
           <div className="col-md-6 col-sm-12 py-1">
-            <Typography
-              component="label"
-              endDecorator={
+            <FormControlLabel
+              control={
                 <Switch
                   sx={{ ml: 1 }}
-                  defaultChecked
-                  onChange={(e) => {
+                  checked={isVisible}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                     setIsVisible(e.target.checked);
                   }}
                 />
               }
-            >
-              Active?
-            </Typography>
+              label="Active?"
+            />
           </div>
           <div className="col py-1">
-            <Typography
-              component="label"
-              endDecorator={
+            <FormControlLabel
+              control={
                 <Switch
                   sx={{ ml: 1 }}
-                  onChange={(e) => {
+                  checked={isFree}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                     setIsFree(e.target.checked);
                   }}
                 />
               }
-            >
-              Is Free?
-            </Typography>
+              label="Is Free?"
+            />
           </div>
         </div>
 
