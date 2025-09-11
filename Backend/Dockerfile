@@ -1,14 +1,14 @@
 FROM node:alpine AS deps
-WORKDIR /app
+WORKDIR /backend
 
 COPY package*.json ./
 
 RUN npm install
 
 FROM node:alpine AS builder
-WORKDIR /app
+WORKDIR /backend
 
-COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /backend/node_modules ./node_modules
 COPY . .
 
 RUN npm run build
@@ -23,8 +23,8 @@ RUN apk add --no-cache ca-certificates
 
 COPY package*.json ./
 
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /backend/dist ./dist
+COPY --from=builder /backend/node_modules ./node_modules
 
 RUN npm prune --production || npm install --omit=dev
 
