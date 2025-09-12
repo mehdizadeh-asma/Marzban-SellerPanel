@@ -2,7 +2,7 @@
 import Login from "@/components/Login";
 import { useMyContext } from "@/context/MyContext";
 
-export default function Home() {
+export default function Home(): React.ReactElement {
   const { config } = useMyContext();
   return (
     <div className=" container-fluid m-2  justify-content-center d-flex ">

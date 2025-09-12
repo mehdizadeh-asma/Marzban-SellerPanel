@@ -1,10 +1,10 @@
-import { useState, useRef, useEffect, ComponentRef, FC } from "react";
+import { ComponentRef, FC, useEffect, useRef, useState } from "react";
 import { Button, Modal } from "react-bootstrap";
 
 import SellerType from "@/models/SellerType";
 
-import AddSeller from "./AddSeller";
 import Messages from "../General/Messages";
+import AddSeller from "./AddSeller";
 
 interface PropsType {
   isOpen: boolean;

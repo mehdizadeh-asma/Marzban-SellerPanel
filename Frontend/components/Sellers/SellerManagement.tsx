@@ -5,11 +5,11 @@ import { ComponentRef, useCallback, useEffect, useRef, useState } from "react";
 import { useMyContext } from "@/context/MyContext";
 import SellerType from "@/models/SellerType";
 
+import Messages from "../General/Messages";
 import AddSeller from "./AddSeller";
 import EditModal from "./EditModal";
 import PackageSellerModal from "./PackageSellerModal";
 import SellerGrid from "./SellerGrid";
-import Messages from "../General/Messages";
 
 const SellerManagement = () => {
   const { user, config } = useMyContext();

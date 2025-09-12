@@ -7,8 +7,8 @@ import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 
 import TariffType from "@/models/TariffType";
 
-import TariffInboundModal from "./TariffInboundModal";
 import Footer from "../General/Footer";
+import TariffInboundModal from "./TariffInboundModal";
 
 interface PropsType {
   Loading: boolean;

@@ -6,7 +6,7 @@ import { encrypt } from "@/utils/Crypto";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(): Promise<Response> {
   try {
     const filepath = path.join(process.cwd(), "data", "config.json");
     const fileContents = await fs.readFile(filepath, "utf8");

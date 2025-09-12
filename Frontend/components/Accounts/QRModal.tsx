@@ -1,4 +1,4 @@
-import { useImperativeHandle, useState, forwardRef } from "react";
+import { forwardRef, useImperativeHandle, useState } from "react";
 import { Button, Modal } from "react-bootstrap";
 import QRCode from "react-qr-code";
 

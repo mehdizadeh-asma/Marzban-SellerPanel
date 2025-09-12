@@ -15,7 +15,7 @@ import SellerManagement from "@/components/Sellers/SellerManagement";
 import TariffManagement from "@/components/Tariffs/TariffManagement";
 import { useMyContext } from "@/context/MyContext";
 
-export default function Dashboard() {
+export default function Dashboard(): React.ReactElement {
   const [activeComponent, setActiveComponent] = useState<string>("accounts");
   const [activeComponentName, setActiveComponentName] = useState<string>("My Accounts Management");
 
@@ -28,7 +28,7 @@ export default function Dashboard() {
     if (user.Token === "") router.push("/seller");
   }, [user.Token, router]);
 
-  const BtnExit_Click = () => {
+  const BtnExit_Click = (): void => {
     setUser({
       Token: "",
       IsAdmin: false,
@@ -39,26 +39,26 @@ export default function Dashboard() {
     router.push("/seller");
   };
 
-  const handleClick = (e: React.MouseEvent<HTMLElement>) => {
+  const handleClick = (e: React.MouseEvent<HTMLElement>): void => {
     setAnchorEl(e.currentTarget as HTMLElement);
   };
 
-  const handlePackagesClick = () => {
+  const handlePackagesClick = (): void => {
     setActiveComponent("packages");
     setActiveComponentName("My Packages Management");
   };
 
-  const handleAgentsClick = () => {
+  const handleAgentsClick = (): void => {
     setActiveComponent("agents");
     setActiveComponentName("My Agents Management");
   };
 
-  const handleAccountsClick = () => {
+  const handleAccountsClick = (): void => {
     setActiveComponent("accounts");
     setActiveComponentName("My Accounts Management");
   };
 
-  const handleClose = () => {
+  const handleClose = (): void => {
     setAnchorEl(null);
   };
   return (

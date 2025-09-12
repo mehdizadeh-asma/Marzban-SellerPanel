@@ -29,7 +29,7 @@ const AddAccount = forwardRef<HTMLSelectElement, PropsType>((props, ref) => {
   const chkOnHold = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    const LaodTariff = async () => {
+    const LaodTariff = async (): Promise<void> => {
       try {
         const url = new URL(`api/tariffs/false/${user.Username}`, config.BACKEND_URL);
         const resultTariff = await axios.get(url.toString(), {
@@ -43,7 +43,7 @@ const AddAccount = forwardRef<HTMLSelectElement, PropsType>((props, ref) => {
     if (user.Token !== "") LaodTariff();
   }, [config.BACKEND_URL, user.Token, user.Username]);
 
-  const BtnAdd_Click = async () => {
+  const BtnAdd_Click = async (): Promise<void> => {
     let note = "";
     let onHold = false;
 
@@ -67,7 +67,7 @@ const AddAccount = forwardRef<HTMLSelectElement, PropsType>((props, ref) => {
     }
   };
 
-  const FillTariffs = () => {
+  const FillTariffs = (): React.ReactNode => {
     if (tariffList && tariffList.length > 0) {
       return tariffList.map((tariff: TariffType) => {
         return (

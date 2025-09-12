@@ -22,22 +22,22 @@ import LinearProgress from "@mui/material/LinearProgress";
 import type { SxProps, Theme } from "@mui/material/styles";
 import {
   DataGrid,
-  useGridApiRef,
   GridColDef,
   gridFilteredSortedRowIdsSelector,
-  GridValidRowModel,
-  GridRowIdGetter,
   GridRowClassNameParams,
   GridRowHeightParams,
   GridRowHeightReturnValue,
+  GridRowIdGetter,
+  GridValidRowModel,
+  useGridApiRef,
 } from "@mui/x-data-grid";
 
 import AccountType from "@/models/AccountType";
 import { copyTextToClipboard } from "@/utils/Helper";
 
-import QRModal from "./QRModal";
 import Footer from "../General/Footer";
 import Messages from "../General/Messages";
+import QRModal from "./QRModal";
 
 export interface BaseGridHelpers {
   onRevokeClick: (account: AccountType) => void;
@@ -101,7 +101,7 @@ const BaseAccountGrid = forwardRef<BaseGridHandle, Props>((props, ref) => {
   const [pageSize, setPageSize] = useState(10);
 
   useImperativeHandle(ref, () => ({
-    SendBackUsernames: () => {
+    SendBackUsernames: (): string[] => {
       const accountsId = Array.from(selectedRows);
       setSelectedRows(new Set());
       setSelectAll(false);
@@ -109,8 +109,8 @@ const BaseAccountGrid = forwardRef<BaseGridHandle, Props>((props, ref) => {
     },
   }));
 
-  const RenderOnline = (online?: string) => {
-    const Dot = ({ color }: { color: string }) => (
+  const RenderOnline = (online?: string): React.ReactNode => {
+    const Dot = ({ color }: { color: string }): React.ReactElement => (
       <Box
         component="span"
         sx={{
@@ -154,7 +154,7 @@ const BaseAccountGrid = forwardRef<BaseGridHandle, Props>((props, ref) => {
     );
   };
 
-  const RenderStatus = (status?: string) => {
+  const RenderStatus = (status?: string): React.ReactNode => {
     const iconSx = { verticalAlign: "middle", fontSize: 20, mr: 0.5 };
     let color: string | undefined;
     let label: string | undefined;
@@ -207,7 +207,7 @@ const BaseAccountGrid = forwardRef<BaseGridHandle, Props>((props, ref) => {
     );
   };
 
-  const RenderPayment = (payment: string | undefined) => {
+  const RenderPayment = (payment: string | undefined): React.ReactElement => {
     return payment === "Paid" ? (
       <span className="text-success">
         <CreditScoreRoundedIcon sx={{ fontSize: "25px" }} />
@@ -219,7 +219,7 @@ const BaseAccountGrid = forwardRef<BaseGridHandle, Props>((props, ref) => {
     );
   };
 
-  const RenderUsage = (account: AccountType) => {
+  const RenderUsage = (account: AccountType): React.ReactNode => {
     const totalGb =
       typeof account.data_limit === "number" && account.data_limit > 0
         ? account.data_limit / (1024 * 1024 * 1024)
@@ -254,7 +254,7 @@ const BaseAccountGrid = forwardRef<BaseGridHandle, Props>((props, ref) => {
     );
   };
 
-  const onCheckClick = (account: AccountType) => {
+  const onCheckClick = (account: AccountType): void => {
     if (!account?.id) return;
     setSelectedRows((prev) => {
       const newSet = new Set(prev);
@@ -264,7 +264,7 @@ const BaseAccountGrid = forwardRef<BaseGridHandle, Props>((props, ref) => {
     });
   };
 
-  const onSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const onSelectAll = (event: React.ChangeEvent<HTMLInputElement>): void => {
     const isChecked = event.target.checked;
     setSelectAll(isChecked);
     let selectedCount = 0;
@@ -362,9 +362,10 @@ const BaseAccountGrid = forwardRef<BaseGridHandle, Props>((props, ref) => {
         onChange={() => onCheckClick(row)}
       />
     ),
-    RenderRevokeIcon: (_row: AccountType) => (
-      <AutoModeIcon className="text-warning" sx={{ fontSize: "25px" }} />
-    ),
+    RenderRevokeIcon: (row: AccountType) => {
+      void row;
+      return <AutoModeIcon className="text-warning" sx={{ fontSize: "25px" }} />;
+    },
     RenderLinkIcon: (row: AccountType) =>
       row?.username === selectedLink ? (
         <CheckIcon className="text-primary" />
@@ -424,7 +425,7 @@ const BaseAccountGrid = forwardRef<BaseGridHandle, Props>((props, ref) => {
   const injectedRowHelpers: Partial<React.ComponentProps<typeof DataGrid>> = {};
   if (props.hasDetailRows) {
     const getRowIdTyped: GridRowIdGetter<GridValidRowModel> = (row) => String(row.id);
-    const getRowClassNameTyped = (params: GridRowClassNameParams<GridValidRowModel>) =>
+    const getRowClassNameTyped = (params: GridRowClassNameParams<GridValidRowModel>): string =>
       String(params.row.id).includes("-detail") ? "expanded-row" : "";
     const getRowHeightTyped = (params: GridRowHeightParams): GridRowHeightReturnValue =>
       String(params.id).includes("-detail") ? 100 : undefined;

@@ -24,10 +24,10 @@ const Messages = forwardRef<ForwardRefHandle, object>((_props, ref) => {
   });
 
   useImperativeHandle(ref, () => ({
-    Show: (severity: AlertColor, text: string) => {
+    Show: (severity: AlertColor, text: string): void => {
       setMessage({ Severity: severity, Text: text, Open: true });
     },
-    Hide: () => setMessage({ ...message, Open: false }),
+    Hide: (): void => setMessage({ ...message, Open: false }),
   }));
 
   return (
@@ -36,7 +36,7 @@ const Messages = forwardRef<ForwardRefHandle, object>((_props, ref) => {
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
         autoHideDuration={6000}
         open={message.Open}
-        onClose={() => {
+        onClose={(): void => {
           setMessage({ ...message, Open: false });
         }}
       >

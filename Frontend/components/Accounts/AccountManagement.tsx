@@ -13,15 +13,15 @@ import { useMyContext } from "@/context/MyContext";
 import AccountType from "@/models/AccountType";
 import TariffType from "@/models/TariffType";
 
+import Messages from "../General/Messages";
 import AddAccount from "./AddAccount";
 import { BaseGridHandle } from "./BaseAccountGrid";
 import DeleteModal from "./DeleteModal";
 import ExpandableAccountGrid from "./ExpandableAccountGrid";
 import GeneralAccountGrid from "./GeneralAccountGrid";
 import RenewModal from "./RenewModal";
-import Messages from "../General/Messages";
 
-export default function AccountManagement() {
+export default function AccountManagement(): React.ReactElement {
   const { user, config, setUser } = useMyContext();
   const gridGeneralRef = useRef<BaseGridHandle>(null);
   const gridExpandableRef = useRef<BaseGridHandle>(null);
@@ -42,7 +42,7 @@ export default function AccountManagement() {
 
   const txtSearch = useRef<HTMLInputElement | null>(null);
 
-  const onRenewClick = (account: AccountType) => {
+  const onRenewClick = (account: AccountType): void => {
     const paid =
       accountList.filter((acc) => acc.username == account.username && acc.payed === "Unpaid")
         .length == 0;
@@ -58,7 +58,7 @@ export default function AccountManagement() {
     }
   };
 
-  const onDeleteClick = (account: AccountType) => {
+  const onDeleteClick = (account: AccountType): void => {
     const ignore = config.IGNORE_TRAFFIC_TO_REMOVE ? +config.IGNORE_TRAFFIC_TO_REMOVE : 1.2;
     if (
       user.IsAdmin ||
@@ -69,7 +69,7 @@ export default function AccountManagement() {
     }
   };
 
-  const onDisabledClick = async (account: AccountType) => {
+  const onDisabledClick = async (account: AccountType): Promise<void> => {
     if (account.status == "active" || account.status == "disabled")
       try {
         StartLoading();
@@ -91,7 +91,7 @@ export default function AccountManagement() {
       }
   };
 
-  const onRevokeClick = async (account: AccountType) => {
+  const onRevokeClick = async (account: AccountType): Promise<void> => {
     try {
       const url = new URL("api/marzban/revokesub/" + account.username, config.BACKEND_URL);
       await axios.post(
@@ -107,7 +107,7 @@ export default function AccountManagement() {
     }
   };
 
-  const onPaymentClick = async (accountId: string) => {
+  const onPaymentClick = async (accountId: string): Promise<void> => {
     if (user.IsAdmin)
       try {
         StartLoading();
@@ -126,7 +126,7 @@ export default function AccountManagement() {
       }
   };
 
-  const onPayAllClick = async () => {
+  const onPayAllClick = async (): Promise<void> => {
     const accountIds = GetAccountIdToPay();
     if (user.IsAdmin && accountIds.length > 0) {
       try {
@@ -154,7 +154,7 @@ export default function AccountManagement() {
     return accountIds;
   }, [gridType]);
 
-  const OnAddClick = async (tariff: TariffType, note: string, onHold: boolean) => {
+  const OnAddClick = async (tariff: TariffType, note: string, onHold: boolean): Promise<void> => {
     if (user.Limit >= tariff.DataLimit)
       try {
         StartLoading();
@@ -211,7 +211,7 @@ export default function AccountManagement() {
   }, [LoadAccount, user.Token]);
 
   useEffect(() => {
-    const LoadAccount = async () => {
+    const LoadAccount = async (): Promise<void> => {
       try {
         StartLoading();
         GetAccountIdToPay();
@@ -234,16 +234,16 @@ export default function AccountManagement() {
     if (user.Token !== "" && searchText != "") LoadAccount();
   }, [GetAccountIdToPay, config.BACKEND_URL, searchText, user.Token, user.Username]);
 
-  const GridTypeChoose_Click = () => {
+  const GridTypeChoose_Click = (): void => {
     if (gridType === "Expandable") setgridType("General");
     else setgridType("Expandable");
   };
 
-  const UnFilter_Click = () => {
+  const UnFilter_Click = (): void => {
     LoadAccount(true);
   };
 
-  const DeleteAccount = async () => {
+  const DeleteAccount = async (): Promise<void> => {
     if (selectedAccount)
       try {
         StartLoading();
@@ -264,7 +264,7 @@ export default function AccountManagement() {
       }
   };
 
-  const RenewAccount = async (username: string, tariffId: string) => {
+  const RenewAccount = async (username: string, tariffId: string): Promise<void> => {
     if (selectedAccount)
       try {
         StartLoading();
@@ -292,15 +292,15 @@ export default function AccountManagement() {
       }
   };
 
-  const StartLoading = () => {
+  const StartLoading = (): void => {
     setLoading(true);
   };
 
-  const EndLoading = () => {
+  const EndLoading = (): void => {
     setLoading(false);
   };
 
-  const Search_Click = () => {
+  const Search_Click = (): void => {
     if (txtSearch.current && txtSearch.current?.value != "") setSearchText(txtSearch.current.value);
     else if (searchText != "") {
       LoadAccount();

@@ -3,7 +3,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import AssignPackageIcon from "@mui/icons-material/MonetizationOn";
 import ToggleOffIcon from "@mui/icons-material/ToggleOff";
 import ToggleOnIcon from "@mui/icons-material/ToggleOn";
-import { DataGrid, GridActionsCellItem, GridColDef, GridActionsColDef } from "@mui/x-data-grid";
+import { DataGrid, GridActionsCellItem, GridActionsColDef, GridColDef } from "@mui/x-data-grid";
 
 import SellerType from "@/models/SellerType";
 
@@ -79,7 +79,7 @@ export default function SellerGrid(props: PropsType) {
               <ToggleOffIcon className="text-secondry " sx={{ fontSize: "35px" }} />
             )
           }
-          onClick={() => onDisableAccount(params.row)}
+          onClick={() => props.onDisableAccount(params.row)}
         />,
       ],
     },
@@ -94,7 +94,7 @@ export default function SellerGrid(props: PropsType) {
           key="AssignPackages"
           label="AssignPackages"
           icon={<AssignPackageIcon className="text-info" />}
-          onClick={() => onAssignPackagesClick(params.row)}
+          onClick={() => props.onAssignPackages(params.row)}
         />,
       ],
     },
@@ -109,7 +109,7 @@ export default function SellerGrid(props: PropsType) {
           key="edit"
           label="Edit"
           icon={<EditIcon className="text-primary" />}
-          onClick={() => onEditClick(params.row)}
+          onClick={() => props.onEditing(params.row)}
         />,
       ],
     },
@@ -124,25 +124,11 @@ export default function SellerGrid(props: PropsType) {
           key="delete"
           label="Delete"
           icon={<DeleteIcon className="text-danger" />}
-          onClick={() => onDeleteClick(params.row)}
+          onClick={() => props.onDeleting(params.row)}
         />,
       ],
     },
   ];
-
-  const onAssignPackagesClick = (seller: SellerType) => {
-    props.onAssignPackages(seller);
-  };
-  const onDeleteClick = (seller: SellerType) => {
-    props.onDeleting(seller);
-  };
-  const onEditClick = (seller: SellerType) => {
-    props.onEditing(seller);
-  };
-
-  const onDisableAccount = (seller: SellerType) => {
-    props.onDisableAccount(seller);
-  };
 
   return (
     <div className="container my-3 GridSellerContainer ">

@@ -4,8 +4,8 @@ import { forwardRef } from "react";
 import {
   GridActionsCellItem,
   GridColDef,
-  GridRowParams,
   GridRenderCellParams,
+  GridRowParams,
 } from "@mui/x-data-grid";
 
 import AccountType from "@/models/AccountType";

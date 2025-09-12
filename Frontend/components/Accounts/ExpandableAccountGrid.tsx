@@ -3,10 +3,11 @@ import { forwardRef, useState } from "react";
 
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { Box, Typography, Button } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import {
-  GridColDef,
   GridActionsCellItem,
+  GridActionsCellItemProps,
+  GridColDef,
   GridRenderCellParams,
   GridRowParams,
 } from "@mui/x-data-grid";
@@ -33,7 +34,7 @@ const ExpandableAccountGrid = forwardRef<BaseGridHandle, PropsType>(
   function ExpandableAccountGrid(props, ref) {
     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
-    const toggleRowExpansion = (username: string) => {
+    const toggleRowExpansion = (username: string): void => {
       setExpandedRows((prev) => {
         const updated = new Set(prev);
         if (updated.has(username)) updated.delete(username);
@@ -47,7 +48,7 @@ const ExpandableAccountGrid = forwardRef<BaseGridHandle, PropsType>(
         field: "toggle",
         headerName: "",
         width: 50,
-        renderCell: (params: GridRenderCellParams<GridRowData, unknown>) => {
+        renderCell: (params: GridRenderCellParams<GridRowData, unknown>): React.ReactNode => {
           const r = params.row;
           if (r.isParent) {
             return (
@@ -68,9 +69,11 @@ const ExpandableAccountGrid = forwardRef<BaseGridHandle, PropsType>(
         type: "actions",
         width: 50,
         renderHeader: () => helpers.RenderSelectHeader(),
-        getActions: (params: GridRowParams<GridRowData>) => {
+        getActions: (
+          params: GridRowParams<GridRowData>,
+        ): readonly React.ReactElement<GridActionsCellItemProps>[] => {
           const isParentRow = params.row.isParent;
-          return isParentRow
+          const actions: readonly React.ReactElement<GridActionsCellItemProps>[] = isParentRow
             ? [
                 <GridActionsCellItem
                   key="checkPay"
@@ -86,6 +89,7 @@ const ExpandableAccountGrid = forwardRef<BaseGridHandle, PropsType>(
                   onClick={() => helpers.onRevokeClick(params.row)}
                 />,
               ];
+          return actions;
         },
       },
       {
@@ -93,9 +97,11 @@ const ExpandableAccountGrid = forwardRef<BaseGridHandle, PropsType>(
         field: "link",
         type: "actions",
         width: 110,
-        getActions: (params: GridRowParams<GridRowData>) => {
+        getActions: (
+          params: GridRowParams<GridRowData>,
+        ): readonly React.ReactElement<GridActionsCellItemProps>[] => {
           const isParentRow = params.row.isParent;
-          return isParentRow
+          const actions: readonly React.ReactElement<GridActionsCellItemProps>[] = isParentRow
             ? [
                 <GridActionsCellItem
                   key="link"
@@ -136,6 +142,7 @@ const ExpandableAccountGrid = forwardRef<BaseGridHandle, PropsType>(
                   onClick={() => helpers.onDeleteClick(params.row)}
                 />,
               ];
+          return actions;
         },
       },
       {
@@ -143,7 +150,9 @@ const ExpandableAccountGrid = forwardRef<BaseGridHandle, PropsType>(
         headerName: "Username",
         width: 160,
         resizable: true,
-        renderCell: (params: GridRenderCellParams<GridRowData, string | undefined>) => {
+        renderCell: (
+          params: GridRenderCellParams<GridRowData, string | undefined>,
+        ): React.ReactNode => {
           const r = params.row;
           if (r.isParent) return <span>{params.value}</span>;
           return (
@@ -170,7 +179,7 @@ const ExpandableAccountGrid = forwardRef<BaseGridHandle, PropsType>(
         headerName: "Note",
         width: 160,
         resizable: true,
-        renderCell: (params: GridRenderCellParams<GridRowData, unknown>) => {
+        renderCell: (params: GridRenderCellParams<GridRowData, unknown>): React.ReactNode => {
           if (params.row.isParent) return <span>{String(params.value)}</span>;
           return (
             <Box
@@ -196,7 +205,9 @@ const ExpandableAccountGrid = forwardRef<BaseGridHandle, PropsType>(
         headerName: "Status",
         width: 110,
         resizable: true,
-        renderCell: (params: GridRenderCellParams<GridRowData, string | undefined>) => {
+        renderCell: (
+          params: GridRenderCellParams<GridRowData, string | undefined>,
+        ): React.ReactNode => {
           if (params.row.isParent) return helpers.RenderStatus(params.value);
           return (
             <Box
@@ -222,15 +233,16 @@ const ExpandableAccountGrid = forwardRef<BaseGridHandle, PropsType>(
         field: "online",
         headerName: "",
         width: 50,
-        renderCell: (params: GridRenderCellParams<GridRowData, string | undefined>) =>
-          params.row.isParent ? helpers.RenderOnline(params.value) : "",
+        renderCell: (
+          params: GridRenderCellParams<GridRowData, string | undefined>,
+        ): React.ReactNode => (params.row.isParent ? helpers.RenderOnline(params.value) : ""),
       },
       {
         field: "used_traffic_string",
         headerName: "Usage",
         width: 150,
         resizable: true,
-        renderCell: (params: GridRenderCellParams<GridRowData, unknown>) => {
+        renderCell: (params: GridRenderCellParams<GridRowData, unknown>): React.ReactNode => {
           if (params.row.isParent) return helpers.RenderUsage(params.row);
           return (
             <Box
@@ -256,7 +268,7 @@ const ExpandableAccountGrid = forwardRef<BaseGridHandle, PropsType>(
         headerName: "Expire",
         width: 100,
         resizable: true,
-        renderCell: (params: GridRenderCellParams<GridRowData, unknown>) =>
+        renderCell: (params: GridRenderCellParams<GridRowData, unknown>): React.ReactNode =>
           params.row.isParent ? <span>{String(params.value)}</span> : "",
       },
       {
@@ -264,8 +276,9 @@ const ExpandableAccountGrid = forwardRef<BaseGridHandle, PropsType>(
         headerName: "Price",
         width: 80,
         resizable: true,
-        renderCell: (params: GridRenderCellParams<GridRowData, number | string | undefined>) =>
-          params.row.isParent ? params.value : "",
+        renderCell: (
+          params: GridRenderCellParams<GridRowData, number | string | undefined>,
+        ): React.ReactNode => (params.row.isParent ? params.value : ""),
       },
     ];
 

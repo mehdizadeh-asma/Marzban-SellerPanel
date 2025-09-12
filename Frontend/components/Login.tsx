@@ -9,7 +9,7 @@ import Spinner from "react-bootstrap/Spinner";
 import { JsonData, useMyContext } from "@/context/MyContext";
 import { decrypt } from "@/utils/Crypto";
 
-export default function Login() {
+export default function Login(): React.ReactElement {
   const router = useRouter();
 
   const { setUser, config, setConfig } = useMyContext();
@@ -20,7 +20,7 @@ export default function Login() {
   const Message = useRef<HTMLHeadingElement | null>(null);
 
   useEffect(() => {
-    const getConfig = async () => {
+    const getConfig = async (): Promise<void> => {
       const result = await axios("/api/getconfig");
       const decText = decrypt(result.data);
       const configData: JsonData = JSON.parse(decText);
@@ -28,8 +28,7 @@ export default function Login() {
     };
     getConfig();
   }, [setConfig]);
-
-  const Login_Click = async () => {
+  const Login_Click = async (): Promise<void> => {
     setLoading(true);
     try {
       if (config.BACKEND_URL) {

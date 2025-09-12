@@ -5,7 +5,7 @@ import { Button, Modal } from "react-bootstrap";
 
 import ToggleOffIcon from "@mui/icons-material/ToggleOff";
 import ToggleOnIcon from "@mui/icons-material/ToggleOn";
-import { DataGrid, GridActionsCellItem, GridColDef, GridActionsColDef } from "@mui/x-data-grid";
+import { DataGrid, GridActionsCellItem, GridActionsColDef, GridColDef } from "@mui/x-data-grid";
 
 import { useMyContext } from "@/context/MyContext";
 import TariffInboundType from "@/models/TariffInboundType";

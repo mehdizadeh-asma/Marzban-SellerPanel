@@ -1,4 +1,4 @@
-import { useImperativeHandle, useState, forwardRef } from "react";
+import { forwardRef, useImperativeHandle, useState } from "react";
 import { Button, Modal } from "react-bootstrap";
 
 interface PropsType {
@@ -14,17 +14,17 @@ const DeleteModal = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
   const [username, setUsername] = useState("");
 
   useImperativeHandle(ref, () => ({
-    Show: (username: string) => {
+    Show: (username: string): void => {
       setUsername(username);
     },
-    Hide: () => setUsername(""),
+    Hide: (): void => setUsername(""),
   }));
 
-  const btnNo_Click = () => {
+  const btnNo_Click = (): void => {
     setUsername("");
   };
 
-  const btnYes_Click = async () => {
+  const btnYes_Click = async (): Promise<void> => {
     props.DeletingHandler();
     setUsername("");
   };

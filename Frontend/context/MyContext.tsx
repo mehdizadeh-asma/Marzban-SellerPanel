@@ -32,7 +32,7 @@ interface PropsType {
   children: React.ReactNode;
 }
 
-export const MyContextProvider: React.FC<PropsType> = (props) => {
+export const MyContextProvider: React.FC<PropsType> = (props): React.ReactElement => {
   const [user, setUser] = React.useState({
     Username: "",
     IsAdmin: false,
@@ -49,7 +49,7 @@ export const MyContextProvider: React.FC<PropsType> = (props) => {
   );
 };
 
-export const useMyContext = () => {
+export const useMyContext = (): MyContextType => {
   const context = useContext(MyContext);
 
   if (!context) {

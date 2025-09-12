@@ -5,9 +5,9 @@ import { ComponentRef, useCallback, useEffect, useRef, useState } from "react";
 import { useMyContext } from "@/context/MyContext";
 import TariffType from "@/models/TariffType";
 
+import Messages from "../General/Messages";
 import AddTariff from "./AddTariff";
 import TariffGrid from "./TariffGrid";
-import Messages from "../General/Messages";
 
 const TariffManagement = () => {
   const { user, config } = useMyContext();
