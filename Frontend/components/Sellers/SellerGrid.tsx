@@ -1,16 +1,12 @@
-import {
-  DataGrid,
-  GridActionsCellItem,
-  GridColDef,
-  GridActionsColDef,
-} from "@mui/x-data-grid";
-import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import ToggleOnIcon from "@mui/icons-material/ToggleOn";
-import ToggleOffIcon from "@mui/icons-material/ToggleOff";
+import EditIcon from "@mui/icons-material/Edit";
 import AssignPackageIcon from "@mui/icons-material/MonetizationOn";
+import ToggleOffIcon from "@mui/icons-material/ToggleOff";
+import ToggleOnIcon from "@mui/icons-material/ToggleOn";
+import { DataGrid, GridActionsCellItem, GridColDef, GridActionsColDef } from "@mui/x-data-grid";
 
 import SellerType from "@/models/SellerType";
+
 import Footer from "../General/Footer";
 
 interface PropsType {
@@ -78,15 +74,9 @@ export default function SellerGrid(props: PropsType) {
           label="Active"
           icon={
             params.row.Status == "Active" ? (
-              <ToggleOnIcon
-                sx={{ fontSize: "35px" }}
-                className="text-success "
-              />
+              <ToggleOnIcon sx={{ fontSize: "35px" }} className="text-success " />
             ) : (
-              <ToggleOffIcon
-                className="text-secondry "
-                sx={{ fontSize: "35px" }}
-              />
+              <ToggleOffIcon className="text-secondry " sx={{ fontSize: "35px" }} />
             )
           }
           onClick={() => onDisableAccount(params.row)}

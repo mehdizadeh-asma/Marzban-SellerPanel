@@ -1,19 +1,15 @@
 "use client";
+import axios from "axios";
 import { useCallback, useEffect, useState } from "react";
 import { Button, Modal } from "react-bootstrap";
-import axios from "axios";
-import {
-  DataGrid,
-  GridActionsCellItem,
-  GridColDef,
-  GridActionsColDef,
-} from "@mui/x-data-grid";
-import ToggleOnIcon from "@mui/icons-material/ToggleOn";
+
 import ToggleOffIcon from "@mui/icons-material/ToggleOff";
+import ToggleOnIcon from "@mui/icons-material/ToggleOn";
+import { DataGrid, GridActionsCellItem, GridColDef, GridActionsColDef } from "@mui/x-data-grid";
 
 import { useMyContext } from "@/context/MyContext";
-import TariffType from "@/models/TariffType";
 import TariffInboundType from "@/models/TariffInboundType";
+import TariffType from "@/models/TariffType";
 
 interface PropsType {
   isOpen: boolean;
@@ -25,17 +21,12 @@ interface PropsType {
 
 const TariffInboundModal = (props: PropsType) => {
   const { user, config } = useMyContext();
-  const [assignedTariffInboundList, setAssignedTariffInboundList] = useState<
-    TariffInboundType[]
-  >([]);
-  const [rawTariffInboundList, setRawTariffInboundList] = useState<
-    TariffInboundType[]
-  >([]);
+  const [assignedTariffInboundList, setAssignedTariffInboundList] = useState<TariffInboundType[]>(
+    [],
+  );
+  const [rawTariffInboundList, setRawTariffInboundList] = useState<TariffInboundType[]>([]);
 
-  const columns: (
-    | GridColDef<TariffInboundType>
-    | GridActionsColDef<TariffInboundType>
-  )[] = [
+  const columns: (GridColDef<TariffInboundType> | GridActionsColDef<TariffInboundType>)[] = [
     {
       field: "InboundTag",
       headerName: "Tag",
@@ -76,15 +67,10 @@ const TariffInboundModal = (props: PropsType) => {
     if (!InboundTag) return;
 
     setAssignedTariffInboundList((prevList) => {
-      const isAssigned = prevList.some(
-        (item) => item.InboundTag === InboundTag,
-      );
-      if (isAssigned)
-        return prevList.filter((item) => item.InboundTag !== InboundTag);
+      const isAssigned = prevList.some((item) => item.InboundTag === InboundTag);
+      if (isAssigned) return prevList.filter((item) => item.InboundTag !== InboundTag);
       else {
-        const rawItem = rawTariffInboundList.find(
-          (item) => item.InboundTag === InboundTag,
-        );
+        const rawItem = rawTariffInboundList.find((item) => item.InboundTag === InboundTag);
 
         if (rawItem) {
           return [...prevList, rawItem];
@@ -107,10 +93,7 @@ const TariffInboundModal = (props: PropsType) => {
 
   const LaodTariffInbound = useCallback(async () => {
     try {
-      const url = new URL(
-        "api/TariffInbound/" + props.tariff?._id,
-        config.BACKEND_URL,
-      );
+      const url = new URL("api/TariffInbound/" + props.tariff?._id, config.BACKEND_URL);
 
       const resultInbounds = await axios.get(url.toString(), {
         headers: { Authorization: "Bearer " + user.Token },
@@ -139,10 +122,7 @@ const TariffInboundModal = (props: PropsType) => {
     }
 
     try {
-      const url = new URL(
-        "api/TariffInbound/" + props.tariff._id,
-        config.BACKEND_URL,
-      );
+      const url = new URL("api/TariffInbound/" + props.tariff._id, config.BACKEND_URL);
 
       const payload = assignedTariffInboundList.map((item) => ({
         InboundTag: item.InboundTag,

@@ -3,9 +3,10 @@ import axios from "axios";
 import { ComponentRef, useCallback, useEffect, useRef, useState } from "react";
 
 import { useMyContext } from "@/context/MyContext";
+import TariffType from "@/models/TariffType";
+
 import AddTariff from "./AddTariff";
 import TariffGrid from "./TariffGrid";
-import TariffType from "@/models/TariffType";
 import Messages from "../General/Messages";
 
 const TariffManagement = () => {
@@ -54,10 +55,7 @@ const TariffManagement = () => {
   const onDisableAccountClick = async (tariff: TariffType) => {
     setLoading(true);
     try {
-      const url = new URL(
-        "api/disabletariff/" + tariff._id,
-        config.BACKEND_URL,
-      );
+      const url = new URL("api/disabletariff/" + tariff._id, config.BACKEND_URL);
 
       await axios.post(
         url.toString(),
@@ -95,10 +93,7 @@ const TariffManagement = () => {
   };
 
   const onMessage = (messageType: string, message: string) => {
-    refMessages.current?.Show(
-      messageType == "success" ? "success" : "error",
-      message,
-    );
+    refMessages.current?.Show(messageType == "success" ? "success" : "error", message);
   };
 
   return (

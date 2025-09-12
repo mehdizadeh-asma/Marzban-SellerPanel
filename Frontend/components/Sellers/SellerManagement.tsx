@@ -3,12 +3,13 @@ import axios, { AxiosError } from "axios";
 import { ComponentRef, useCallback, useEffect, useRef, useState } from "react";
 
 import { useMyContext } from "@/context/MyContext";
-import AddSeller from "./AddSeller";
-import SellerGrid from "./SellerGrid";
 import SellerType from "@/models/SellerType";
-import Messages from "../General/Messages";
+
+import AddSeller from "./AddSeller";
 import EditModal from "./EditModal";
 import PackageSellerModal from "./PackageSellerModal";
+import SellerGrid from "./SellerGrid";
+import Messages from "../General/Messages";
 
 const SellerManagement = () => {
   const { user, config } = useMyContext();
@@ -16,8 +17,7 @@ const SellerManagement = () => {
   const [loading, setLoading] = useState(false);
   const [selectedSeller, setSelectedSeller] = useState<SellerType | null>(null);
   const [isEditModalOpen, setEditModalOpen] = useState(false);
-  const [isAssignPackagesModalOpen, setAssignPackagesModalOpen] =
-    useState(false);
+  const [isAssignPackagesModalOpen, setAssignPackagesModalOpen] = useState(false);
 
   type MessagesHandle = ComponentRef<typeof Messages>;
   const refMessages = useRef<MessagesHandle>(null);
@@ -88,10 +88,7 @@ const SellerManagement = () => {
           const statusCode = axiosError.response.status;
 
           if (statusCode === 404) {
-            refMessages.current?.Show(
-              "error",
-              "Invalid Marzban Account Information",
-            );
+            refMessages.current?.Show("error", "Invalid Marzban Account Information");
           }
         } else {
           const errorMessage =
@@ -129,15 +126,9 @@ const SellerManagement = () => {
           const statusCode = axiosError.response.status;
 
           if (statusCode === 404) {
-            refMessages.current?.Show(
-              "error",
-              "Invalid Marzban Account Information",
-            );
+            refMessages.current?.Show("error", "Invalid Marzban Account Information");
           } else {
-            refMessages.current?.Show(
-              "error",
-              "Internal Server Error! Please try again later.",
-            );
+            refMessages.current?.Show("error", "Internal Server Error! Please try again later.");
           }
         } else {
           refMessages.current?.Show("error", "No response from the server.");
@@ -152,10 +143,7 @@ const SellerManagement = () => {
   const onDisableAccountClick = async (seller: SellerType) => {
     setLoading(true);
     try {
-      const url = new URL(
-        "api/disableseller/" + seller._id,
-        config.BACKEND_URL,
-      );
+      const url = new URL("api/disableseller/" + seller._id, config.BACKEND_URL);
 
       await axios.post(
         url.toString(),
@@ -178,10 +166,7 @@ const SellerManagement = () => {
     setAssignPackagesModalOpen(true);
   };
 
-  const onSavePackageClick = async (
-    seller: SellerType,
-    packagesListIds: string[],
-  ) => {
+  const onSavePackageClick = async (seller: SellerType, packagesListIds: string[]) => {
     setLoading(true);
     try {
       const url = new URL("api/tariffSeller/" + seller._id, config.BACKEND_URL);
@@ -193,10 +178,7 @@ const SellerManagement = () => {
         },
       );
 
-      refMessages.current?.Show(
-        "success",
-        "Packages Assigned to Seller Successfully!",
-      );
+      refMessages.current?.Show("success", "Packages Assigned to Seller Successfully!");
     } catch (error) {
       console.log(error);
       refMessages.current?.Show(

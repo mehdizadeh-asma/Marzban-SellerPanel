@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
-import ToggleOnIcon from "@mui/icons-material/ToggleOn";
-import ToggleOffIcon from "@mui/icons-material/ToggleOff";
+
 import AssignInboundIcon from "@mui/icons-material/AccountTree";
+import ToggleOffIcon from "@mui/icons-material/ToggleOff";
+import ToggleOnIcon from "@mui/icons-material/ToggleOn";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 
 import TariffType from "@/models/TariffType";
+
 import TariffInboundModal from "./TariffInboundModal";
 import Footer from "../General/Footer";
 
@@ -17,8 +19,7 @@ interface PropsType {
 }
 
 export default function TariffGrid(props: PropsType) {
-  const [isTariffInboundModalOpen, setIsTariffInboundModalOpen] =
-    useState(false);
+  const [isTariffInboundModalOpen, setIsTariffInboundModalOpen] = useState(false);
   const [selectedTariff, setSelectedTariff] = useState<TariffType>();
 
   useEffect(() => {
@@ -64,15 +65,9 @@ export default function TariffGrid(props: PropsType) {
           label="Free"
           icon={
             params.row.IsFree ? (
-              <ToggleOnIcon
-                sx={{ fontSize: "35px" }}
-                className="text-success "
-              />
+              <ToggleOnIcon sx={{ fontSize: "35px" }} className="text-success " />
             ) : (
-              <ToggleOffIcon
-                className="text-secondry "
-                sx={{ fontSize: "35px" }}
-              />
+              <ToggleOffIcon className="text-secondry " sx={{ fontSize: "35px" }} />
             )
           }
           onClick={() => onFreeEnable(params.row)}
@@ -107,15 +102,9 @@ export default function TariffGrid(props: PropsType) {
           label="Active"
           icon={
             params.row.IsVisible ? (
-              <ToggleOnIcon
-                sx={{ fontSize: "35px" }}
-                className="text-success "
-              />
+              <ToggleOnIcon sx={{ fontSize: "35px" }} className="text-success " />
             ) : (
-              <ToggleOffIcon
-                className="text-secondry "
-                sx={{ fontSize: "35px" }}
-              />
+              <ToggleOffIcon className="text-secondry " sx={{ fontSize: "35px" }} />
             )
           }
           onClick={() => onDisableAccount(params.row)}

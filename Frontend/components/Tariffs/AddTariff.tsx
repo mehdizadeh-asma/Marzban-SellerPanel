@@ -1,10 +1,11 @@
 import { ComponentRef, useRef, useState } from "react";
 
-import TextField from "@mui/material/TextField";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Switch from "@mui/material/Switch";
+import TextField from "@mui/material/TextField";
 
 import TariffType from "@/models/TariffType";
+
 import Messages from "../General/Messages";
 
 interface PropsType {
@@ -34,29 +35,17 @@ export default function AddTariff(props: PropsType) {
       return;
     }
 
-    if (
-      !txtDataLimit.current ||
-      !txtDataLimit.current.value ||
-      txtDataLimit.current.value === ""
-    ) {
+    if (!txtDataLimit.current || !txtDataLimit.current.value || txtDataLimit.current.value === "") {
       refMessages.current?.Show("error", "DataLimit Is Required!");
       return;
     }
 
-    if (
-      !txtDuration.current ||
-      !txtDuration.current.value ||
-      txtDuration.current.value === ""
-    ) {
+    if (!txtDuration.current || !txtDuration.current.value || txtDuration.current.value === "") {
       refMessages.current?.Show("error", "Duration Is Required!");
       return;
     }
 
-    if (
-      !txtPrice.current ||
-      !txtPrice.current.value ||
-      txtPrice.current.value === ""
-    ) {
+    if (!txtPrice.current || !txtPrice.current.value || txtPrice.current.value === "") {
       refMessages.current?.Show("error", "Price Is Required!");
       return;
     }
@@ -160,10 +149,7 @@ export default function AddTariff(props: PropsType) {
         </div>
 
         <div className="row">
-          <div
-            className="col-12 d-flex mt-1 mx-1 justify-content-center"
-            id="divButton"
-          >
+          <div className="col-12 d-flex mt-1 mx-1 justify-content-center" id="divButton">
             <button
               onClick={BtnAdd_Click}
               className="btn btnAdd w100px BgGrdColorizePurple text-white border-1 BorderPurple  "

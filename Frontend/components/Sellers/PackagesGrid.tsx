@@ -1,14 +1,9 @@
-import {
-  forwardRef,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useState,
-} from "react";
 import axios from "axios";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
-import ToggleOnIcon from "@mui/icons-material/ToggleOn";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from "react";
+
 import ToggleOffIcon from "@mui/icons-material/ToggleOff";
+import ToggleOnIcon from "@mui/icons-material/ToggleOn";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 
 import { useMyContext } from "@/context/MyContext";
 import SellerType from "@/models/SellerType";
@@ -27,9 +22,7 @@ interface TariffSellerGridType {
   Price: string;
 }
 const PackagesGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
-  const [tariffSellerList, setTariffSellerList] = useState<
-    TariffSellerGridType[]
-  >([]);
+  const [tariffSellerList, setTariffSellerList] = useState<TariffSellerGridType[]>([]);
   const [tariffListIds, setTariffListIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const { user, config } = useMyContext();
@@ -70,9 +63,7 @@ const PackagesGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
     if (!tariffId) return;
 
     setTariffListIds((prevIds) =>
-      prevIds.includes(tariffId)
-        ? prevIds.filter((id) => id !== tariffId)
-        : [...prevIds, tariffId],
+      prevIds.includes(tariffId) ? prevIds.filter((id) => id !== tariffId) : [...prevIds, tariffId],
     );
     setTariffSellerList((prevList) =>
       prevList.map((item) =>
