@@ -2,9 +2,8 @@
   --max-width: 1100px;
   --border-radius: 12px;
   --font-mono:
-    ui-monospace, Menlo, Monaco, "Cascadia Mono", "Segoe UI Mono",
-    "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro",
-    "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
+    ui-monospace, Menlo, Monaco, "Cascadia Mono", "Segoe UI Mono", "Roboto Mono", "Oxygen Mono",
+    "Ubuntu Monospace", "Source Code Pro", "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
 
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
@@ -40,11 +39,7 @@ body {
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
+  background: linear-gradient(to bottom, transparent, rgb(var(--background-end-rgb)))
     rgb(var(--background-start-rgb));
 }
 
@@ -254,12 +249,7 @@ a {
 }
 
 .BtnGrdPurple {
-  background: linear-gradient(
-    to right,
-    rgb(90, 49, 90),
-    rgb(90, 53, 90),
-    rgb(90, 49, 90)
-  );
+  background: linear-gradient(to right, rgb(90, 49, 90), rgb(90, 53, 90), rgb(90, 49, 90));
 }
 
 .BtnGrdOrange {
@@ -349,12 +339,7 @@ a {
 
 /* Force DataGrid header purple + white text for marzban-data-grid */
 .marzban-data-grid .MuiDataGrid-columnHeaders {
-  background: linear-gradient(
-    30deg,
-    rgb(50, 1, 49),
-    rgb(90, 49, 90),
-    rgb(126, 74, 126)
-  ) !important;
+  background: linear-gradient(30deg, rgb(50, 1, 49), rgb(90, 49, 90), rgb(126, 74, 126)) !important;
   color: #fff !important;
   border-bottom: 2px solid rgba(255, 255, 255, 0.06) !important;
 }

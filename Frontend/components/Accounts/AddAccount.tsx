@@ -1,11 +1,12 @@
 "use client";
 import axios from "axios";
 import { forwardRef, useEffect, useRef, useState } from "react";
-import TextField from "@mui/material/TextField";
-import Checkbox from "@mui/material/Checkbox";
-import FormControlLabel from "@mui/material/FormControlLabel";
 import Button from "react-bootstrap/Button";
 import Spinner from "react-bootstrap/Spinner";
+
+import Checkbox from "@mui/material/Checkbox";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import TextField from "@mui/material/TextField";
 
 import { useMyContext } from "@/context/MyContext";
 import TariffType from "@/models/TariffType";
@@ -30,10 +31,7 @@ const AddAccount = forwardRef<HTMLSelectElement, PropsType>((props, ref) => {
   useEffect(() => {
     const LaodTariff = async () => {
       try {
-        const url = new URL(
-          `api/tariffs/false/${user.Username}`,
-          config.BACKEND_URL,
-        );
+        const url = new URL(`api/tariffs/false/${user.Username}`, config.BACKEND_URL);
         const resultTariff = await axios.get(url.toString(), {
           headers: { Authorization: "Bearer " + user.Token },
         });
@@ -91,12 +89,7 @@ const AddAccount = forwardRef<HTMLSelectElement, PropsType>((props, ref) => {
         >
           {FillTariffs()}
         </select>
-        <TextField
-          id="outlined-basic"
-          label="Note"
-          variant="outlined"
-          inputRef={txtNote}
-        />
+        <TextField id="outlined-basic" label="Note" variant="outlined" inputRef={txtNote} />
         <FormControlLabel
           control={<Checkbox inputRef={chkOnHold} />}
           label="OnHold"
@@ -124,10 +117,7 @@ const AddAccount = forwardRef<HTMLSelectElement, PropsType>((props, ref) => {
   ) : (
     <div className="container-fluid">
       <div className="row">
-        <div
-          className="col-12  justify-content-start d-flex mt-1 mx-1"
-          id="divDrop"
-        >
+        <div className="col-12  justify-content-start d-flex mt-1 mx-1" id="divDrop">
           <select
             name="tariffList"
             id="tariffList"

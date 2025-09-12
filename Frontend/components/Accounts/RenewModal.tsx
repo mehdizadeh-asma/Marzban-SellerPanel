@@ -28,8 +28,7 @@ const RenewModal = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
   };
 
   const btnRenew_Click = async () => {
-    if (selectTariff.current)
-      props.RenewHandler(username, selectTariff.current.value);
+    if (selectTariff.current) props.RenewHandler(username, selectTariff.current.value);
     setUsername("");
   };
 

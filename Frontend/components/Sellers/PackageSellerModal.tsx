@@ -1,8 +1,9 @@
 import { useRef } from "react";
 import { Button, Modal } from "react-bootstrap";
 
-import PackagesGrid, { ForwardRefHandle } from "./PackagesGrid";
 import SellerType from "@/models/SellerType";
+
+import PackagesGrid, { ForwardRefHandle } from "./PackagesGrid";
 
 interface PropsType {
   onAssign: (seller: SellerType, tariffIdList: string[]) => void;

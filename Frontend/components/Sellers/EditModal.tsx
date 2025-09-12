@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, ComponentRef, FC } from "react";
 import { Button, Modal } from "react-bootstrap";
 
 import SellerType from "@/models/SellerType";
+
 import AddSeller from "./AddSeller";
 import Messages from "../General/Messages";
 
@@ -25,10 +26,7 @@ const EditModal: FC<PropsType> = ({ isOpen, onClose, seller, onEditing }) => {
     if (currentSeller) onEditing(currentSeller);
   };
 
-  const handleFieldChange = (
-    field: keyof SellerType,
-    value: string | number,
-  ) => {
+  const handleFieldChange = (field: keyof SellerType, value: string | number) => {
     let errorMessage = "";
 
     switch (field) {
@@ -40,8 +38,7 @@ const EditModal: FC<PropsType> = ({ isOpen, onClose, seller, onEditing }) => {
         break;
 
       case "Limit":
-        if (Number(value) <= 0)
-          errorMessage = "Limit is required and must be a positive number.";
+        if (Number(value) <= 0) errorMessage = "Limit is required and must be a positive number.";
         break;
     }
 
@@ -68,8 +65,7 @@ const EditModal: FC<PropsType> = ({ isOpen, onClose, seller, onEditing }) => {
     >
       <Modal.Header closeButton className=" text-white bg-success">
         <Modal.Title>
-          Edit Agent :
-          <label className="text-warning px-2">{currentSeller?.Username}</label>
+          Edit Agent :<label className="text-warning px-2">{currentSeller?.Username}</label>
         </Modal.Title>
       </Modal.Header>
       <Modal.Body>

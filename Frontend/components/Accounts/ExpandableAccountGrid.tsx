@@ -1,19 +1,19 @@
 "use client";
 import { forwardRef, useState } from "react";
+
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { Box, Typography, Button } from "@mui/material";
 import {
   GridColDef,
   GridActionsCellItem,
   GridRenderCellParams,
   GridRowParams,
 } from "@mui/x-data-grid";
-import { Box, Typography, Button } from "@mui/material";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+
 import AccountType from "@/models/AccountType";
-import BaseAccountGrid, {
-  BaseGridHandle,
-  BaseGridHelpers,
-} from "./BaseAccountGrid";
+
+import BaseAccountGrid, { BaseGridHandle, BaseGridHelpers } from "./BaseAccountGrid";
 
 interface PropsType {
   Loading: boolean;
@@ -143,9 +143,7 @@ const ExpandableAccountGrid = forwardRef<BaseGridHandle, PropsType>(
         headerName: "Username",
         width: 160,
         resizable: true,
-        renderCell: (
-          params: GridRenderCellParams<GridRowData, string | undefined>,
-        ) => {
+        renderCell: (params: GridRenderCellParams<GridRowData, string | undefined>) => {
           const r = params.row;
           if (r.isParent) return <span>{params.value}</span>;
           return (
@@ -187,9 +185,7 @@ const ExpandableAccountGrid = forwardRef<BaseGridHandle, PropsType>(
                 <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
                   Last Update
                 </Typography>
-                <Typography variant="body2">
-                  {params.row.sub_updated_at}
-                </Typography>
+                <Typography variant="body2">{params.row.sub_updated_at}</Typography>
               </Box>
             </Box>
           );
@@ -200,9 +196,7 @@ const ExpandableAccountGrid = forwardRef<BaseGridHandle, PropsType>(
         headerName: "Status",
         width: 110,
         resizable: true,
-        renderCell: (
-          params: GridRenderCellParams<GridRowData, string | undefined>,
-        ) => {
+        renderCell: (params: GridRenderCellParams<GridRowData, string | undefined>) => {
           if (params.row.isParent) return helpers.RenderStatus(params.value);
           return (
             <Box
@@ -228,9 +222,8 @@ const ExpandableAccountGrid = forwardRef<BaseGridHandle, PropsType>(
         field: "online",
         headerName: "",
         width: 50,
-        renderCell: (
-          params: GridRenderCellParams<GridRowData, string | undefined>,
-        ) => (params.row.isParent ? helpers.RenderOnline(params.value) : ""),
+        renderCell: (params: GridRenderCellParams<GridRowData, string | undefined>) =>
+          params.row.isParent ? helpers.RenderOnline(params.value) : "",
       },
       {
         field: "used_traffic_string",
@@ -271,12 +264,8 @@ const ExpandableAccountGrid = forwardRef<BaseGridHandle, PropsType>(
         headerName: "Price",
         width: 80,
         resizable: true,
-        renderCell: (
-          params: GridRenderCellParams<
-            GridRowData,
-            number | string | undefined
-          >,
-        ) => (params.row.isParent ? params.value : ""),
+        renderCell: (params: GridRenderCellParams<GridRowData, number | string | undefined>) =>
+          params.row.isParent ? params.value : "",
       },
     ];
 
@@ -310,7 +299,7 @@ const ExpandableAccountGrid = forwardRef<BaseGridHandle, PropsType>(
           })
         }
         Loading={props.Loading}
-        hasDetailRows={true}
+        hasDetailRows
         dataGridProps={{
           autoHeight: true,
         }}

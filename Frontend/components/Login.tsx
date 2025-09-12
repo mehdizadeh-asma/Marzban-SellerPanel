@@ -1,7 +1,7 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { Image } from "react-bootstrap";
 import Button from "react-bootstrap/Button";
 import Spinner from "react-bootstrap/Spinner";
@@ -49,8 +49,7 @@ export default function Login() {
           });
           router.push("/dashboard");
         } else {
-          if (Message.current)
-            Message.current.innerText = "Something Is Wrong!";
+          if (Message.current) Message.current.innerText = "Something Is Wrong!";
           setLoading(false);
         }
       } else if (Message.current) {
@@ -134,11 +133,7 @@ export default function Login() {
         {Loading ? "" : "LOGIN"}
       </Button>
 
-      <h6
-        id="message"
-        className="text-danger py-3 text-center"
-        ref={Message}
-      ></h6>
+      <h6 id="message" className="text-danger py-3 text-center" ref={Message}></h6>
     </div>
   );
 }

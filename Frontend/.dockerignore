@@ -1,3 +1,6 @@
 .env
 node_modules
-config.json
+data
+.vscode
+.gitignore
+README.md

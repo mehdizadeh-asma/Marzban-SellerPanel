@@ -1,23 +1,25 @@
 "use client";
 import axios from "axios";
 import { ComponentRef, useCallback, useEffect, useRef, useState } from "react";
-import { TextField } from "@mui/material";
-import FilterAltOffIcon from "@mui/icons-material/FilterAltOff";
-import SearchRounded from "@mui/icons-material/SearchRounded";
-import PaymentsIcon from "@mui/icons-material/Payments";
-import GridOnIcon from "@mui/icons-material/GridOn";
+
 import Deselect from "@mui/icons-material/Deselect";
+import FilterAltOffIcon from "@mui/icons-material/FilterAltOff";
+import GridOnIcon from "@mui/icons-material/GridOn";
+import PaymentsIcon from "@mui/icons-material/Payments";
+import SearchRounded from "@mui/icons-material/SearchRounded";
+import { TextField } from "@mui/material";
 
 import { useMyContext } from "@/context/MyContext";
-import AddAccount from "./AddAccount";
-import DeleteModal from "./DeleteModal";
-import RenewModal from "./RenewModal";
 import AccountType from "@/models/AccountType";
 import TariffType from "@/models/TariffType";
-import Messages from "../General/Messages";
+
+import AddAccount from "./AddAccount";
 import { BaseGridHandle } from "./BaseAccountGrid";
+import DeleteModal from "./DeleteModal";
 import ExpandableAccountGrid from "./ExpandableAccountGrid";
 import GeneralAccountGrid from "./GeneralAccountGrid";
+import RenewModal from "./RenewModal";
+import Messages from "../General/Messages";
 
 export default function AccountManagement() {
   const { user, config, setUser } = useMyContext();
@@ -42,9 +44,8 @@ export default function AccountManagement() {
 
   const onRenewClick = (account: AccountType) => {
     const paid =
-      accountList.filter(
-        (acc) => acc.username == account.username && acc.payed === "Unpaid",
-      ).length == 0;
+      accountList.filter((acc) => acc.username == account.username && acc.payed === "Unpaid")
+        .length == 0;
     if (
       (paid || config.RENEW_FORCE_TO_PAID?.toUpperCase() !== "YES") &&
       (account.status == "expired" ||
@@ -58,13 +59,10 @@ export default function AccountManagement() {
   };
 
   const onDeleteClick = (account: AccountType) => {
-    const ignore = config.IGNORE_TRAFFIC_TO_REMOVE
-      ? +config.IGNORE_TRAFFIC_TO_REMOVE
-      : 1.2;
+    const ignore = config.IGNORE_TRAFFIC_TO_REMOVE ? +config.IGNORE_TRAFFIC_TO_REMOVE : 1.2;
     if (
       user.IsAdmin ||
-      (account.payed !== "Paid" &&
-        account.used_traffic < +ignore * 1024 * 1024 * 1024)
+      (account.payed !== "Paid" && account.used_traffic < +ignore * 1024 * 1024 * 1024)
     ) {
       setSelectedAccount(account);
       refDeleteModal.current?.Show(account.username);
@@ -76,10 +74,7 @@ export default function AccountManagement() {
       try {
         StartLoading();
 
-        const url = new URL(
-          "api/marzban/disableaccount/" + account.username,
-          config.BACKEND_URL,
-        );
+        const url = new URL("api/marzban/disableaccount/" + account.username, config.BACKEND_URL);
         await axios.post(
           url.toString(),
           {
@@ -98,10 +93,7 @@ export default function AccountManagement() {
 
   const onRevokeClick = async (account: AccountType) => {
     try {
-      const url = new URL(
-        "api/marzban/revokesub/" + account.username,
-        config.BACKEND_URL,
-      );
+      const url = new URL("api/marzban/revokesub/" + account.username, config.BACKEND_URL);
       await axios.post(
         url.toString(),
         {},
@@ -109,10 +101,7 @@ export default function AccountManagement() {
           headers: { Authorization: "Bearer " + user.Token },
         },
       );
-      refMessages.current?.Show(
-        "success",
-        "Subscription Revoked Successfully!",
-      );
+      refMessages.current?.Show("success", "Subscription Revoked Successfully!");
     } catch (error) {
       refMessages.current?.Show("error", "Something went Wrong!" + error);
     }
@@ -165,11 +154,7 @@ export default function AccountManagement() {
     return accountIds;
   }, [gridType]);
 
-  const OnAddClick = async (
-    tariff: TariffType,
-    note: string,
-    onHold: boolean,
-  ) => {
+  const OnAddClick = async (tariff: TariffType, note: string, onHold: boolean) => {
     if (user.Limit >= tariff.DataLimit)
       try {
         StartLoading();
@@ -206,10 +191,7 @@ export default function AccountManagement() {
         StartLoading();
         GetAccountIdToPay();
         setSearchText("");
-        const url = new URL(
-          `api/marzban/accounts/${user.Username}/${IsAll}`,
-          config.BACKEND_URL,
-        );
+        const url = new URL(`api/marzban/accounts/${user.Username}/${IsAll}`, config.BACKEND_URL);
         const resultAccounts = await axios.get(url.toString(), {
           headers: { Authorization: "Bearer " + user.Token },
         });
@@ -250,13 +232,7 @@ export default function AccountManagement() {
       }
     };
     if (user.Token !== "" && searchText != "") LoadAccount();
-  }, [
-    GetAccountIdToPay,
-    config.BACKEND_URL,
-    searchText,
-    user.Token,
-    user.Username,
-  ]);
+  }, [GetAccountIdToPay, config.BACKEND_URL, searchText, user.Token, user.Username]);
 
   const GridTypeChoose_Click = () => {
     if (gridType === "Expandable") setgridType("General");
@@ -272,10 +248,7 @@ export default function AccountManagement() {
       try {
         StartLoading();
 
-        const url = new URL(
-          "api/marzban/account/" + selectedAccount?.username,
-          config.BACKEND_URL,
-        );
+        const url = new URL("api/marzban/account/" + selectedAccount?.username, config.BACKEND_URL);
 
         await axios.delete(url.toString(), {
           headers: { Authorization: "Bearer " + user.Token },
@@ -296,10 +269,7 @@ export default function AccountManagement() {
       try {
         StartLoading();
 
-        const url = new URL(
-          "api/marzban/renewaccount/" + user.Username,
-          config.BACKEND_URL,
-        );
+        const url = new URL("api/marzban/renewaccount/" + user.Username, config.BACKEND_URL);
 
         await axios.post(
           url.toString(),
@@ -331,8 +301,7 @@ export default function AccountManagement() {
   };
 
   const Search_Click = () => {
-    if (txtSearch.current && txtSearch.current?.value != "")
-      setSearchText(txtSearch.current.value);
+    if (txtSearch.current && txtSearch.current?.value != "") setSearchText(txtSearch.current.value);
     else if (searchText != "") {
       LoadAccount();
       setSearchText("");
@@ -367,24 +336,15 @@ export default function AccountManagement() {
           </button>
         </div>
         <div className="col justify-content-end d-flex mt-1">
-          <button
-            className="btn border-2 border border-success p-1"
-            onClick={UnFilter_Click}
-          >
-            <FilterAltOffIcon
-              sx={{ fontSize: "30px" }}
-              className="text-success  "
-            />
+          <button className="btn border-2 border border-success p-1" onClick={UnFilter_Click}>
+            <FilterAltOffIcon sx={{ fontSize: "30px" }} className="text-success  " />
           </button>
           {user.IsAdmin ? (
             <button
               className="btn border-2 border border-success px-1 py-1 mx-2"
               onClick={onPayAllClick}
             >
-              <PaymentsIcon
-                sx={{ fontSize: "28px" }}
-                className="text-success  "
-              />
+              <PaymentsIcon sx={{ fontSize: "28px" }} className="text-success  " />
             </button>
           ) : (
             ""
@@ -394,10 +354,7 @@ export default function AccountManagement() {
               className="btn border-2 border border-success p-1"
               onClick={GridTypeChoose_Click}
             >
-              <GridOnIcon
-                sx={{ fontSize: "30px" }}
-                className="text-success  "
-              />
+              <GridOnIcon sx={{ fontSize: "30px" }} className="text-success  " />
             </button>
           ) : (
             <button
@@ -439,10 +396,7 @@ export default function AccountManagement() {
           </div>
         </div>
       </div>
-      <DeleteModal
-        DeletingHandler={DeleteAccount}
-        ref={refDeleteModal}
-      ></DeleteModal>
+      <DeleteModal DeletingHandler={DeleteAccount} ref={refDeleteModal}></DeleteModal>
       <RenewModal RenewHandler={RenewAccount} ref={refRenewModal}></RenewModal>
       <div className="my-3">
         <br />

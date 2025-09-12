@@ -1,11 +1,25 @@
 "use client";
-import React, {
-  ComponentRef,
-  forwardRef,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from "react";
+import React, { ComponentRef, forwardRef, useImperativeHandle, useRef, useState } from "react";
+
+import AutoModeIcon from "@mui/icons-material/AutoMode";
+import CheckIcon from "@mui/icons-material/Check";
+import CreditCardOffRoundedIcon from "@mui/icons-material/CreditCardOffRounded";
+import CreditScoreRoundedIcon from "@mui/icons-material/CreditScoreRounded";
+import DeleteIcon from "@mui/icons-material/Delete";
+import GppBadRoundedIcon from "@mui/icons-material/GppBadRounded";
+import GppGoodRoundedIcon from "@mui/icons-material/GppGoodRounded";
+import GppMaybeRoundedIcon from "@mui/icons-material/GppMaybeRounded";
+import LinkIcon from "@mui/icons-material/Link";
+import QrCode2Icon from "@mui/icons-material/QrCode2";
+import RenewIcon from "@mui/icons-material/RecyclingOutlined";
+import SafetyCheckRoundedIcon from "@mui/icons-material/SafetyCheckRounded";
+import ToggleOffIcon from "@mui/icons-material/ToggleOff";
+import ToggleOnIcon from "@mui/icons-material/ToggleOn";
+import WatchLaterIcon from "@mui/icons-material/WatchLater";
+import Box from "@mui/material/Box";
+import Checkbox from "@mui/material/Checkbox";
+import LinearProgress from "@mui/material/LinearProgress";
+import type { SxProps, Theme } from "@mui/material/styles";
 import {
   DataGrid,
   useGridApiRef,
@@ -17,31 +31,13 @@ import {
   GridRowHeightParams,
   GridRowHeightReturnValue,
 } from "@mui/x-data-grid";
-import type { SxProps, Theme } from "@mui/material/styles";
-import Box from "@mui/material/Box";
-import Checkbox from "@mui/material/Checkbox";
-import CreditScoreRoundedIcon from "@mui/icons-material/CreditScoreRounded";
-import CreditCardOffRoundedIcon from "@mui/icons-material/CreditCardOffRounded";
-import GppMaybeRoundedIcon from "@mui/icons-material/GppMaybeRounded";
-import GppGoodRoundedIcon from "@mui/icons-material/GppGoodRounded";
-import GppBadRoundedIcon from "@mui/icons-material/GppBadRounded";
-import WatchLaterIcon from "@mui/icons-material/WatchLater";
-import SafetyCheckRoundedIcon from "@mui/icons-material/SafetyCheckRounded";
-import AutoModeIcon from "@mui/icons-material/AutoMode";
-import QrCode2Icon from "@mui/icons-material/QrCode2";
-import RenewIcon from "@mui/icons-material/RecyclingOutlined";
-import DeleteIcon from "@mui/icons-material/Delete";
-import LinearProgress from "@mui/material/LinearProgress";
-import AccountType from "@/models/AccountType";
-import LinkIcon from "@mui/icons-material/Link";
-import CheckIcon from "@mui/icons-material/Check";
-import ToggleOnIcon from "@mui/icons-material/ToggleOn";
-import ToggleOffIcon from "@mui/icons-material/ToggleOff";
 
-import Messages from "../General/Messages";
+import AccountType from "@/models/AccountType";
+import { copyTextToClipboard } from "@/utils/Helper";
+
 import QRModal from "./QRModal";
 import Footer from "../General/Footer";
-import { copyTextToClipboard } from "@/utils/Helper";
+import Messages from "../General/Messages";
 
 export interface BaseGridHelpers {
   onRevokeClick: (account: AccountType) => void;
@@ -248,9 +244,7 @@ const BaseAccountGrid = forwardRef<BaseGridHandle, Props>((props, ref) => {
           textAlign: "center",
         }}
       >
-        <Box
-          sx={{ lineHeight: 1 }}
-        >{`${account.used_traffic_string} of ${totalGbLabel}`}</Box>
+        <Box sx={{ lineHeight: 1 }}>{`${account.used_traffic_string} of ${totalGbLabel}`}</Box>
         <LinearProgress
           variant="determinate"
           value={Math.min(Math.max(progressValue, 0), 100)}
@@ -294,9 +288,7 @@ const BaseAccountGrid = forwardRef<BaseGridHandle, Props>((props, ref) => {
       if (!visibleSortedIds || visibleSortedIds.length === 0) {
         try {
           visibleSortedIds =
-            typeof api.getAllRowIds === "function"
-              ? (api.getAllRowIds() ?? []).map(String)
-              : [];
+            typeof api.getAllRowIds === "function" ? (api.getAllRowIds() ?? []).map(String) : [];
         } catch {
           visibleSortedIds = [];
         }
@@ -309,8 +301,7 @@ const BaseAccountGrid = forwardRef<BaseGridHandle, Props>((props, ref) => {
       const currentPageParentIds = pageIds
         .map((id) => {
           try {
-            const row =
-              typeof api.getRow === "function" ? api.getRow(id) : undefined;
+            const row = typeof api.getRow === "function" ? api.getRow(id) : undefined;
             if (!row) return null;
             const r = row as GridValidRowModel & {
               isParent?: boolean;
@@ -337,10 +328,7 @@ const BaseAccountGrid = forwardRef<BaseGridHandle, Props>((props, ref) => {
     setTimeout(() => {
       if (refMessages.current) {
         if (isChecked && selectedCount > 0) {
-          refMessages.current.Show(
-            "success",
-            `${selectedCount} accounts selected!`,
-          );
+          refMessages.current.Show("success", `${selectedCount} accounts selected!`);
         } else {
           refMessages.current.Show("info", "No accounts selected.");
         }
@@ -351,11 +339,7 @@ const BaseAccountGrid = forwardRef<BaseGridHandle, Props>((props, ref) => {
   const helpers: BaseGridHelpers = {
     onRevokeClick: (account: AccountType) => onRevoke?.(account),
     onPaymentClick: (account: AccountType) =>
-      onPaying?.(
-        account.id.includes("-detail")
-          ? account.id.replace("-detail", "")
-          : account.id,
-      ),
+      onPaying?.(account.id.includes("-detail") ? account.id.replace("-detail", "") : account.id),
 
     RenderOnline,
     RenderStatus,
@@ -370,9 +354,7 @@ const BaseAccountGrid = forwardRef<BaseGridHandle, Props>((props, ref) => {
       refQRModal.current?.Show(account.subscription_url, account.username),
     onDeleteClick: (account: AccountType) => onDeleting?.(account),
     onDisableClick: (account: AccountType) => onDisabling?.(account),
-    RenderSelectHeader: () => (
-      <Checkbox checked={selectAll} onChange={onSelectAll} />
-    ),
+    RenderSelectHeader: () => <Checkbox checked={selectAll} onChange={onSelectAll} />,
     RenderSelectCheckbox: (row: AccountType) => (
       <Checkbox
         sx={{ fontSize: "25px" }}
@@ -399,9 +381,7 @@ const BaseAccountGrid = forwardRef<BaseGridHandle, Props>((props, ref) => {
       <QrCode2Icon
         className="text-primary"
         sx={{ fontSize: "25px", cursor: "pointer" }}
-        onClick={() =>
-          refQRModal.current?.Show(row.subscription_url, row.username)
-        }
+        onClick={() => refQRModal.current?.Show(row.subscription_url, row.username)}
       />
     ),
     RenderRenewIcon: (row: AccountType) => (
@@ -435,23 +415,18 @@ const BaseAccountGrid = forwardRef<BaseGridHandle, Props>((props, ref) => {
     },
   };
   const mergedSx: SxProps<Theme> = (
-    Array.isArray(existingSx)
-      ? [...existingSx, customSx]
-      : [existingSx ?? {}, customSx]
+    Array.isArray(existingSx) ? [...existingSx, customSx] : [existingSx ?? {}, customSx]
   ) as SxProps<Theme>;
 
   const { sx: _sx, ...dataGridPropsWithoutSx } = dataGridProps ?? {};
+  void _sx;
 
   const injectedRowHelpers: Partial<React.ComponentProps<typeof DataGrid>> = {};
   if (props.hasDetailRows) {
-    const getRowIdTyped: GridRowIdGetter<GridValidRowModel> = (row) =>
-      String(row.id);
-    const getRowClassNameTyped = (
-      params: GridRowClassNameParams<GridValidRowModel>,
-    ) => (String(params.row.id).includes("-detail") ? "expanded-row" : "");
-    const getRowHeightTyped = (
-      params: GridRowHeightParams,
-    ): GridRowHeightReturnValue =>
+    const getRowIdTyped: GridRowIdGetter<GridValidRowModel> = (row) => String(row.id);
+    const getRowClassNameTyped = (params: GridRowClassNameParams<GridValidRowModel>) =>
+      String(params.row.id).includes("-detail") ? "expanded-row" : "";
+    const getRowHeightTyped = (params: GridRowHeightParams): GridRowHeightReturnValue =>
       String(params.id).includes("-detail") ? 100 : undefined;
 
     injectedRowHelpers.getRowId = getRowIdTyped;
@@ -482,15 +457,9 @@ const BaseAccountGrid = forwardRef<BaseGridHandle, Props>((props, ref) => {
         }}
         sortingOrder={["asc", "desc"]}
         sx={mergedSx}
-        {...(injectedRowHelpers as Partial<
-          React.ComponentProps<typeof DataGrid>
-        >)}
-        {...(dataGridPropsWithoutSx as Partial<
-          React.ComponentProps<typeof DataGrid>
-        >)}
-        getRowHeight={(params) =>
-          String(params.id).includes("-detail") ? 100 : undefined
-        }
+        {...(injectedRowHelpers as Partial<React.ComponentProps<typeof DataGrid>>)}
+        {...(dataGridPropsWithoutSx as Partial<React.ComponentProps<typeof DataGrid>>)}
+        getRowHeight={(params) => (String(params.id).includes("-detail") ? 100 : undefined)}
       />
       <Footer></Footer>
     </>

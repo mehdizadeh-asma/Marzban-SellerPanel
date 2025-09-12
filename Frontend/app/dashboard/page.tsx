@@ -1,25 +1,23 @@
 "use client";
-import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
 
-import Box from "@mui/material/Box";
+import PowerSettingsNewIcon from "@mui/icons-material/PowerSettingsNew";
 import Avatar from "@mui/material/Avatar";
+import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
-import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
-import PowerSettingsNewIcon from "@mui/icons-material/PowerSettingsNew";
 
-import { useMyContext } from "@/context/MyContext";
 import AccountManagment from "@/components/Accounts/AccountManagement";
-import TariffManagement from "@/components/Tariffs/TariffManagement";
 import SellerManagement from "@/components/Sellers/SellerManagement";
+import TariffManagement from "@/components/Tariffs/TariffManagement";
+import { useMyContext } from "@/context/MyContext";
 
 export default function Dashboard() {
   const [activeComponent, setActiveComponent] = useState<string>("accounts");
-  const [activeComponentName, setActiveComponentName] = useState<string>(
-    "My Accounts Management",
-  );
+  const [activeComponentName, setActiveComponentName] = useState<string>("My Accounts Management");
 
   const router = useRouter();
   const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
@@ -172,32 +170,20 @@ export default function Dashboard() {
                     transformOrigin={{ horizontal: "right", vertical: "top" }}
                     anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
                   >
-                    <MenuItem onClick={handleAccountsClick}>
-                      My Accounts
-                    </MenuItem>
-                    <MenuItem onClick={handlePackagesClick}>
-                      My Packages
-                    </MenuItem>
+                    <MenuItem onClick={handleAccountsClick}>My Accounts</MenuItem>
+                    <MenuItem onClick={handlePackagesClick}>My Packages</MenuItem>
                     <MenuItem onClick={handleAgentsClick}>My Agents</MenuItem>
                   </Menu>
                   <div className="w-25"></div>
-                  <div className="ActiveComponentName w-75">
-                    {activeComponentName}
-                  </div>
+                  <div className="ActiveComponentName w-75">{activeComponentName}</div>
                 </div>
               </div>
             </React.Fragment>
           )}
           <div>
-            {activeComponent == "accounts" && (
-              <AccountManagment></AccountManagment>
-            )}
-            {activeComponent == "packages" && (
-              <TariffManagement></TariffManagement>
-            )}
-            {activeComponent == "agents" && (
-              <SellerManagement></SellerManagement>
-            )}
+            {activeComponent == "accounts" && <AccountManagment></AccountManagment>}
+            {activeComponent == "packages" && <TariffManagement></TariffManagement>}
+            {activeComponent == "agents" && <SellerManagement></SellerManagement>}
           </div>
         </div>
       </div>
