@@ -5,7 +5,7 @@ const config = {
   tabWidth: 2,
   printWidth: 100,
   arrowParens: "always",
-  endOfLine: "crlf",
+  endOfLine: "lf",
   quoteProps: "as-needed",
 };
 
