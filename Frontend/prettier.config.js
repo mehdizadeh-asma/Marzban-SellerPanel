@@ -1,4 +1,4 @@
-const config = {
+module.exports = {
   semi: true,
   singleQuote: false,
   trailingComma: "all",
@@ -8,5 +8,3 @@ const config = {
   endOfLine: "lf",
   quoteProps: "as-needed",
 };
-
-export default config;
