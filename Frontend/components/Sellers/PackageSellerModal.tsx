@@ -38,7 +38,7 @@ const PackageSellerModal = (props: PropsType) => {
         <Modal.Title>Assigned Packages</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <PackagesGrid ref={gridRef} seller={props.seller}></PackagesGrid>
+        <PackagesGrid ref={gridRef} seller={props.seller!}></PackagesGrid>
       </Modal.Body>
       <Modal.Footer className="justify-content-end">
         <Button variant="success" className="w100px" onClick={btnSave_Click}>

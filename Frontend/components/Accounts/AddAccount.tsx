@@ -68,7 +68,7 @@ const AddAccount = forwardRef<HTMLSelectElement, PropsType>((props, ref) => {
   };
 
   const FillTariffs = () => {
-    if (tariffList)
+    if (tariffList && tariffList.length > 0) {
       return tariffList.map((tariff: TariffType) => {
         return (
           <option key={tariff?._id} value={tariff?._id}>
@@ -76,6 +76,8 @@ const AddAccount = forwardRef<HTMLSelectElement, PropsType>((props, ref) => {
           </option>
         );
       });
+    }
+    return null;
   };
 
   return props.Mode == "Add" ? (

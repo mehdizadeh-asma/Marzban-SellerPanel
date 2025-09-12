@@ -7,7 +7,7 @@ interface ForwardRefHandle {
   Hide: () => void;
 }
 
-const QRModal = forwardRef<ForwardRefHandle, object>((props, ref) => {
+const QRModal = forwardRef<ForwardRefHandle, object>((_props, ref) => {
   const [subscriptionUrl, setSubscriptionUrl] = useState("");
   const [username, setUsername] = useState("");
 

@@ -11,9 +11,9 @@ interface ForwardRefHandle {
 }
 
 interface MessageType {
-  Open?: boolean;
-  Severity?: AlertColor;
-  Text?: string;
+  Open: boolean;
+  Severity: AlertColor;
+  Text: string;
 }
 
 const Messages = forwardRef<ForwardRefHandle, object>((_props, ref) => {
