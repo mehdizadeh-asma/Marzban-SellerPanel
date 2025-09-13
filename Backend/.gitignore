@@ -131,3 +131,4 @@ dist
 certs
 data
 package-lock.json
+.husky

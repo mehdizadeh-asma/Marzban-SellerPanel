@@ -40,7 +40,6 @@ class MongooseDbManagement {
   private static connectionCleanupInterval: NodeJS.Timeout | null = null;
   private static connectionLastUsedMap = new WeakMap<Connection, number>();
 
-  // تنظیمات اتصال با اندازه پویای pool
   private static getConnectionOptions(poolSize = 10): ConnectOptions {
     return {
       ...DEFAULT_CONNECTION_OPTIONS,
@@ -49,7 +48,6 @@ class MongooseDbManagement {
     };
   }
 
-  // سیستم پاکسازی خودکار اتصالات بلااستفاده
   private static initConnectionCleanup(): void {
     if (this.connectionCleanupInterval) return;
 
@@ -85,7 +83,6 @@ class MongooseDbManagement {
     }, 30000);
   }
 
-  // اتصال به دیتابیس اصلی
   static async connectMainDatabase(): Promise<void> {
     if (this.mainConnection) {
       if (this.mainConnection.readyState !== mongoose.ConnectionStates.connected) {
@@ -118,7 +115,6 @@ class MongooseDbManagement {
     }
   }
 
-  // ایجاد اتصال جدید
   private static async createConnection(
     connectionString: string,
     connectionName: string,
@@ -169,7 +165,6 @@ class MongooseDbManagement {
     }
   }
 
-  // دریافت اتصال (استفاده از کش یا ایجاد جدید)
   static async getConnection(
     connectionString: string,
     connectionName: string,
@@ -218,7 +213,6 @@ class MongooseDbManagement {
     }
   }
 
-  // تنظیم مانیتورینگ اتصال
   private static setupConnectionMonitoring(connection: Connection, name: string): void {
     connection.on("connected", () => {
       console.log(`[${name}] MongoDB connected`);
@@ -243,7 +237,6 @@ class MongooseDbManagement {
     });
   }
 
-  // بستن همه اتصالات هنگام خاتمه
   static async shutdown(): Promise<void> {
     if (this.connectionCleanupInterval) {
       clearInterval(this.connectionCleanupInterval);
@@ -262,7 +255,6 @@ class MongooseDbManagement {
     console.log("All database connections closed");
   }
 
-  // متدهای مدیریت رشته اتصال
   static getDbPanelConnectionString(): string {
     return this.BASE_CONNECTION_STRING.replace("##CLUSTER##", "marzbansellerpanel.ghtzkr3")
       .replace("##DB##", "MarzbanSellerPanel")
@@ -286,7 +278,6 @@ class MongooseDbManagement {
     return this.dbWholeSalerConnectionString;
   }
 
-  // مدیریت لایسنس
   static async checkLicense(): Promise<boolean> {
     const marzbanUrl = await ConfigFile.GetMarzbanURL();
     const sn = await ConfigFile.GetSerialKey();
@@ -319,7 +310,6 @@ class MongooseDbManagement {
     }
   }
 
-  // کپی دیتابیس
   static async copyDatabase(destinationConnectionString: string): Promise<void> {
     try {
       if (!this.mainConnection) {
