@@ -9,7 +9,6 @@ module.exports = [
   {
     ignores: ["node_modules/**", "dist/**", "coverage/**", "jest.config.ts"],
   },
-
   {
     files: ["**/*.ts", "**/*.tsx"],
     languageOptions: {
@@ -34,8 +33,8 @@ module.exports = [
       "no-console": "off",
 
       // Unused imports/vars
-      "no-unused-vars": "off",
-      "@typescript-eslint/no-unused-vars": "off",
+      "no-unused-vars": "warn",
+      "@typescript-eslint/no-unused-vars": "warn",
       "unused-imports/no-unused-imports": "error",
       "unused-imports/no-unused-vars": [
         "warn",

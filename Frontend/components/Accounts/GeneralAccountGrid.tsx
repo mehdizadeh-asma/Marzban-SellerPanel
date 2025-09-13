@@ -19,7 +19,7 @@ interface PropsType {
   onRevoke: (account: AccountType) => void;
 }
 
-const GeneralAccountGrid = forwardRef<BaseGridHandle, PropsType>((props, _ref) => {
+const GeneralAccountGrid = forwardRef<BaseGridHandle, PropsType>((props, ref) => {
   const buildColumns = (helpers: BaseGridHelpers): GridColDef[] => [
     {
       headerName: "",
@@ -202,6 +202,7 @@ const GeneralAccountGrid = forwardRef<BaseGridHandle, PropsType>((props, _ref) =
 
   return (
     <BaseAccountGrid
+      ref={ref}
       Accounts={props.Accounts}
       columnsFactory={(helpers) => buildColumns(helpers)}
       Loading={props.Loading}
