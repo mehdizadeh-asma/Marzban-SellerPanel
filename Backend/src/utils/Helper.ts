@@ -1,5 +1,5 @@
 class Helper {
-  static CalculateRemainDate(expire: number) {
+  static CalculateRemainDate(expire: number): string {
     if (expire != null) {
       const diffDate = new Date(expire * 1000).getTime() - new Date().getTime();
       const remainDay = Math.ceil(diffDate / (1000 * 3600 * 24)) - 1;
@@ -9,7 +9,7 @@ class Helper {
     return "Never";
   }
 
-  static IsOnline(online_at: string) {
+  static IsOnline(online_at: string): string {
     if (online_at != null) {
       const diffTime = new Date().getTime() - new Date(online_at).getTime();
       const remainMinutes = Math.ceil(diffTime / (1000 * 60)) - 1;
@@ -19,7 +19,7 @@ class Helper {
     return "Never";
   }
 
-  static CalculateOnlineDate(online_at: string) {
+  static CalculateOnlineDate(online_at: string): string {
     if (online_at != null) {
       const diffTime = new Date().getTime() - new Date(online_at).getTime();
       const remainMinutes = Math.ceil(diffTime / (1000 * 60)) - 1;
@@ -37,7 +37,7 @@ class Helper {
     return "Never";
   }
 
-  static CalculateUpdateSubscriptionDate(online_at: string) {
+  static CalculateUpdateSubscriptionDate(online_at: string): string {
     if (online_at != null) {
       const diffTime = new Date().getTime() - new Date(online_at).getTime();
       const remainMinutes = Math.ceil(diffTime / (1000 * 60)) - 1;
@@ -54,7 +54,7 @@ class Helper {
     return "Never";
   }
 
-  static CalculateTraffic(volume: number) {
+  static CalculateTraffic(volume: number): string {
     if (volume < 1024) return volume.toString() + " B";
     else if (volume < 1024 * 1024) return (volume / 1024).toFixed(2) + " KB";
     else if (volume < 1024 * 1024 * 1024) return (volume / (1024 * 1024)).toFixed(2) + " MB";
@@ -62,9 +62,10 @@ class Helper {
       return (volume / (1024 * 1024 * 1024)).toFixed(2) + " GB";
     else if (volume < 1024 * 1024 * 1024 * 1024 * 1024)
       return (volume / (1024 * 1024 * 1024 * 1024)).toFixed(2) + " TB";
+    return volume.toString();
   }
 
-  static GenerateRandomPassword(length: number) {
+  static GenerateRandomPassword(length: number): string {
     const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789~!@#$%^&";
     let password = "";
 

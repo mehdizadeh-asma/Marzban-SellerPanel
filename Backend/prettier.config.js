@@ -6,4 +6,6 @@ module.exports = {
   printWidth: 100,
   arrowParens: "always",
   endOfLine: "lf",
+  quoteProps: "as-needed",
+  plugins: [require.resolve("prettier-plugin-organize-imports")],
 };

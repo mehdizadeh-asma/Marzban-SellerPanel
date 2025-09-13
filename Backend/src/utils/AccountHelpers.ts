@@ -1,11 +1,9 @@
+import type { AxiosResponse } from "axios";
 import axios from "axios";
 import type { Document } from "mongoose";
 import { Types } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
 
-import ConfigFile from "./Config";
-import Helper from "./Helper";
-import { getModel } from "./MongooseModel";
 import type { IAccount } from "../models/Account";
 import { AccountSchema } from "../models/Account";
 import type MarzbanAccount from "../models/MarzbanAccount";
@@ -15,6 +13,9 @@ import type { ITariff } from "../models/Tariff";
 import { TariffSchema } from "../models/Tariff";
 import type { ITariffInbound } from "../models/TariffInbound";
 import { TariffInboundSchema } from "../models/TariffInbound";
+import ConfigFile from "./Config";
+import Helper from "./Helper";
+import { getModel } from "./MongooseModel";
 
 class AccountHelpers {
   static MarzbanAccountsList: Record<
@@ -23,7 +24,9 @@ class AccountHelpers {
   > = {};
   static CACHE_TTL_MS = 20 * 60 * 1000; // 20 دقیقه
 
-  static GetInbounds = async (authorization: string | undefined) => {
+  static GetInbounds = async (
+    authorization: string | undefined,
+  ): Promise<{ InboundType: string; InboundTag: string }[]> => {
     const apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/inbounds";
 
     const result = await axios.get(apiURL, {
@@ -52,7 +55,20 @@ class AccountHelpers {
   static GenerateProxiesAndInbounds = async (
     authorization: string | undefined,
     tariff: ITariff,
-  ) => {
+  ): Promise<{
+    proxies: {
+      vmess?: { id: string };
+      vless?: { id: string; flow: string };
+      trojan?: { password: string };
+      shadowsocks?: { password: string; method: string };
+    };
+    inbounds: {
+      vmess?: string[];
+      vless?: string[];
+      trojan?: string[];
+      shadowsocks?: string[];
+    };
+  }> => {
     const vlessUUID = uuidv4();
     const vmessUUID = uuidv4();
     const TariffInboundModel = await getModel<ITariffInbound>("TariffInbound", TariffInboundSchema);
@@ -175,14 +191,14 @@ class AccountHelpers {
     return { proxies, inbounds };
   };
 
-  static InvalidateSellerAllCache = (seller: string) => {
+  static InvalidateSellerAllCache = (seller: string): void => {
     if (AccountHelpers.MarzbanAccountsList[seller]) {
       delete AccountHelpers.MarzbanAccountsList[seller]["all"];
       delete AccountHelpers.MarzbanAccountsList[seller]["unpaid"];
     }
   };
 
-  static GetSellerAccounts = async (seller: ISeller, IsAll: boolean) => {
+  static GetSellerAccounts = async (seller: ISeller, IsAll: boolean): Promise<IAccount[]> => {
     const adminUsername = await ConfigFile.GetSellerAdminUsername();
     let condition = {};
     if (seller.Title.toLowerCase() !== adminUsername.toLowerCase()) {
@@ -200,7 +216,7 @@ class AccountHelpers {
   static RemoveDeletedAccountSeller = async (
     authorization: string | undefined,
     seller: ISeller,
-  ) => {
+  ): Promise<void> => {
     if (seller) {
       const resultMarzban = await AccountHelpers.GetMarzbanAccounts(authorization, seller);
       const sellerUsers = (resultMarzban.data as { users: MarzbanAccount[] }).users;
@@ -222,7 +238,10 @@ class AccountHelpers {
     }
   };
 
-  static GetTotalUnpaid = async (seller: Document | undefined, IsAdmin: boolean) => {
+  static GetTotalUnpaid = async (
+    seller: Document | undefined,
+    IsAdmin: boolean,
+  ): Promise<{ TotalLimitUnpaid: number; TotalPriceUnpaid: number }> => {
     let totalLimitUnpaid = 0;
     let totalPriceUnpaid = 0;
     const AccountModel = await getModel<IAccount>("Account", AccountSchema);
@@ -250,7 +269,7 @@ class AccountHelpers {
     seller: ISeller,
     username: string,
     authorization: string | undefined,
-  ) => {
+  ): Promise<string> => {
     const apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/user/";
     let generateUsername = "";
 
@@ -272,7 +291,10 @@ class AccountHelpers {
     throw new Error("Username is Empty");
   };
 
-  static GetSubscriptionUrl = (marzbanSubscriptionUrl: string, sellerSubscriptionUrl: string) => {
+  static GetSubscriptionUrl = (
+    marzbanSubscriptionUrl: string,
+    sellerSubscriptionUrl: string,
+  ): string => {
     const url =
       sellerSubscriptionUrl.trim() !== ""
         ? sellerSubscriptionUrl + "/sub/" + marzbanSubscriptionUrl.split("/sub/")[1]
@@ -281,7 +303,7 @@ class AccountHelpers {
     return url;
   };
 
-  static CheckToken = async (authorization?: string) => {
+  static CheckToken = async (authorization?: string): Promise<boolean> => {
     try {
       const apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/admin";
 
@@ -295,6 +317,7 @@ class AccountHelpers {
       return resultMarzban.status === 200;
     } catch (error) {
       console.log(error);
+      return false;
     }
   };
 
@@ -303,7 +326,7 @@ class AccountHelpers {
     sellerAccounts: IAccount[],
     sellername: string,
     sellerSubscriptionUrl: string,
-  ) => {
+  ): Promise<Record<string, unknown>[]> => {
     const marzbanAccountMap = new Map(
       marzbanAccounts.map((account) => [account.username, account]),
     );
@@ -367,7 +390,7 @@ class AccountHelpers {
     return accounts.filter((acc) => acc.data_limit).reverse();
   };
 
-  static LoginToMarzban = async (username: string, password: string) => {
+  static LoginToMarzban = async (username: string, password: string): Promise<string> => {
     const apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/admin/token";
 
     const config = {
@@ -391,7 +414,7 @@ class AccountHelpers {
     seller: string,
     sellerSubscriptionUrl: string,
     isAdmin: boolean,
-  ) => {
+  ): Promise<Record<string, unknown>[]> => {
     const startTime = Date.now(); // زمان شروع کل
     if (isAdmin) {
       const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
@@ -478,7 +501,7 @@ class AccountHelpers {
     authorization: string | undefined,
     seller: ISeller,
     isAll: boolean,
-  ) => {
+  ): Promise<{ users: MarzbanAccount[]; failed: boolean; error?: unknown }> => {
     const cacheKey = isAll ? "all" : "unpaid";
     const now = Date.now();
     if (
@@ -528,7 +551,7 @@ class AccountHelpers {
     authorization: string | undefined,
     seller: ISeller | undefined,
     search = "",
-  ) => {
+  ): Promise<AxiosResponse> => {
     const apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/users";
     const params = { search: "" };
 

@@ -1,7 +1,6 @@
-import type { Connection, ConnectOptions, Model, Document } from "mongoose";
+import type { Connection, ConnectOptions, Document, Model } from "mongoose";
 import mongoose from "mongoose";
 
-import ConfigFile from "./Config";
 import type { IAccount } from "../models/Account";
 import { AccountSchema } from "../models/Account";
 import type { ISeller } from "../models/Seller";
@@ -13,6 +12,7 @@ import { TariffInboundSchema } from "../models/TariffInbound";
 import type { ITariffSeller } from "../models/TariffSeller";
 import { TariffSellerSchema } from "../models/TariffSeller";
 import { WholeSalerSchema } from "../models/WholeSaler";
+import ConfigFile from "./Config";
 
 // تنظیمات پیش‌فرض اتصال
 const DEFAULT_CONNECTION_OPTIONS: ConnectOptions = {
@@ -50,10 +50,10 @@ class MongooseDbManagement {
   }
 
   // سیستم پاکسازی خودکار اتصالات بلااستفاده
-  private static initConnectionCleanup() {
+  private static initConnectionCleanup(): void {
     if (this.connectionCleanupInterval) return;
 
-    const cleanupTask = async () => {
+    const cleanupTask = async (): Promise<void> => {
       const now = Date.now();
       const maxIdleTime = 5 * 60 * 1000;
       const connections = Array.from(this.activeConnections.entries());
@@ -128,12 +128,12 @@ class MongooseDbManagement {
       const connection = mongoose.createConnection(connectionString, options);
 
       await new Promise<void>((resolve, reject) => {
-        const connectHandler = () => {
+        const connectHandler = (): void => {
           cleanup();
           resolve();
         };
 
-        const errorHandler = (err: Error) => {
+        const errorHandler = (err: Error): void => {
           cleanup();
           reject(err);
         };
@@ -143,7 +143,7 @@ class MongooseDbManagement {
           reject(new Error("Connection timed out"));
         }, options.connectTimeoutMS || 15000);
 
-        const cleanup = () => {
+        const cleanup = (): void => {
           connection.removeListener("connected", connectHandler);
           connection.removeListener("error", errorHandler);
           clearTimeout(timeout);

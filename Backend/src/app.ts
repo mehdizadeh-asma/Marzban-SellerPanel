@@ -87,7 +87,7 @@ const HTTP_PORT = process.env.HTTP_PORT || 8080;
 const HTTPS_PORT = process.env.HTTPS_PORT || 8443;
 
 // تابع راه‌اندازی اصلی
-const bootstrap = async () => {
+const bootstrap = async (): Promise<void> => {
   try {
     // 1. بررسی لایسنس
     console.log("Checking license...");
@@ -119,7 +119,7 @@ const bootstrap = async () => {
 };
 
 // مدیریت خاتمه تمیز برنامه
-const gracefulShutdown = async () => {
+const gracefulShutdown = async (): Promise<void> => {
   console.log("Starting graceful shutdown...");
 
   // 1. بستن سرورها

@@ -20,7 +20,7 @@ interface ConfigType {
 class ConfigFile {
   private static config: ConfigType | undefined = undefined;
 
-  static async GetConfigFromFile() {
+  static async GetConfigFromFile(): Promise<void> {
     const filepath = path.join(process.cwd(), "data", "config.json");
     const fileContents = await fs.readFile(filepath, "utf8");
     if (fileContents) {
@@ -28,7 +28,7 @@ class ConfigFile {
     }
   }
 
-  static async GetMarzbanURL() {
+  static async GetMarzbanURL(): Promise<string> {
     if (!this.config) await this.GetConfigFromFile();
 
     if (this.config && this.config.MARZBAN_URL) return this.config.MARZBAN_URL;
@@ -36,7 +36,7 @@ class ConfigFile {
     throw new Error("MARZBAN_URL doesn't exist in config File!");
   }
 
-  static async GetSubscriptionURL() {
+  static async GetSubscriptionURL(): Promise<string> {
     if (!this.config) await this.GetConfigFromFile();
 
     if (this.config && this.config.SUBSCRIPTION_URL) return this.config.SUBSCRIPTION_URL;
@@ -44,7 +44,7 @@ class ConfigFile {
     throw new Error("SUBSCRIPTION_URL doesn't exist in config File!");
   }
 
-  static async GetMarzbanUsername() {
+  static async GetMarzbanUsername(): Promise<string> {
     if (!this.config) await this.GetConfigFromFile();
 
     if (this.config && this.config.SUDO_MARZBAN_USERNAME) return this.config.SUDO_MARZBAN_USERNAME;
@@ -52,7 +52,7 @@ class ConfigFile {
     throw new Error("NOSUDO_MARZBAN_USERNAME doesn't exist in config File!");
   }
 
-  static async GetMarzbanPassword() {
+  static async GetMarzbanPassword(): Promise<string> {
     if (!this.config) await this.GetConfigFromFile();
 
     if (this.config && this.config.SUDO_MARZBAN_PASSWORD) return this.config.SUDO_MARZBAN_PASSWORD;
@@ -60,7 +60,7 @@ class ConfigFile {
     throw new Error("NOSUDO_MARZBAN_PASSWORD doesn't exist in config File!");
   }
 
-  static async GetRenewForceToPaid() {
+  static async GetRenewForceToPaid(): Promise<string> {
     if (!this.config) await this.GetConfigFromFile();
 
     if (this.config && this.config.RENEW_FORCE_TO_PAID) return this.config.RENEW_FORCE_TO_PAID;
@@ -68,7 +68,7 @@ class ConfigFile {
     throw new Error("RENEW_FORCE_TO_PAID doesn't exist in config File!");
   }
 
-  static async GetRenewForceToLimitedAndExpired() {
+  static async GetRenewForceToLimitedAndExpired(): Promise<string> {
     if (!this.config) await this.GetConfigFromFile();
 
     if (this.config && this.config.RENEW_FORCE_TO_LIMITED_AND_EXPIRED)
@@ -77,7 +77,7 @@ class ConfigFile {
     throw new Error("RENEW_FORCE_TO_LIMITED_AND_EXPIRED doesn't exist in config File!");
   }
 
-  static async GetAllUsersForAgent() {
+  static async GetAllUsersForAgent(): Promise<string> {
     if (!this.config) await this.GetConfigFromFile();
 
     if (this.config && this.config.GET_ALL_USERS_FOR_AGENT)
@@ -86,7 +86,7 @@ class ConfigFile {
     throw new Error("GET_ALL_USERS_FOR_AGENT doesn't exist in config File!");
   }
 
-  static async GetDeletePaidAndRemovedUsers() {
+  static async GetDeletePaidAndRemovedUsers(): Promise<string> {
     if (!this.config) await this.GetConfigFromFile();
 
     if (this.config && this.config.DELETE_PAIDANDREMOVED_USERS)
@@ -95,7 +95,7 @@ class ConfigFile {
     throw new Error("DELETE_PAIDANDREMOVED_USERS doesn't exist in config File!");
   }
 
-  static async GetMarzbanFlow() {
+  static async GetMarzbanFlow(): Promise<string> {
     if (!this.config) await this.GetConfigFromFile();
 
     if (this.config && this.config.MARZBAN_FLOW) return this.config.MARZBAN_FLOW;
@@ -103,7 +103,7 @@ class ConfigFile {
     throw new Error("MARZBAN_FLOW doesn't exist in config File!");
   }
 
-  static async GetSellerAdminUsername() {
+  static async GetSellerAdminUsername(): Promise<string> {
     if (!this.config) await this.GetConfigFromFile();
 
     if (this.config && this.config.SELLER_ADMIN_USERNAME) return this.config.SELLER_ADMIN_USERNAME;
@@ -111,7 +111,7 @@ class ConfigFile {
     throw new Error("SELLER_ADMIN_USERNAME doesn't exist in config File!");
   }
 
-  static async GetSellerAdminPassword() {
+  static async GetSellerAdminPassword(): Promise<string> {
     if (!this.config) await this.GetConfigFromFile();
 
     if (this.config && this.config.SELLER_ADMIN_PASSWORD) return this.config.SELLER_ADMIN_PASSWORD;
@@ -119,7 +119,7 @@ class ConfigFile {
     throw new Error("SELLER_ADMIN_PASSWORD doesn't exist in config File!");
   }
 
-  static async GetIgnoreTrafficToRemove() {
+  static async GetIgnoreTrafficToRemove(): Promise<number> {
     if (!this.config) await this.GetConfigFromFile();
 
     if (this.config && this.config.IGNORE_TRAFFIC_TO_REMOVE)
@@ -128,7 +128,7 @@ class ConfigFile {
     throw new Error("IGNORE_TRAFFIC_TO_REMOVE doesn't exist in config File!");
   }
 
-  static async GetSerialKey() {
+  static async GetSerialKey(): Promise<string> {
     if (!this.config) await this.GetConfigFromFile();
 
     if (this.config && this.config.SERIALKEY) return this.config.SERIALKEY;

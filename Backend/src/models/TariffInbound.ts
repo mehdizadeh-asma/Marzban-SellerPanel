@@ -1,5 +1,5 @@
 import type { Document } from "mongoose";
-import { Types, Schema } from "mongoose";
+import { Schema, Types } from "mongoose";
 
 import type { ITariff } from "./Tariff";
 

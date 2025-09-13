@@ -1,4 +1,4 @@
-import type { Schema, Model, Connection, Document } from "mongoose";
+import type { Connection, Document, Model, Schema } from "mongoose";
 
 import Mongoose from "./MongooseDbManagement";
 

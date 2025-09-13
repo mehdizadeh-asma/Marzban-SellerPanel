@@ -3,20 +3,19 @@ const tsParser = require("@typescript-eslint/parser");
 const tsPlugin = require("@typescript-eslint/eslint-plugin");
 const prettierPlugin = require("eslint-plugin-prettier");
 const importPlugin = require("eslint-plugin-import");
+const unusedImports = require("eslint-plugin-unused-imports");
 
 module.exports = [
-  // Ignore patterns
   {
     ignores: ["node_modules/**", "dist/**", "coverage/**", "jest.config.ts"],
   },
 
-  // Rules for TS/TSX files
   {
     files: ["**/*.ts", "**/*.tsx"],
     languageOptions: {
       parser: tsParser,
       parserOptions: {
-        project: "./tsconfig.eslint.json", // این فایل باید وجود داشته باشه
+        project: "./tsconfig.eslint.json",
         ecmaVersion: "latest",
         sourceType: "module",
       },
@@ -25,40 +24,35 @@ module.exports = [
       "@typescript-eslint": tsPlugin,
       prettier: prettierPlugin,
       import: importPlugin,
+      "unused-imports": unusedImports,
     },
     rules: {
-      // ✅ Prettier integration
+      // Formatting
       "prettier/prettier": "error",
 
-      // ✅ General
+      // General
       "no-console": "off",
 
-      // ✅ TS best practices
-      "no-unused-vars": "off", // غیرفعال چون با TS تداخل داره
-      "@typescript-eslint/no-unused-vars": [
+      // Unused imports/vars
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+      "unused-imports/no-unused-imports": "error",
+      "unused-imports/no-unused-vars": [
         "warn",
-        {
-          vars: "all",
-          args: "after-used",
-          varsIgnorePattern: "^_",
-          argsIgnorePattern: "^_",
-        },
+        { vars: "all", varsIgnorePattern: "^_", args: "after-used", argsIgnorePattern: "^_" },
       ],
+
+      // TypeScript
       "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/explicit-function-return-type": "off",
+      "@typescript-eslint/explicit-function-return-type": "warn",
       "@typescript-eslint/no-unused-expressions": "error",
       "@typescript-eslint/consistent-type-imports": "warn",
 
-      // ✅ Import rules (شبیه Airbnb ولی بدون dependency conflict)
+      // Imports
       "import/order": [
-        "warn",
+        "off",
         {
-          groups: [
-            "builtin", // node libs
-            "external", // npm packages
-            "internal", // alias paths
-            ["parent", "sibling", "index"], // relative imports
-          ],
+          groups: ["builtin", "external", "internal", ["parent", "sibling", "index"]],
           alphabetize: { order: "asc", caseInsensitive: true },
           "newlines-between": "always",
         },
