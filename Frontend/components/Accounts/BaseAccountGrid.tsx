@@ -1,5 +1,6 @@
 "use client";
-import React, { ComponentRef, forwardRef, useImperativeHandle, useRef, useState } from "react";
+import type { ComponentRef } from "react";
+import React, { forwardRef, useImperativeHandle, useRef, useState } from "react";
 
 import AutoModeIcon from "@mui/icons-material/AutoMode";
 import CheckIcon from "@mui/icons-material/Check";
@@ -20,19 +21,17 @@ import Box from "@mui/material/Box";
 import Checkbox from "@mui/material/Checkbox";
 import LinearProgress from "@mui/material/LinearProgress";
 import type { SxProps, Theme } from "@mui/material/styles";
-import {
-  DataGrid,
+import type {
   GridColDef,
-  gridFilteredSortedRowIdsSelector,
   GridRowClassNameParams,
   GridRowHeightParams,
   GridRowHeightReturnValue,
   GridRowIdGetter,
   GridValidRowModel,
-  useGridApiRef,
 } from "@mui/x-data-grid";
+import { DataGrid, gridFilteredSortedRowIdsSelector, useGridApiRef } from "@mui/x-data-grid";
 
-import AccountType from "@/models/AccountType";
+import type AccountType from "@/models/AccountType";
 import { copyTextToClipboard } from "@/utils/Helper";
 
 import Footer from "../General/Footer";

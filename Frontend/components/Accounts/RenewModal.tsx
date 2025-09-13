@@ -1,4 +1,4 @@
-import { forwardRef, useImperativeHandle, useRef, useState } from "react";
+import { forwardRef, useImperativeHandle, useRef, useState, type ReactElement } from "react";
 import { Button, Modal } from "react-bootstrap";
 
 import AddAccount from "./AddAccount";
@@ -12,22 +12,22 @@ interface ForwardRefHandle {
   Hide: () => void;
 }
 
-const RenewModal = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
+const RenewModal = forwardRef<ForwardRefHandle, PropsType>((props, ref): ReactElement | null => {
   const [username, setUsername] = useState("");
   const selectTariff = useRef<HTMLSelectElement | null>(null);
 
   useImperativeHandle(ref, () => ({
-    Show: (username: string) => {
+    Show: (username: string): void => {
       setUsername(username);
     },
-    Hide: () => setUsername(""),
+    Hide: (): void => setUsername(""),
   }));
 
-  const btnCancel_Click = () => {
+  const btnCancel_Click = (): void => {
     setUsername("");
   };
 
-  const btnRenew_Click = async () => {
+  const btnRenew_Click = async (): Promise<void> => {
     if (selectTariff.current) props.RenewHandler(username, selectTariff.current.value);
     setUsername("");
   };

@@ -1,10 +1,11 @@
-import { ComponentRef, useRef, useState } from "react";
+import type { ComponentRef, ReactElement } from "react";
+import { useRef, useState } from "react";
 
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
 
-import TariffType from "@/models/TariffType";
+import type TariffType from "@/models/TariffType";
 
 import Messages from "../General/Messages";
 
@@ -12,7 +13,7 @@ interface PropsType {
   onAdding: (seller: TariffType) => void;
 }
 
-export default function AddTariff(props: PropsType) {
+export default function AddTariff(props: PropsType): ReactElement | null {
   const txtTitle = useRef<HTMLInputElement | null>(null);
   const txtDuration = useRef<HTMLInputElement | null>(null);
   const txtDataLimit = useRef<HTMLInputElement | null>(null);
@@ -24,7 +25,7 @@ export default function AddTariff(props: PropsType) {
   type MessagesHandle = ComponentRef<typeof Messages>;
   const refMessages = useRef<MessagesHandle>(null);
 
-  const BtnAdd_Click = () => {
+  const BtnAdd_Click = (): void => {
     if (!txtTitle.current || !txtTitle.current.value) {
       refMessages.current?.Show("error", "Title Is Required!");
       return;

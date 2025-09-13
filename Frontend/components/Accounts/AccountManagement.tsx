@@ -1,6 +1,7 @@
 "use client";
 import axios from "axios";
-import { ComponentRef, useCallback, useEffect, useRef, useState } from "react";
+import type { ComponentRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import Deselect from "@mui/icons-material/Deselect";
 import FilterAltOffIcon from "@mui/icons-material/FilterAltOff";
@@ -10,12 +11,12 @@ import SearchRounded from "@mui/icons-material/SearchRounded";
 import { TextField } from "@mui/material";
 
 import { useMyContext } from "@/context/MyContext";
-import AccountType from "@/models/AccountType";
-import TariffType from "@/models/TariffType";
+import type AccountType from "@/models/AccountType";
+import type TariffType from "@/models/TariffType";
 
 import Messages from "../General/Messages";
 import AddAccount from "./AddAccount";
-import { BaseGridHandle } from "./BaseAccountGrid";
+import type { BaseGridHandle } from "./BaseAccountGrid";
 import DeleteModal from "./DeleteModal";
 import ExpandableAccountGrid from "./ExpandableAccountGrid";
 import GeneralAccountGrid from "./GeneralAccountGrid";

@@ -1,6 +1,6 @@
 import { forwardRef, useImperativeHandle, useState } from "react";
 
-import { AlertColor } from "@mui/material";
+import type { AlertColor } from "@mui/material";
 import Alert from "@mui/material/Alert";
 import Snackbar from "@mui/material/Snackbar";
 import Zoom from "@mui/material/Zoom";

@@ -3,9 +3,11 @@ import EditIcon from "@mui/icons-material/Edit";
 import AssignPackageIcon from "@mui/icons-material/MonetizationOn";
 import ToggleOffIcon from "@mui/icons-material/ToggleOff";
 import ToggleOnIcon from "@mui/icons-material/ToggleOn";
-import { DataGrid, GridActionsCellItem, GridActionsColDef, GridColDef } from "@mui/x-data-grid";
+import type { GridActionsCellItemProps, GridActionsColDef, GridColDef } from "@mui/x-data-grid";
+import { DataGrid, GridActionsCellItem } from "@mui/x-data-grid";
+import type { ReactElement } from "react";
 
-import SellerType from "@/models/SellerType";
+import type SellerType from "@/models/SellerType";
 
 import Footer from "../General/Footer";
 
@@ -18,7 +20,7 @@ interface PropsType {
   onAssignPackages: (seller: SellerType) => void;
 }
 
-export default function SellerGrid(props: PropsType) {
+export default function SellerGrid(props: PropsType): ReactElement | null {
   const columns: (GridColDef<SellerType> | GridActionsColDef<SellerType>)[] = [
     {
       field: "Title",
@@ -68,7 +70,9 @@ export default function SellerGrid(props: PropsType) {
       type: "actions",
       width: 80,
       headerClassName: "MUIGridHeader",
-      getActions: (params: { row: SellerType }) => [
+      getActions: (params: {
+        row: SellerType;
+      }): readonly ReactElement<GridActionsCellItemProps>[] => [
         <GridActionsCellItem
           key="active"
           label="Active"
@@ -89,7 +93,9 @@ export default function SellerGrid(props: PropsType) {
       field: "AssignPackages",
       type: "actions",
       width: 50,
-      getActions: (params: { row: SellerType }) => [
+      getActions: (params: {
+        row: SellerType;
+      }): readonly ReactElement<GridActionsCellItemProps>[] => [
         <GridActionsCellItem
           key="AssignPackages"
           label="AssignPackages"
@@ -104,7 +110,9 @@ export default function SellerGrid(props: PropsType) {
       field: "edit",
       type: "actions",
       width: 30,
-      getActions: (params: { row: SellerType }) => [
+      getActions: (params: {
+        row: SellerType;
+      }): readonly ReactElement<GridActionsCellItemProps>[] => [
         <GridActionsCellItem
           key="edit"
           label="Edit"
@@ -119,7 +127,9 @@ export default function SellerGrid(props: PropsType) {
       field: "delete",
       type: "actions",
       width: 30,
-      getActions: (params: { row: SellerType }) => [
+      getActions: (params: {
+        row: SellerType;
+      }): readonly ReactElement<GridActionsCellItemProps>[] => [
         <GridActionsCellItem
           key="delete"
           label="Delete"

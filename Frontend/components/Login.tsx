@@ -6,8 +6,10 @@ import { Image } from "react-bootstrap";
 import Button from "react-bootstrap/Button";
 import Spinner from "react-bootstrap/Spinner";
 
-import { JsonData, useMyContext } from "@/context/MyContext";
+import type { JsonData } from "@/context/MyContext";
+import { useMyContext } from "@/context/MyContext";
 import { decrypt } from "@/utils/Crypto";
+import type { AxiosError } from "axios";
 
 export default function Login(): React.ReactElement {
   const router = useRouter();
@@ -77,7 +79,7 @@ export default function Login(): React.ReactElement {
       setLoading(false);
     }
 
-    function isAxiosError(error: unknown): error is import("axios").AxiosError {
+    function isAxiosError(error: unknown): error is AxiosError {
       return (
         typeof error === "object" &&
         error !== null &&

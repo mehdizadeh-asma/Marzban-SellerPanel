@@ -4,17 +4,18 @@ import { forwardRef, useState } from "react";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Box, Button, Typography } from "@mui/material";
-import {
-  GridActionsCellItem,
+import type {
   GridActionsCellItemProps,
   GridColDef,
   GridRenderCellParams,
   GridRowParams,
 } from "@mui/x-data-grid";
+import { GridActionsCellItem } from "@mui/x-data-grid";
 
-import AccountType from "@/models/AccountType";
+import type AccountType from "@/models/AccountType";
 
-import BaseAccountGrid, { BaseGridHandle, BaseGridHelpers } from "./BaseAccountGrid";
+import type { BaseGridHandle, BaseGridHelpers } from "./BaseAccountGrid";
+import BaseAccountGrid from "./BaseAccountGrid";
 
 interface PropsType {
   Loading: boolean;

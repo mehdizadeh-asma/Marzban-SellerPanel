@@ -1,15 +1,16 @@
 "use client";
 import axios from "axios";
-import { ComponentRef, useCallback, useEffect, useRef, useState } from "react";
+import type { ComponentRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useMyContext } from "@/context/MyContext";
-import TariffType from "@/models/TariffType";
+import type TariffType from "@/models/TariffType";
 
 import Messages from "../General/Messages";
 import AddTariff from "./AddTariff";
 import TariffGrid from "./TariffGrid";
 
-const TariffManagement = () => {
+const TariffManagement = (): React.ReactElement | null => {
   const { user, config } = useMyContext();
   const [tariffList, setTariffList] = useState<TariffType[]>([]);
   const [loading, setLoading] = useState(false);
@@ -17,7 +18,7 @@ const TariffManagement = () => {
   type MessagesHandle = ComponentRef<typeof Messages>;
   const refMessages = useRef<MessagesHandle>(null);
 
-  const LaodTariff = useCallback(async () => {
+  const LaodTariff = useCallback(async (): Promise<void> => {
     try {
       const url = new URL("api/tariffs/true/Admin", config.BACKEND_URL);
       const resultTariff = await axios.get(url.toString(), {
@@ -36,7 +37,7 @@ const TariffManagement = () => {
     if (user.Token !== "") LaodTariff();
   }, [LaodTariff, user.Token]);
 
-  const onAddClick = async (tariff: TariffType) => {
+  const onAddClick = async (tariff: TariffType): Promise<void> => {
     setLoading(true);
     try {
       const url = new URL("api/tariff", config.BACKEND_URL);
@@ -52,7 +53,7 @@ const TariffManagement = () => {
     }
   };
 
-  const onDisableAccountClick = async (tariff: TariffType) => {
+  const onDisableAccountClick = async (tariff: TariffType): Promise<void> => {
     setLoading(true);
     try {
       const url = new URL("api/disabletariff/" + tariff._id, config.BACKEND_URL);
@@ -72,7 +73,7 @@ const TariffManagement = () => {
     }
   };
 
-  const onFreeChangedClick = async (tariff: TariffType) => {
+  const onFreeChangedClick = async (tariff: TariffType): Promise<void> => {
     setLoading(true);
     try {
       const url = new URL("api/freechanged/" + tariff._id, config.BACKEND_URL);
@@ -92,7 +93,7 @@ const TariffManagement = () => {
     }
   };
 
-  const onMessage = (messageType: string, message: string) => {
+  const onMessage = (messageType: string, message: string): void => {
     refMessages.current?.Show(messageType == "success" ? "success" : "error", message);
   };
 

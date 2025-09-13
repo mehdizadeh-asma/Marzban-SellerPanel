@@ -9,7 +9,7 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import TextField from "@mui/material/TextField";
 
 import { useMyContext } from "@/context/MyContext";
-import TariffType from "@/models/TariffType";
+import type TariffType from "@/models/TariffType";
 
 interface PropsType {
   onAdding?: (tariff: TariffType, note: string, onHold: boolean) => void;

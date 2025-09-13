@@ -1,4 +1,4 @@
-import { forwardRef, useImperativeHandle, useState } from "react";
+import { forwardRef, useImperativeHandle, useState, type ReactElement } from "react";
 import { Button, Modal } from "react-bootstrap";
 import QRCode from "react-qr-code";
 
@@ -7,20 +7,21 @@ interface ForwardRefHandle {
   Hide: () => void;
 }
 
-const QRModal = forwardRef<ForwardRefHandle, object>((_props, ref) => {
+const QRModal = forwardRef<ForwardRefHandle, object>((_props, ref): ReactElement | null => {
   const [subscriptionUrl, setSubscriptionUrl] = useState("");
   const [username, setUsername] = useState("");
 
+  const btnClose_Click = (): void => {
+    setSubscriptionUrl("");
+  };
+
   useImperativeHandle(ref, () => ({
-    Show: (subscriptionUrl: string, username: string) => {
+    Show: (subscriptionUrl: string, username: string): void => {
       setSubscriptionUrl(subscriptionUrl);
       setUsername(username);
     },
     Hide: btnClose_Click,
   }));
-  const btnClose_Click = () => {
-    setSubscriptionUrl("");
-  };
   return (
     <Modal
       className="border border-1 shadow rounded-3"

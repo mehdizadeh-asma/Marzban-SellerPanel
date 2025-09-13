@@ -1,7 +1,8 @@
-import { ComponentRef, FC, useEffect, useRef, useState } from "react";
+import type { ComponentRef, FC, ReactElement } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button, Modal } from "react-bootstrap";
 
-import SellerType from "@/models/SellerType";
+import type SellerType from "@/models/SellerType";
 
 import Messages from "../General/Messages";
 import AddSeller from "./AddSeller";
@@ -13,7 +14,7 @@ interface PropsType {
   onEditing: (seller: SellerType) => void;
 }
 
-const EditModal: FC<PropsType> = ({ isOpen, onClose, seller, onEditing }) => {
+const EditModal: FC<PropsType> = ({ isOpen, onClose, seller, onEditing }): ReactElement | null => {
   const [currentSeller, setCurrentSeller] = useState<SellerType | null>(seller);
   type MessagesHandle = ComponentRef<typeof Messages>;
   const refMessages = useRef<MessagesHandle>(null);
@@ -22,11 +23,11 @@ const EditModal: FC<PropsType> = ({ isOpen, onClose, seller, onEditing }) => {
     setCurrentSeller(seller);
   }, [seller]);
 
-  const handleSave = () => {
+  const handleSave = (): void => {
     if (currentSeller) onEditing(currentSeller);
   };
 
-  const handleFieldChange = (field: keyof SellerType, value: string | number) => {
+  const handleFieldChange = (field: keyof SellerType, value: string | number): void => {
     let errorMessage = "";
 
     switch (field) {

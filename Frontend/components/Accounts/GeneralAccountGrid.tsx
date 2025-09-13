@@ -1,16 +1,13 @@
 "use client";
 import { forwardRef } from "react";
 
-import {
-  GridActionsCellItem,
-  GridColDef,
-  GridRenderCellParams,
-  GridRowParams,
-} from "@mui/x-data-grid";
+import type { GridColDef, GridRenderCellParams, GridRowParams } from "@mui/x-data-grid";
+import { GridActionsCellItem } from "@mui/x-data-grid";
 
-import AccountType from "@/models/AccountType";
+import type AccountType from "@/models/AccountType";
 
-import BaseAccountGrid, { BaseGridHandle, BaseGridHelpers } from "./BaseAccountGrid";
+import type { BaseGridHandle, BaseGridHelpers } from "./BaseAccountGrid";
+import BaseAccountGrid from "./BaseAccountGrid";
 
 interface PropsType {
   Loading: boolean;

@@ -121,6 +121,8 @@ module.exports = [
     },
     rules: {
       ...baseRecommendedRules,
+
+      // Unused imports/vars
       "@typescript-eslint/no-unused-vars": "off",
       "unused-imports/no-unused-imports": "error",
       "unused-imports/no-unused-vars": [
@@ -128,14 +130,21 @@ module.exports = [
         { vars: "all", varsIgnorePattern: "^_", args: "after-used", argsIgnorePattern: "^_" },
       ],
 
-      "@typescript-eslint/explicit-function-return-type": "off",
+      // TypeScript
       "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/explicit-function-return-type": "warn",
+      "@typescript-eslint/no-unused-expressions": "error",
+      "@typescript-eslint/consistent-type-imports": "warn",
+
+      // React
       "react/jsx-uses-react": "warn",
       "react/react-in-jsx-scope": "warn",
       "react/jsx-no-duplicate-props": "error",
       "react/jsx-boolean-value": ["warn", "never"],
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
+
+      // Import
       "import/order": [
         "off",
         {
@@ -149,6 +158,9 @@ module.exports = [
           "newlines-between": "always",
         },
       ],
+      "import/newline-after-import": "warn",
+
+      // General
       "no-alert": "warn",
       "no-console": "off",
       "prettier/prettier": "warn",
@@ -159,9 +171,7 @@ module.exports = [
     ? [
         {
           files: ["**/*.json", "**/*.jsonc"],
-          languageOptions: {
-            parser: jsoncParser,
-          },
+          languageOptions: { parser: jsoncParser },
           plugins: { ...(jsoncPlugin ? { jsonc: jsoncPlugin } : {}) },
           rules: {
             ...(jsoncPlugin ? { "jsonc/no-comments": "error" } : {}),

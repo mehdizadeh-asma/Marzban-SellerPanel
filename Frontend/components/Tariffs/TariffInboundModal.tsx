@@ -1,15 +1,17 @@
 "use client";
 import axios from "axios";
+import type { ReactElement } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { Button, Modal } from "react-bootstrap";
 
 import ToggleOffIcon from "@mui/icons-material/ToggleOff";
 import ToggleOnIcon from "@mui/icons-material/ToggleOn";
-import { DataGrid, GridActionsCellItem, GridActionsColDef, GridColDef } from "@mui/x-data-grid";
+import type { GridActionsColDef, GridColDef } from "@mui/x-data-grid";
+import { DataGrid, GridActionsCellItem } from "@mui/x-data-grid";
 
 import { useMyContext } from "@/context/MyContext";
-import TariffInboundType from "@/models/TariffInboundType";
-import TariffType from "@/models/TariffType";
+import type TariffInboundType from "@/models/TariffInboundType";
+import type TariffType from "@/models/TariffType";
 
 interface PropsType {
   isOpen: boolean;
@@ -19,7 +21,7 @@ interface PropsType {
   onMessage: (messageType: string, message: string) => void;
 }
 
-const TariffInboundModal = (props: PropsType) => {
+const TariffInboundModal = (props: PropsType): ReactElement | null => {
   const { user, config } = useMyContext();
   const [assignedTariffInboundList, setAssignedTariffInboundList] = useState<TariffInboundType[]>(
     [],
@@ -55,7 +57,7 @@ const TariffInboundModal = (props: PropsType) => {
       ],
     },
   ];
-  const changeIcon = (tariffId: string) => {
+  const changeIcon = (tariffId: string): React.ReactElement => {
     return tariffId != "" ? (
       <ToggleOnIcon sx={{ fontSize: "35px" }} className="text-success" />
     ) : (
@@ -63,7 +65,7 @@ const TariffInboundModal = (props: PropsType) => {
     );
   };
 
-  const handleAssignToggle = (InboundTag: string) => {
+  const handleAssignToggle = (InboundTag: string): void => {
     if (!InboundTag) return;
 
     setAssignedTariffInboundList((prevList) => {
@@ -91,7 +93,7 @@ const TariffInboundModal = (props: PropsType) => {
     );
   };
 
-  const LaodTariffInbound = useCallback(async () => {
+  const LaodTariffInbound = useCallback(async (): Promise<void> => {
     try {
       const url = new URL("api/TariffInbound/" + props.tariff?._id, config.BACKEND_URL);
 
@@ -115,7 +117,7 @@ const TariffInboundModal = (props: PropsType) => {
     }
   }, [LaodTariffInbound, user.Token, props.isOpen]);
 
-  const btnSave_Click = async () => {
+  const btnSave_Click = async (): Promise<void> => {
     if (!props.tariff?._id) {
       props.onMessage("error", "Tariff ID is required to assign inbounds.");
       return;
@@ -147,7 +149,7 @@ const TariffInboundModal = (props: PropsType) => {
     }
   };
 
-  const btnCancel_Click = () => {
+  const btnCancel_Click = (): void => {
     props.onClose();
   };
 

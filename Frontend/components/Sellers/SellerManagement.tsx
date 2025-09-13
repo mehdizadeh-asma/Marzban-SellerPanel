@@ -1,9 +1,11 @@
 "use client";
-import axios, { AxiosError } from "axios";
-import { ComponentRef, useCallback, useEffect, useRef, useState } from "react";
+import type { AxiosError } from "axios";
+import axios from "axios";
+import type { ComponentRef, ReactElement } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useMyContext } from "@/context/MyContext";
-import SellerType from "@/models/SellerType";
+import type SellerType from "@/models/SellerType";
 
 import Messages from "../General/Messages";
 import AddSeller from "./AddSeller";
@@ -11,7 +13,7 @@ import EditModal from "./EditModal";
 import PackageSellerModal from "./PackageSellerModal";
 import SellerGrid from "./SellerGrid";
 
-const SellerManagement = () => {
+const SellerManagement = (): ReactElement | null => {
   const { user, config } = useMyContext();
   const [sellerList, setSellerList] = useState<SellerType[]>([]);
   const [loading, setLoading] = useState(false);
@@ -27,7 +29,7 @@ const SellerManagement = () => {
   };
   const addSellerRef = useRef<AddSellerHandle | null>(null);
 
-  const LaodSeller = useCallback(async () => {
+  const LaodSeller = useCallback(async (): Promise<void> => {
     setLoading(true);
     try {
       const url = new URL("api/sellers", config.BACKEND_URL);
@@ -46,7 +48,7 @@ const SellerManagement = () => {
     if (user.Token !== "") LaodSeller();
   }, [LaodSeller, user.Token]);
 
-  const onDeleteClick = async (seller: SellerType) => {
+  const onDeleteClick = async (seller: SellerType): Promise<void> => {
     setLoading(true);
     try {
       const url = new URL("api/seller/" + seller._id, config.BACKEND_URL);
@@ -62,17 +64,17 @@ const SellerManagement = () => {
     }
   };
 
-  const resetAddSellerFields = () => {
+  const resetAddSellerFields = (): void => {
     addSellerRef.current?.resetFields();
   };
 
-  const onEditClick = (seller: SellerType) => {
+  const onEditClick = (seller: SellerType): void => {
     resetAddSellerFields();
     setSelectedSeller(seller);
     setEditModalOpen(true);
   };
 
-  const onUpdateClick = async (seller: SellerType) => {
+  const onUpdateClick = async (seller: SellerType): Promise<void> => {
     setLoading(true);
     try {
       const url = new URL("api/seller/" + seller._id, config.BACKEND_URL);
@@ -108,7 +110,7 @@ const SellerManagement = () => {
     }
   };
 
-  const onAddClick = async (seller: SellerType) => {
+  const onAddClick = async (seller: SellerType): Promise<void> => {
     setLoading(true);
     try {
       const url = new URL("api/seller", config.BACKEND_URL);
@@ -140,7 +142,7 @@ const SellerManagement = () => {
       LaodSeller();
     }
   };
-  const onDisableAccountClick = async (seller: SellerType) => {
+  const onDisableAccountClick = async (seller: SellerType): Promise<void> => {
     setLoading(true);
     try {
       const url = new URL("api/disableseller/" + seller._id, config.BACKEND_URL);
@@ -161,12 +163,15 @@ const SellerManagement = () => {
   };
 
   // #region AssignPackages
-  const onAssignPackagesClick = async (seller: SellerType) => {
+  const onAssignPackagesClick = async (seller: SellerType): Promise<void> => {
     setSelectedSeller(seller);
     setAssignPackagesModalOpen(true);
   };
 
-  const onSavePackageClick = async (seller: SellerType, packagesListIds: string[]) => {
+  const onSavePackageClick = async (
+    seller: SellerType,
+    packagesListIds: string[],
+  ): Promise<void> => {
     setLoading(true);
     try {
       const url = new URL("api/tariffSeller/" + seller._id, config.BACKEND_URL);

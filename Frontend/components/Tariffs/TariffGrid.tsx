@@ -1,11 +1,13 @@
+import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
 
 import AssignInboundIcon from "@mui/icons-material/AccountTree";
 import ToggleOffIcon from "@mui/icons-material/ToggleOff";
 import ToggleOnIcon from "@mui/icons-material/ToggleOn";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
+import type { GridActionsCellItemProps, GridColDef } from "@mui/x-data-grid";
+import { DataGrid, GridActionsCellItem } from "@mui/x-data-grid";
 
-import TariffType from "@/models/TariffType";
+import type TariffType from "@/models/TariffType";
 
 import Footer from "../General/Footer";
 import TariffInboundModal from "./TariffInboundModal";
@@ -18,7 +20,7 @@ interface PropsType {
   onMessage: (messageType: string, message: string) => void;
 }
 
-export default function TariffGrid(props: PropsType) {
+export default function TariffGrid(props: PropsType): ReactElement | null {
   const [isTariffInboundModalOpen, setIsTariffInboundModalOpen] = useState(false);
   const [selectedTariff, setSelectedTariff] = useState<TariffType>();
 
@@ -59,7 +61,9 @@ export default function TariffGrid(props: PropsType) {
       type: "actions",
       width: 80,
       headerClassName: "MUIGridHeader",
-      getActions: (params: { row: TariffType }) => [
+      getActions: (params: {
+        row: TariffType;
+      }): readonly ReactElement<GridActionsCellItemProps>[] => [
         <GridActionsCellItem
           key="free"
           label="Free"
@@ -81,7 +85,9 @@ export default function TariffGrid(props: PropsType) {
       field: "AssignInbounds",
       type: "actions",
       width: 120,
-      getActions: (params: { row: TariffType }) => [
+      getActions: (params: {
+        row: TariffType;
+      }): readonly ReactElement<GridActionsCellItemProps>[] => [
         <GridActionsCellItem
           key="AssignInbounds"
           label="AssignInbounds"
@@ -96,7 +102,9 @@ export default function TariffGrid(props: PropsType) {
       type: "actions",
       width: 100,
       headerClassName: "MUIGridHeader",
-      getActions: (params: { row: TariffType }) => [
+      getActions: (params: {
+        row: TariffType;
+      }): readonly ReactElement<GridActionsCellItemProps>[] => [
         <GridActionsCellItem
           key="active"
           label="Active"
@@ -113,14 +121,13 @@ export default function TariffGrid(props: PropsType) {
     },
   ];
 
-  const onDisableAccount = (tariff: TariffType) => {
+  const onDisableAccount = (tariff: TariffType): void => {
     props.onDisableAccount(tariff);
   };
-
-  const onFreeEnable = (tariff: TariffType) => {
+  const onFreeEnable = (tariff: TariffType): void => {
     props.onFreeChanged(tariff);
   };
-  const onAssignInboundClick = (tariff: TariffType) => {
+  const onAssignInboundClick = (tariff: TariffType): void => {
     setSelectedTariff(tariff);
   };
   useEffect(() => {
@@ -128,12 +135,12 @@ export default function TariffGrid(props: PropsType) {
       setIsTariffInboundModalOpen(true);
     }
   }, [selectedTariff]);
-  const handleModalClose = () => {
+  const handleModalClose = (): void => {
     setIsTariffInboundModalOpen(false);
     setSelectedTariff(undefined);
   };
 
-  const handleModalMessage = (messageType: string, message: string) => {
+  const handleModalMessage = (messageType: string, message: string): void => {
     props.onMessage(messageType, message);
     handleModalClose();
   };

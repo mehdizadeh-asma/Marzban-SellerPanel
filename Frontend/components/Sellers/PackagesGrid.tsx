@@ -1,12 +1,14 @@
 import axios from "axios";
+import type { ReactElement } from "react";
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from "react";
 
 import ToggleOffIcon from "@mui/icons-material/ToggleOff";
 import ToggleOnIcon from "@mui/icons-material/ToggleOn";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
+import type { GridActionsCellItemProps, GridColDef } from "@mui/x-data-grid";
+import { DataGrid, GridActionsCellItem } from "@mui/x-data-grid";
 
 import { useMyContext } from "@/context/MyContext";
-import SellerType from "@/models/SellerType";
+import type SellerType from "@/models/SellerType";
 
 interface PropsType {
   seller?: SellerType;
@@ -21,7 +23,7 @@ interface TariffSellerGridType {
   TariffId: string;
   Price: string;
 }
-const PackagesGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
+const PackagesGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref): ReactElement | null => {
   const [tariffSellerList, setTariffSellerList] = useState<TariffSellerGridType[]>([]);
   const [tariffListIds, setTariffListIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -29,10 +31,10 @@ const PackagesGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
   const sellerId = props.seller?._id;
 
   useImperativeHandle(ref, () => ({
-    SendBackList: () => tariffListIds,
+    SendBackList: (): string[] => tariffListIds,
   }));
 
-  const LaodTariff = useCallback(async () => {
+  const LaodTariff = useCallback(async (): Promise<void> => {
     setLoading(true);
     const tarifflist: string[] = [];
     try {
@@ -59,7 +61,7 @@ const PackagesGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
     if (user.Token) LaodTariff();
   }, [LaodTariff, user.Token]);
 
-  const handleAssignToggle = (tariffId?: string) => {
+  const handleAssignToggle = (tariffId?: string): void => {
     if (!tariffId) return;
 
     setTariffListIds((prevIds) =>
@@ -77,7 +79,7 @@ const PackagesGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
     );
   };
 
-  const changeIcon = (SellerId: string) => {
+  const changeIcon = (SellerId: string): ReactElement => {
     return SellerId != "" ? (
       <ToggleOnIcon sx={{ fontSize: "35px" }} className="text-success" />
     ) : (
@@ -104,7 +106,9 @@ const PackagesGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref) => {
       type: "actions",
       width: 100,
       headerClassName: "MUIGridHeader",
-      getActions: (params: { row: TariffSellerGridType }) => [
+      getActions: (params: {
+        row: TariffSellerGridType;
+      }): readonly ReactElement<GridActionsCellItemProps>[] => [
         <GridActionsCellItem
           key="assign"
           label="Assign"

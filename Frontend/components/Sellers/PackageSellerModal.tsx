@@ -1,9 +1,11 @@
+import type { ReactElement } from "react";
 import { useRef } from "react";
 import { Button, Modal } from "react-bootstrap";
 
-import SellerType from "@/models/SellerType";
+import type SellerType from "@/models/SellerType";
 
-import PackagesGrid, { ForwardRefHandle } from "./PackagesGrid";
+import type { ForwardRefHandle } from "./PackagesGrid";
+import PackagesGrid from "./PackagesGrid";
 
 interface PropsType {
   onAssign: (seller: SellerType, tariffIdList: string[]) => void;
@@ -12,14 +14,14 @@ interface PropsType {
   seller: SellerType | undefined;
 }
 
-const PackageSellerModal = (props: PropsType) => {
+const PackageSellerModal = (props: PropsType): ReactElement | null => {
   const gridRef = useRef<ForwardRefHandle>(null);
 
-  const btnCancel_Click = () => {
+  const btnCancel_Click = (): void => {
     props.onClose();
   };
 
-  const btnSave_Click = () => {
+  const btnSave_Click = (): void => {
     if (gridRef.current) {
       const selectedTariffIds = gridRef.current.SendBackList();
       if (props.seller != null) props.onAssign(props.seller, selectedTariffIds);

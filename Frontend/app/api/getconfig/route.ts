@@ -1,7 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 
-import { JsonData } from "@/context/MyContext";
+import type { JsonData } from "@/context/MyContext";
 import { encrypt } from "@/utils/Crypto";
 
 export const dynamic = "force-dynamic";
