@@ -358,7 +358,6 @@ class MongooseDbManagement {
     }
   }
 
-  // متد کمکی برای کپی مجموعه‌ها
   private static async copyCollection<T extends Document>(
     sourceModel: Model<T>,
     targetModel: Model<T>,
