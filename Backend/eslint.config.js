@@ -7,7 +7,17 @@ const unusedImports = require("eslint-plugin-unused-imports");
 
 module.exports = [
   {
-    ignores: ["node_modules/**", "dist/**", "coverage/**", "jest.config.ts"],
+    // ignore generated coverage folders (both test/coverage and tests/coverage),
+    // build outputs and JS files so ESLint focuses on TypeScript sources/tests
+    ignores: [
+      "node_modules/**",
+      "dist/**",
+      "coverage/**",
+      "test/coverage/**",
+      "tests/coverage/**",
+      "jest.config.ts",
+      "**/*.js",
+    ],
   },
   {
     files: ["**/*.ts", "**/*.tsx"],
@@ -43,7 +53,7 @@ module.exports = [
 
       // TypeScript
       "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/explicit-function-return-type": "warn",
+      "@typescript-eslint/explicit-function-return-type": "off",
       "@typescript-eslint/no-unused-expressions": "error",
       "@typescript-eslint/consistent-type-imports": "warn",
 

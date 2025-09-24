@@ -10,14 +10,15 @@
     "build": "tsc",
     "test": "jest",
     "test-coverage": "jest --coverage",
-    "lint": "eslint . --ext .ts,.tsx",
-    "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "format": "prettier --write ."
   },
   "lint-staged": {
     "*.{ts,tsx,js,json,md}": [
       "prettier --write",
-      "eslint --fix"
+      "eslint --fix",
+      "jest"
     ]
   },
   "repository": {
