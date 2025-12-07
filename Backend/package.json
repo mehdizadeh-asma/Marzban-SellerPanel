@@ -14,7 +14,7 @@
     "test-coverage": "jest --coverage",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "format": "prettier --write .",
+    "format": "prettier --write ..",
     "check": "npm run lint"
   },
   "dependencies": {
