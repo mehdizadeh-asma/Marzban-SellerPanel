@@ -1,31 +1,33 @@
-FROM node:alpine AS deps
+FROM node:22-alpine AS base
 WORKDIR /backend
-
-COPY package*.json ./
-
-RUN npm install
-
-FROM node:alpine AS builder
-WORKDIR /backend
-
-COPY --from=deps /backend/node_modules ./node_modules
-COPY . .
-
-RUN npm run build
-
-FROM node:alpine AS runner
-WORKDIR /backend
-
 ENV NODE_ENV=production
 ENV NODE_OPTIONS="--tls-min-v1.2 --max-old-space-size=8192"
-
 RUN apk add --no-cache ca-certificates
 
-COPY package*.json ./
+FROM base AS deps
+COPY package.json package-lock.json ./
+RUN npm ci
 
-COPY --from=builder /backend/dist ./dist
-COPY --from=builder /backend/node_modules ./node_modules
+FROM base AS builder
+WORKDIR /backend
+COPY --from=deps /backend/node_modules ./node_modules
+COPY . .
+RUN npm run build
 
-RUN npm prune --production || npm install --omit=dev
+FROM base AS prod-deps
+WORKDIR /backend
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
 
-CMD ["npm", "start"]
+FROM base AS runner
+WORKDIR /backend
+
+RUN addgroup -S app && adduser -S app -G app
+
+COPY --from=prod-deps /backend/node_modules ./node_modules
+COPY --from=builder   /backend/dist        ./dist
+
+USER app
+EXPOSE 8080 8443
+
+CMD ["node", "dist/app.js"]

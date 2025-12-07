@@ -1,7 +1,6 @@
 import http from "http";
 import https from "https";
 
-import bodyParser from "body-parser";
 import cors from "cors";
 import type { NextFunction, Request, Response } from "express";
 import express from "express";
@@ -18,8 +17,8 @@ import MongooseDbManagement from "./utils/MongooseDbManagement";
 const app = express();
 
 // تنظیمات اولیه اکسپرس
-app.use(bodyParser.json({ limit: "10mb" }));
-app.use(bodyParser.urlencoded({ extended: true, limit: "10mb" }));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 // تنظیمات CORS
 const corsOptions = {

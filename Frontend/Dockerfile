@@ -1,27 +1,35 @@
-FROM node:slim AS deps
+FROM node:22-slim AS base
 WORKDIR /frontend
+ENV NEXT_TELEMETRY_DISABLED=1
 
-COPY package*.json ./
-RUN npm install
+FROM base AS deps
+ENV NODE_ENV=development
+COPY package.json package-lock.json ./
+RUN npm ci
 
-FROM node:slim AS builder
-WORKDIR /frontend
-
-COPY --from=deps /frontend/node_modules ./node_modules
+FROM deps AS builder
 COPY . .
 RUN npm run build
 
-FROM node:slim AS runner
-WORKDIR /frontend
+FROM base AS prod-deps
 ENV NODE_ENV=production
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
 
-COPY package*.json ./
+FROM base AS runner
+ENV NODE_ENV=production
+WORKDIR /frontend
 
-COPY --from=builder /frontend/.next ./.next
-COPY --from=builder /frontend/public ./public
+RUN useradd -m -u 1001 nextjs \
+  && chown -R nextjs:nextjs /frontend
 
-COPY --from=builder /frontend/node_modules ./node_modules
-RUN npm prune --production || npm install --omit=dev
+USER nextjs
+
+COPY --from=builder   /frontend/.next   ./.next
+COPY --from=builder   /frontend/public ./public
+COPY --from=prod-deps /frontend/node_modules ./node_modules
+COPY package.json ./
 
 EXPOSE 3000
+
 CMD ["npm", "start"]
