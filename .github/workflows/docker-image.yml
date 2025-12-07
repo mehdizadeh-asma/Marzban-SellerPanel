@@ -5,6 +5,12 @@ on:
     tags:
       - "v*"
       - "dev-*"
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Tag name (e.g. v2.5.9 or dev-2.5.9)"
+        required: true
+        type: string
 
 jobs:
   docker:
@@ -14,10 +20,55 @@ jobs:
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
     steps:
+      - name: Set build variables
+        id: vars
+        run: |
+          if [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
+            TAG_NAME="${GITHUB_REF_NAME}"
+          else
+            TAG_NAME="${{ github.event.inputs.tag_name }}"
+          fi
+
+          if [[ "$TAG_NAME" == v* ]]; then
+            BUILD_TYPE="release"
+            VERSION="${TAG_NAME#v}"
+            CHECKOUT_REF="main"
+
+            FRONT_TAG_MAIN="marzbansellerpanel/msp-frontend:${VERSION}"
+            FRONT_TAG_EXTRA="marzbansellerpanel/msp-frontend:latest"
+
+            BACK_TAG_MAIN="marzbansellerpanel/msp-backend:${VERSION}"
+            BACK_TAG_EXTRA="marzbansellerpanel/msp-backend:latest"
+          elif [[ "$TAG_NAME" == dev-* ]]; then
+            BUILD_TYPE="dev"
+            VERSION="${TAG_NAME#dev-}"
+            CHECKOUT_REF="development"
+
+            FRONT_TAG_MAIN="marzbansellerpanel/msp-frontend:dev"
+            FRONT_TAG_EXTRA=""
+
+            BACK_TAG_MAIN="marzbansellerpanel/msp-backend:dev"
+            BACK_TAG_EXTRA=""
+          else
+            echo "Unsupported tag pattern: $TAG_NAME"
+            exit 1
+          fi
+
+          {
+            echo "TAG_NAME=$TAG_NAME"
+            echo "BUILD_TYPE=$BUILD_TYPE"
+            echo "VERSION=$VERSION"
+            echo "CHECKOUT_REF=$CHECKOUT_REF"
+            echo "FRONT_TAG_MAIN=$FRONT_TAG_MAIN"
+            echo "FRONT_TAG_EXTRA=$FRONT_TAG_EXTRA"
+            echo "BACK_TAG_MAIN=$BACK_TAG_MAIN"
+            echo "BACK_TAG_EXTRA=$BACK_TAG_EXTRA"
+          } >> "$GITHUB_ENV"
+
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          ref: ${{ env.CHECKOUT_REF }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -28,23 +79,8 @@ jobs:
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ env.DOCKERHUB_TOKEN }}
 
-      - name: Detect build type and version
-        id: meta
-        run: |
-          TAG_NAME="${GITHUB_REF_NAME}"
-          echo "GITHUB_REF_NAME=$TAG_NAME"
-          if [[ "$TAG_NAME" == v* ]]; then
-            VERSION="${TAG_NAME#v}"
-            echo "build_type=stable" >> "$GITHUB_OUTPUT"
-            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          elif [[ "$TAG_NAME" == dev-* ]]; then
-            echo "build_type=dev" >> "$GITHUB_OUTPUT"
-          else
-            echo "Unsupported tag: $TAG_NAME"
-            exit 1
-          fi
-
-      - name: Build and Push Frontend
+      - name: Build and Push Frontend (release)
+        if: env.BUILD_TYPE == 'release'
         uses: docker/build-push-action@v6
         with:
           context: ./Frontend
@@ -52,11 +88,22 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            ${{ steps.meta.outputs.build_type == 'stable' && format('marzbansellerpanel/msp-frontend:{0}', steps.meta.outputs.version) || '' }}
-            ${{ steps.meta.outputs.build_type == 'stable' && 'marzbansellerpanel/msp-frontend:latest' || '' }}
-            ${{ steps.meta.outputs.build_type == 'dev' && 'marzbansellerpanel/msp-frontend:dev' || '' }}
+            ${{ env.FRONT_TAG_MAIN }}
+            ${{ env.FRONT_TAG_EXTRA }}
 
-      - name: Build and Push Backend
+      - name: Build and Push Frontend (dev)
+        if: env.BUILD_TYPE == 'dev'
+        uses: docker/build-push-action@v6
+        with:
+          context: ./Frontend
+          file: ./Frontend/Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ${{ env.FRONT_TAG_MAIN }}
+
+      - name: Build and Push Backend (release)
+        if: env.BUILD_TYPE == 'release'
         uses: docker/build-push-action@v6
         with:
           context: ./Backend
@@ -64,6 +111,16 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            ${{ steps.meta.outputs.build_type == 'stable' && format('marzbansellerpanel/msp-backend:{0}', steps.meta.outputs.version) || '' }}
-            ${{ steps.meta.outputs.build_type == 'stable' && 'marzbansellerpanel/msp-backend:latest' || '' }}
-            ${{ steps.meta.outputs.build_type == 'dev' && 'marzbansellerpanel/msp-backend:dev' || '' }}
+            ${{ env.BACK_TAG_MAIN }}
+            ${{ env.BACK_TAG_EXTRA }}
+
+      - name: Build and Push Backend (dev)
+        if: env.BUILD_TYPE == 'dev'
+        uses: docker/build-push-action@v6
+        with:
+          context: ./Backend
+          file: ./Backend/Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ${{ env.BACK_TAG_MAIN }}
