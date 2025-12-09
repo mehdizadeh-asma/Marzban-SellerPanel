@@ -1,5 +1,6 @@
 FROM node:22-slim AS base
 WORKDIR /backend
+
 RUN apt-get update \
   && apt-get install -y --no-install-recommends ca-certificates \
   && rm -rf /var/lib/apt/lists/*
@@ -13,6 +14,7 @@ RUN npm ci
 FROM base AS builder
 WORKDIR /backend
 ENV NODE_ENV=development
+ENV NODE_OPTIONS="--max-old-space-size=6144"
 COPY --from=deps /backend/node_modules ./node_modules
 COPY . .
 RUN npm run build
