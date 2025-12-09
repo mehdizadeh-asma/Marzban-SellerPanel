@@ -1,8 +1,8 @@
-FROM node:22-alpine AS base
+FROM node:22-slim AS base
 WORKDIR /backend
-ENV NODE_OPTIONS="--tls-min-v1.2 --max-old-space-size=8192"
-
-RUN apk add --no-cache --no-scripts ca-certificates
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
 
 FROM base AS deps
 WORKDIR /backend
@@ -26,13 +26,15 @@ RUN npm ci --omit=dev
 FROM base AS runner
 WORKDIR /backend
 ENV NODE_ENV=production
+ENV NODE_OPTIONS="--tls-min-v1.2 --max-old-space-size=4096"
 
-RUN addgroup -S app && adduser -S app -G app
+RUN useradd -m -u 1001 app \
+  && chown -R app:app /backend
+
+USER app
 
 COPY --from=prod-deps /backend/node_modules ./node_modules
 COPY --from=builder   /backend/dist        ./dist
 
-USER app
 EXPOSE 8080 8443
-
 CMD ["node", "dist/app.js"]
