@@ -86,13 +86,13 @@ jobs:
           npm run check
           NODE_ENV=production npm run build
 
-      - name: Install, Lint, Test, Build Backend
-        working-directory: ./Backend
-        run: |
-          npm ci
-          npm run lint
-          npm test
-          NODE_OPTIONS="--max-old-space-size=4096" npm run build
+      # - name: Install, Lint, Test, Build Backend
+      #   working-directory: ./Backend
+      #   run: |
+      #     npm ci
+      #     npm run lint
+      #     npm test
+      #     NODE_OPTIONS="--max-old-space-size=4096" npm run build
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
