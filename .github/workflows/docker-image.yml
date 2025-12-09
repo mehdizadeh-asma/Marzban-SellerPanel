@@ -70,6 +70,27 @@ jobs:
         with:
           ref: ${{ env.CHECKOUT_REF }}
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: |
+            Frontend/package-lock.json
+            Backend/package-lock.json
+
+      - name: Install & Build Frontend
+        working-directory: ./Frontend
+        run: |
+          npm ci
+          NODE_ENV=production npm run build
+
+      - name: Install & Build Backend
+        working-directory: ./Backend
+        run: |
+          npm ci
+          NODE_OPTIONS="--max-old-space-size=12288" npm run build
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 

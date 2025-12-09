@@ -5,20 +5,6 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
-FROM base AS deps
-WORKDIR /backend
-ENV NODE_ENV=development
-COPY package.json package-lock.json ./
-RUN npm ci
-
-FROM base AS builder
-WORKDIR /backend
-ENV NODE_ENV=development
-ENV NODE_OPTIONS="--max-old-space-size=6144"
-COPY --from=deps /backend/node_modules ./node_modules
-COPY . .
-RUN npm run build
-
 FROM base AS prod-deps
 WORKDIR /backend
 ENV NODE_ENV=production
@@ -36,7 +22,8 @@ RUN useradd -m -u 1001 app \
 USER app
 
 COPY --from=prod-deps /backend/node_modules ./node_modules
-COPY --from=builder   /backend/dist        ./dist
+COPY dist ./dist
+COPY package.json ./
 
 EXPOSE 8080 8443
 CMD ["node", "dist/app.js"]
