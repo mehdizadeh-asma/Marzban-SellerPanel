@@ -1,4 +1,6 @@
 export {};
+// --- merged from mongooseDbManagement.additional.spec.ts ---
+export {};
 
 const MongooseDbManagement = require("../../src/utils/MongooseDbManagement").default;
 
@@ -31,9 +33,6 @@ describe("More granular coverage additions for MongooseDbManagement", () => {
     );
   });
 });
-
-// --- merged from mongooseDbManagement.additional.spec.ts ---
-export {};
 
 jest.mock("../../src/utils/Config");
 

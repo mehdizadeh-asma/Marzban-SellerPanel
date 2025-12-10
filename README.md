@@ -11,12 +11,14 @@ Marzban SellerPanel is a split web application: a Next.js + TypeScript frontend 
 ## Folder structure (important paths)
 
 - Frontend/
+
   - app/ — Next.js app routes and pages (.tsx)
   - components/ — Reusable React components (.tsx)
   - utils/ — Client utilities and helpers (.ts)
   - tsconfig.json, package.json, .eslintrc.json — TypeScript and tool configs
 
 - Backend/
+
   - src/app.ts — Server bootstrap, middleware and shutdown
   - src/controllers/ — Route handlers / controllers
   - src/services/ or src/utils/ — Business logic and helpers
@@ -64,12 +66,14 @@ Marzban SellerPanel is a split web application: a Next.js + TypeScript frontend 
 ## Local development
 
 - Frontend:
+
   - cd Frontend
   - npm install
   - npm run dev
   - Open http://localhost:3000
 
 - Backend:
+
   - cd Backend
   - npm install
   - npm run dev (or the script that runs ts-node/ts-node-dev)
