@@ -138,16 +138,6 @@ class SellerController {
       if (existingSeller) {
         return res.status(400).json({ error: "Title Or Username Already Exists!" });
       }
-      const tempSeller = new SellerModel({
-        _id: id,
-        Title,
-        Limit,
-        Username,
-        Password,
-        MarzbanUsername,
-        MarzbanPassword,
-      });
-      tempSeller.validateSync();
       const updateFields: Partial<typeof req.body> = {};
       if (Title) updateFields.Title = Title;
       if (Limit !== undefined) updateFields.Limit = Limit;

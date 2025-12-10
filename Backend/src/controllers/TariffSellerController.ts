@@ -28,7 +28,7 @@ class TariffSellerController {
       const allTariffs = await TariffModel.find();
       const tariffList = [
         ...allTariffs
-          .filter((tariff) => sellerTariffIds.has((tariff.id as Types.ObjectId).toString()))
+          .filter((tariff) => sellerTariffIds.has((tariff._id as Types.ObjectId).toString()))
           .map((tariff) => ({
             TariffId: tariff._id,
             Title: tariff.Title,
@@ -36,7 +36,7 @@ class TariffSellerController {
             Price: tariff.Price,
           })),
         ...allTariffs
-          .filter((tariff) => !sellerTariffIds.has((tariff.id as Types.ObjectId).toString()))
+          .filter((tariff) => !sellerTariffIds.has((tariff._id as Types.ObjectId).toString()))
           .map((tariff) => ({
             TariffId: tariff._id,
             Title: tariff.Title,

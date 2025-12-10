@@ -55,6 +55,8 @@ class MongooseDbManagement {
       const now = Date.now();
       const maxIdleTime = 5 * 60 * 1000;
       const connections = Array.from(this.activeConnections.entries());
+      const connectedState = (mongoose as { ConnectionStates?: { connected?: unknown } })
+        .ConnectionStates?.connected;
 
       for (const [connectionString, connection] of connections) {
         try {
@@ -66,7 +68,9 @@ class MongooseDbManagement {
           const isMain =
             this.mainConnection &&
             (this.mainConnection as ConnectionWithClient).client?.s?.url === connectionString;
-          if (connection.readyState === mongoose.ConnectionStates.connected && isIdle && !isMain) {
+          const isConnected =
+            connectedState !== undefined && connection.readyState === connectedState;
+          if (isConnected && isIdle && !isMain) {
             console.log(`Closing idle Main connection`);
             await this.closeConnection(connectionString);
           }
@@ -85,7 +89,11 @@ class MongooseDbManagement {
 
   static async connectMainDatabase(): Promise<void> {
     if (this.mainConnection) {
-      if (this.mainConnection.readyState !== mongoose.ConnectionStates.connected) {
+      const connectedState = (mongoose as { ConnectionStates?: { connected?: unknown } })
+        .ConnectionStates?.connected;
+      const isConnected =
+        connectedState !== undefined && this.mainConnection.readyState === connectedState;
+      if (!isConnected) {
         try {
           await this.mainConnection.close();
         } catch (e) {
@@ -129,24 +137,25 @@ class MongooseDbManagement {
           resolve();
         };
 
-        const errorHandler = (err: Error): void => {
+        const errorHandler = (err: unknown): void => {
           cleanup();
-          reject(err);
+          reject(err instanceof Error ? err : new Error(String(err)));
         };
 
+        const timeoutMs = Number((options as Record<string, unknown>).connectTimeoutMS ?? 15000);
         const timeout = setTimeout(() => {
           cleanup();
           reject(new Error("Connection timed out"));
-        }, options.connectTimeoutMS || 15000);
+        }, timeoutMs);
 
         const cleanup = (): void => {
-          connection.removeListener("connected", connectHandler);
-          connection.removeListener("error", errorHandler);
+          connection.removeListener?.("connected", connectHandler);
+          connection.removeListener?.("error", errorHandler);
           clearTimeout(timeout);
         };
 
-        connection.once("connected", connectHandler);
-        connection.once("error", errorHandler);
+        connection.once?.("connected", connectHandler);
+        connection.once?.("error", errorHandler);
       });
 
       this.setupConnectionMonitoring(connection, connectionName);
@@ -171,7 +180,13 @@ class MongooseDbManagement {
     poolSize = 10,
   ): Promise<Connection> {
     const cachedConnection = this.activeConnections.get(connectionString);
-    if (cachedConnection && cachedConnection.readyState === mongoose.ConnectionStates.connected) {
+    const connectedState = (mongoose as { ConnectionStates?: { connected?: unknown } })
+      .ConnectionStates?.connected;
+    const isConnected =
+      cachedConnection &&
+      connectedState !== undefined &&
+      cachedConnection.readyState === connectedState;
+    if (isConnected) {
       this.connectionLastUsedMap.set(cachedConnection, Date.now());
       return cachedConnection;
     }
@@ -214,25 +229,25 @@ class MongooseDbManagement {
   }
 
   private static setupConnectionMonitoring(connection: Connection, name: string): void {
-    connection.on("connected", () => {
+    connection.on?.("connected", () => {
       console.log(`[${name}] MongoDB connected`);
       this.connectionLastUsedMap.set(connection, Date.now());
     });
 
-    connection.on("disconnected", () => {
+    connection.on?.("disconnected", () => {
       console.warn(`[${name}] MongoDB disconnected`);
     });
 
-    connection.on("error", (err) => {
+    connection.on?.("error", (err) => {
       console.error(`[${name}] MongoDB error:`, err);
     });
 
-    connection.on("reconnected", () => {
+    connection.on?.("reconnected", () => {
       console.log(`[${name}] MongoDB reconnected`);
       this.connectionLastUsedMap.set(connection, Date.now());
     });
 
-    connection.on("open", () => {
+    connection.on?.("open", () => {
       this.connectionLastUsedMap.set(connection, Date.now());
     });
   }
@@ -287,14 +302,30 @@ class MongooseDbManagement {
       const connection = await this.getConnection(connectionString, "LicenseDB", 5);
 
       const WholeSalerModel = connection.model("WholeSaler", WholeSalerSchema);
-      const wholeSaler = await WholeSalerModel.findOne({
+      const wholeSaler = (await WholeSalerModel.findOne({
         MarzbanUrl: marzbanUrl,
         SN: sn,
-      });
+      })) as
+        | ({
+            ExpireDate?: Date;
+            Cluster?: string;
+            Database?: string;
+            DbUsername?: string;
+            DbPassword?: string;
+          } & Document)
+        | null;
 
       await this.closeConnection(connectionString);
 
-      if (wholeSaler && wholeSaler.ExpireDate >= new Date()) {
+      if (
+        wholeSaler &&
+        wholeSaler.ExpireDate &&
+        wholeSaler.Cluster &&
+        wholeSaler.Database &&
+        wholeSaler.DbUsername &&
+        wholeSaler.DbPassword &&
+        wholeSaler.ExpireDate >= new Date()
+      ) {
         this.setDbWholeSalerConnectionString(
           wholeSaler.Cluster,
           wholeSaler.Database,

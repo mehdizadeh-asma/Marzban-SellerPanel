@@ -17,6 +17,7 @@ module.exports = [
       "tests/coverage/**",
       "jest.config.ts",
       "**/*.js",
+      "types/mongoose-shim.d.ts",
     ],
   },
   {

@@ -250,15 +250,18 @@ class AccountHelpers {
       ? await AccountModel.find({ Payed: false })
       : await AccountModel.find({ Seller: seller, Payed: false });
     const tariffs = await TariffModel.find({ IsFree: false });
-    accounts.map((account) => {
-      const tariff = tariffs.find(
-        (tariff) => tariff._id.toString() == account.TariffId._id.toString(),
-      );
+    for (const account of accounts) {
+      const tariffIdObj = account.TariffId as unknown as {
+        _id?: { toString(): string };
+        toString?: () => string;
+      };
+      const tariffIdString = tariffIdObj?._id?.toString() ?? tariffIdObj?.toString?.() ?? undefined;
+      const tariff = tariffs.find((t) => t._id.toString() === tariffIdString);
       if (tariff) {
         totalPriceUnpaid += tariff.Price ?? 0;
         totalLimitUnpaid += tariff.DataLimit ?? 0;
       }
-    });
+    }
     return {
       TotalLimitUnpaid: totalLimitUnpaid,
       TotalPriceUnpaid: totalPriceUnpaid,
@@ -333,7 +336,9 @@ class AccountHelpers {
 
     const tariffIds = sellerAccounts.map((item) => item.TariffId);
     const TariffModel = await getModel<ITariff>("Tariff", TariffSchema);
-    const tariffs = await TariffModel.find({ _id: { $in: tariffIds } }).lean();
+    const tariffs = (await TariffModel.find({ _id: { $in: tariffIds } }).lean()) as Array<
+      ITariff & { _id: Types.ObjectId }
+    >;
     const tariffMap = new Map(tariffs.map((tariff) => [tariff._id.toString(), tariff]));
 
     const accounts = sellerAccounts.map((item) => {
