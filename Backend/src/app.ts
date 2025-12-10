@@ -1,5 +1,4 @@
 import http from "http";
-import https from "https";
 
 import cors from "cors";
 import type { NextFunction, Request, Response } from "express";
@@ -11,7 +10,6 @@ import sellerRouter from "./routes/SellerRouter";
 import tariffInboundRouter from "./routes/TariffInboundRouter";
 import tariffRouter from "./routes/TariffRouter";
 import tariffSellerRouter from "./routes/TariffSellerRouter";
-import Certificate from "./utils/Certificate";
 import MongooseDbManagement from "./utils/MongooseDbManagement";
 
 const app = express();
@@ -59,7 +57,7 @@ app.get("/health", (req: Request, res: Response) => {
 app.get("/", (req: Request, res: Response) => {
   res.status(200).json({
     message: "Marzban Seller Panel API",
-    version: "1.0.0",
+    version: "2.5.9",
     documentation: "/api-docs",
   });
 });
@@ -77,13 +75,13 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 });
 
 // ایجاد سرورهای HTTP و HTTPS
-const credentials = Certificate.GetCredential();
+// const credentials = Certificate.GetCredential();
 const httpServer = http.createServer(app);
-const httpsServer = https.createServer(credentials, app);
+// const httpsServer = https.createServer(credentials, app);
 
 // پورت‌های سرور
 const HTTP_PORT = process.env.HTTP_PORT || 8080;
-const HTTPS_PORT = process.env.HTTPS_PORT || 8443;
+// const HTTPS_PORT = process.env.HTTPS_PORT || 8443;
 
 // تابع راه‌اندازی اصلی
 const bootstrap = async (): Promise<void> => {
@@ -105,9 +103,9 @@ const bootstrap = async (): Promise<void> => {
       console.log(`HTTP server running on port ${HTTP_PORT}`);
     });
 
-    httpsServer.listen(HTTPS_PORT, () => {
-      console.log(`HTTPS server running on port ${HTTPS_PORT}`);
-    });
+    // httpsServer.listen(HTTPS_PORT, () => {
+    //   console.log(`HTTPS server running on port ${HTTPS_PORT}`);
+    // });
 
     // 4. گزارش وضعیت
     console.log("Server is ready to handle requests");
@@ -129,12 +127,12 @@ const gracefulShutdown = async (): Promise<void> => {
     });
   });
 
-  await new Promise<void>((resolve) => {
-    httpsServer.close(() => {
-      console.log("HTTPS server closed");
-      resolve();
-    });
-  });
+  // await new Promise<void>((resolve) => {
+  //   httpsServer.close(() => {
+  //     console.log("HTTPS server closed");
+  //     resolve();
+  //   });
+  // });
 
   // 2. بستن اتصالات دیتابیس
   await MongooseDbManagement.shutdown();
