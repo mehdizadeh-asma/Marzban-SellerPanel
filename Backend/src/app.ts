@@ -74,14 +74,9 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-// ایجاد سرورهای HTTP و HTTPS
-// const credentials = Certificate.GetCredential();
+//ایجاد سرور HTTP
 const httpServer = http.createServer(app);
-// const httpsServer = https.createServer(credentials, app);
-
-// پورت‌های سرور
 const HTTP_PORT = process.env.HTTP_PORT || 8080;
-// const HTTPS_PORT = process.env.HTTPS_PORT || 8443;
 
 // تابع راه‌اندازی اصلی
 const bootstrap = async (): Promise<void> => {
@@ -103,10 +98,6 @@ const bootstrap = async (): Promise<void> => {
       console.log(`HTTP server running on port ${HTTP_PORT}`);
     });
 
-    // httpsServer.listen(HTTPS_PORT, () => {
-    //   console.log(`HTTPS server running on port ${HTTPS_PORT}`);
-    // });
-
     // 4. گزارش وضعیت
     console.log("Server is ready to handle requests");
   } catch (error) {
@@ -126,13 +117,6 @@ const gracefulShutdown = async (): Promise<void> => {
       resolve();
     });
   });
-
-  // await new Promise<void>((resolve) => {
-  //   httpsServer.close(() => {
-  //     console.log("HTTPS server closed");
-  //     resolve();
-  //   });
-  // });
 
   // 2. بستن اتصالات دیتابیس
   await MongooseDbManagement.shutdown();

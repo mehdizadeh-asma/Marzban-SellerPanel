@@ -14,7 +14,6 @@ RUN npm ci --omit=dev
 FROM base AS runner
 WORKDIR /backend
 ENV NODE_ENV=production
-ENV NODE_OPTIONS="--tls-min-v1.2 --max-old-space-size=4096"
 
 RUN useradd -m -u 1001 app \
   && chown -R app:app /backend
@@ -25,5 +24,5 @@ COPY --from=prod-deps /backend/node_modules ./node_modules
 COPY dist ./dist
 COPY package.json ./
 
-EXPOSE 8080 8443
+EXPOSE 8080
 CMD ["node", "dist/app.js"]
