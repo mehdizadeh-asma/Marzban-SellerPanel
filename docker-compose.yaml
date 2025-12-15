@@ -2,6 +2,8 @@ services:
   frontend:
     image: marzbansellerpanel/msp-frontend:latest
     restart: always
+    environment:
+      NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: ${NEXT_SERVER_ACTIONS_ENCRYPTION_KEY}
     volumes:
       - ./config.json:/frontend/data/config.json:ro
     depends_on:
