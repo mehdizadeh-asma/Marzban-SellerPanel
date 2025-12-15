@@ -81,6 +81,8 @@ jobs:
 
       - name: Install, Lint, Test, Build Frontend
         working-directory: ./Frontend
+        env:
+          NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: ${{ secrets.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY }}
         run: |
           npm ci
           npm run check
