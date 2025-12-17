@@ -1,4 +1,4 @@
-name: Build & Push Docker Images
+name: Frontend & Backend CI/CD
 
 on:
   push:
@@ -13,99 +13,70 @@ on:
         type: string
 
 jobs:
-  docker:
+  frontend-checks:
     runs-on: ubuntu-latest
-    env:
-      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-
     steps:
-      - name: Set build variables
-        id: vars
-        run: |
-          if [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
-            TAG_NAME="${GITHUB_REF_NAME}"
-          else
-            TAG_NAME="${{ github.event.inputs.tag_name }}"
-          fi
-
-          if [[ "$TAG_NAME" == v* ]]; then
-            BUILD_TYPE="release"
-            VERSION="${TAG_NAME#v}"
-            CHECKOUT_REF="main"
-
-            FRONT_TAG_MAIN="marzbansellerpanel/msp-frontend:${VERSION}"
-            FRONT_TAG_EXTRA="marzbansellerpanel/msp-frontend:latest"
-
-            BACK_TAG_MAIN="marzbansellerpanel/msp-backend:${VERSION}"
-            BACK_TAG_EXTRA="marzbansellerpanel/msp-backend:latest"
-          elif [[ "$TAG_NAME" == dev-* ]]; then
-            BUILD_TYPE="dev"
-            VERSION="${TAG_NAME#dev-}"
-            CHECKOUT_REF="development"
-
-            FRONT_TAG_MAIN="marzbansellerpanel/msp-frontend:dev"
-            FRONT_TAG_EXTRA=""
-
-            BACK_TAG_MAIN="marzbansellerpanel/msp-backend:dev"
-            BACK_TAG_EXTRA=""
-          else
-            echo "Unsupported tag pattern: $TAG_NAME"
-            exit 1
-          fi
-
-          {
-            echo "TAG_NAME=$TAG_NAME"
-            echo "BUILD_TYPE=$BUILD_TYPE"
-            echo "VERSION=$VERSION"
-            echo "CHECKOUT_REF=$CHECKOUT_REF"
-            echo "FRONT_TAG_MAIN=$FRONT_TAG_MAIN"
-            echo "FRONT_TAG_EXTRA=$FRONT_TAG_EXTRA"
-            echo "BACK_TAG_MAIN=$BACK_TAG_MAIN"
-            echo "BACK_TAG_EXTRA=$BACK_TAG_EXTRA"
-          } >> "$GITHUB_ENV"
-
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ env.CHECKOUT_REF }}
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: "npm"
-          cache-dependency-path: |
-            Frontend/package-lock.json
-            Backend/package-lock.json
+          cache-dependency-path: Frontend/package-lock.json
 
-      - name: Install, Lint, Test, Build Frontend
+      - name: Install Frontend Dependencies
+        working-directory: ./Frontend
+        run: npm ci
+
+      - name: Frontend Linting
+        working-directory: ./Frontend
+        run: npm run lint
+
+      - name: Frontend Tests
+        working-directory: ./Frontend
+        run: npm run test
+
+      - name: Frontend Build
         working-directory: ./Frontend
         env:
           NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: ${{ secrets.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY }}
-        run: |
-          npm ci
-          npm run check
-          NODE_ENV=production npm run build
+        run: NODE_ENV=production npm run build
 
-      - name: Install, Lint, Test, Build Backend
+  backend-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: Backend/package-lock.json
+
+      - name: Install Backend Dependencies
         working-directory: ./Backend
+        run: npm ci
+
+      - name: Backend Linting
+        working-directory: ./Backend
+        run: npm run lint
+
+      - name: Backend Tests
+        working-directory: ./Backend
+        run: npm run test
+
+      - name: Backend Build
+        working-directory: ./Backend
+        run: npm run build
+
+  docker-frontend:
+    needs: [frontend-checks]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set Frontend Build Variables
+        id: frontend-vars
         run: |
-          npm ci
-          npm run check
-          npm run build
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ env.DOCKERHUB_USERNAME }}
-          password: ${{ env.DOCKERHUB_TOKEN }}
-
-      - name: Build and Push Frontend (release)
-        if: env.BUILD_TYPE == 'release'
+      - name: Build and Push Frontend Docker Image
         uses: docker/build-push-action@v6
         with:
           context: ./Frontend
@@ -113,34 +84,20 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            ${{ env.FRONT_TAG_MAIN }}
-            ${{ env.FRONT_TAG_EXTRA }}
+            ${{ steps.frontend-vars.outputs.FRONT_TAG_MAIN }}
+            ${{ steps.frontend-vars.outputs.FRONT_TAG_EXTRA }}
 
-      - name: Build and Push Frontend (dev)
-        if: env.BUILD_TYPE == 'dev'
-        uses: docker/build-push-action@v6
-        with:
-          context: ./Frontend
-          file: ./Frontend/Dockerfile
-          push: true
-          platforms: linux/amd64,linux/arm64
-          tags: |
-            ${{ env.FRONT_TAG_MAIN }}
+  docker-backend:
+    needs: [backend-checks]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set Backend Build Variables
+        id: backend-vars
+        run: |
+          # تنظیم متغیرهای بیلد بک‌اند (مشابه کد قبلی)
 
-      - name: Build and Push Backend (release)
-        if: env.BUILD_TYPE == 'release'
-        uses: docker/build-push-action@v6
-        with:
-          context: ./Backend
-          file: ./Backend/Dockerfile
-          push: true
-          platforms: linux/amd64,linux/arm64
-          tags: |
-            ${{ env.BACK_TAG_MAIN }}
-            ${{ env.BACK_TAG_EXTRA }}
-
-      - name: Build and Push Backend (dev)
-        if: env.BUILD_TYPE == 'dev'
+      - name: Build and Push Backend Docker Image
         uses: docker/build-push-action@v6
         with:
           context: ./Backend
@@ -148,4 +105,5 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            ${{ env.BACK_TAG_MAIN }}
+            ${{ steps.backend-vars.outputs.BACK_TAG_MAIN }}
+            ${{ steps.backend-vars.outputs.BACK_TAG_EXTRA }}

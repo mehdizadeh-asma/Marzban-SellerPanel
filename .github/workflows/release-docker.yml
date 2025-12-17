@@ -1,0 +1,167 @@
+name: Release Docker Images
+
+on:
+  push:
+    tags:
+      - "v*"
+      - "dev-*"
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Existing tag name (e.g. v2.5.9 or dev-2.5.9)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      tag_name: ${{ steps.vars.outputs.tag_name }}
+      build_type: ${{ steps.vars.outputs.build_type }}
+      version: ${{ steps.vars.outputs.version }}
+      front_tags: ${{ steps.vars.outputs.front_tags }}
+      back_tags: ${{ steps.vars.outputs.back_tags }}
+
+    steps:
+      - name: Compute tags
+        id: vars
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
+            TAG_NAME="${GITHUB_REF_NAME}"
+          else
+            TAG_NAME="${{ github.event.inputs.tag_name }}"
+          fi
+
+          if [[ "$TAG_NAME" == v* ]]; then
+            BUILD_TYPE="release"
+            VERSION="${TAG_NAME#v}"
+
+            FRONT_TAG_MAIN="marzbansellerpanel/msp-frontend:${VERSION}"
+            FRONT_TAG_EXTRA="marzbansellerpanel/msp-frontend:latest"
+
+            BACK_TAG_MAIN="marzbansellerpanel/msp-backend:${VERSION}"
+            BACK_TAG_EXTRA="marzbansellerpanel/msp-backend:latest"
+          elif [[ "$TAG_NAME" == dev-* ]]; then
+            BUILD_TYPE="dev"
+            VERSION="${TAG_NAME#dev-}"
+
+            FRONT_TAG_MAIN="marzbansellerpanel/msp-frontend:dev"
+            FRONT_TAG_EXTRA=""
+
+            BACK_TAG_MAIN="marzbansellerpanel/msp-backend:dev"
+            BACK_TAG_EXTRA=""
+          else
+            echo "Unsupported tag pattern: $TAG_NAME"
+            exit 1
+          fi
+
+          {
+            echo "tag_name=$TAG_NAME"
+            echo "build_type=$BUILD_TYPE"
+            echo "version=$VERSION"
+
+            echo "front_tags<<EOF"
+            echo "$FRONT_TAG_MAIN"
+            if [[ -n "$FRONT_TAG_EXTRA" ]]; then echo "$FRONT_TAG_EXTRA"; fi
+            echo "EOF"
+
+            echo "back_tags<<EOF"
+            echo "$BACK_TAG_MAIN"
+            if [[ -n "$BACK_TAG_EXTRA" ]]; then echo "$BACK_TAG_EXTRA"; fi
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+  build_and_push:
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [frontend, backend]
+
+    env:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    steps:
+      - name: Checkout (exact tag)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.tag_name }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: |
+            Frontend/package-lock.json
+            Backend/package-lock.json
+
+      - name: Install/Check/Build (Frontend)
+        if: matrix.service == 'frontend'
+        working-directory: ./Frontend
+        env:
+          NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: ${{ secrets.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY }}
+        run: |
+          npm ci
+          npm run check
+          NODE_ENV=production npm run build
+
+      - name: Install/Check/Build (Backend)
+        if: matrix.service == 'backend'
+        working-directory: ./Backend
+        run: |
+          npm ci
+          npm run check
+          npm run build
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKERHUB_USERNAME }}
+          password: ${{ env.DOCKERHUB_TOKEN }}
+
+      - name: Build & Push Frontend
+        if: matrix.service == 'frontend'
+        uses: docker/build-push-action@v6
+        with:
+          context: ./Frontend
+          file: ./Frontend/Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ needs.prepare.outputs.front_tags }}
+          cache-from: type=gha,scope=msp-frontend
+          cache-to: type=gha,mode=max,scope=msp-frontend
+          provenance: mode=max
+          sbom: true
+
+      - name: Build & Push Backend
+        if: matrix.service == 'backend'
+        uses: docker/build-push-action@v6
+        with:
+          context: ./Backend
+          file: ./Backend/Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ needs.prepare.outputs.back_tags }}
+          cache-from: type=gha,scope=msp-backend
+          cache-to: type=gha,mode=max,scope=msp-backend
+          provenance: mode=max
+          sbom: true
