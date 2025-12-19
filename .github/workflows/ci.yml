@@ -2,9 +2,9 @@ name: CI (Lint/Test/Build)
 
 on:
   pull_request:
-    branches: [ main, development ]
+    branches: [main, development]
   push:
-    branches: [ main, development ]
+    branches: [main, development]
 
 permissions:
   contents: read
@@ -32,7 +32,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "24"
           cache: "npm"
           cache-dependency-path: |
             Frontend/package-lock.json

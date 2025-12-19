@@ -8,11 +8,7 @@ const reactHooks = require("eslint-plugin-react-hooks");
 const globals = require("globals");
 const unusedImports = require("eslint-plugin-unused-imports");
 
-let nextConfig = null;
 let nextPlugin = null;
-try {
-  nextConfig = require("eslint-config-next");
-} catch {}
 try {
   nextPlugin = require("@next/eslint-plugin-next");
 } catch {}
@@ -57,19 +53,16 @@ try {
 const baseRecommendedRules = {
   ...js.configs.recommended.rules,
   ...tsPlugin.configs.recommended.rules,
-  ...(nextConfig && nextConfig.configs && nextConfig.configs.recommended
-    ? nextConfig.configs.recommended.rules
+  ...(nextPlugin && nextPlugin.configs && nextPlugin.configs.recommended
+    ? nextPlugin.configs.recommended.rules
     : {}),
 };
 
 module.exports = [
   {
     plugins: {
-      ...(nextPlugin ? { next: nextPlugin } : {}),
+      ...(nextPlugin ? { "@next/next": nextPlugin } : {}),
     },
-    ...(nextConfig && nextConfig.configs && nextConfig.configs.recommended
-      ? { rules: nextConfig.configs.recommended.rules }
-      : {}),
   },
 
   {
@@ -111,7 +104,7 @@ module.exports = [
       "react-hooks": reactHooks,
       prettier: prettierPlugin,
       "unused-imports": unusedImports,
-      ...(nextPlugin ? { next: nextPlugin } : {}),
+      ...(nextPlugin ? { "@next/next": nextPlugin } : {}),
     },
     settings: {
       react: { version: "detect" },
