@@ -79,6 +79,7 @@ module.exports = [
       "public/",
       "next-env.d.ts",
       "next.config.js",
+      "jest.config.js",
       "prettier.config.js",
       "eslint.config.cjs",
     ],
@@ -164,6 +165,17 @@ module.exports = [
       "no-alert": "warn",
       "no-console": "off",
       "prettier/prettier": "warn",
+    },
+  },
+  {
+    files: ["test/**/*.{ts,tsx,js,jsx}"],
+    languageOptions: {
+      globals: {
+        ...globals.jest,
+      },
+    },
+    rules: {
+      "@typescript-eslint/explicit-function-return-type": "off",
     },
   },
 
