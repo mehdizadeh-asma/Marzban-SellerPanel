@@ -1,0 +1,60 @@
+name: CI (Lint/Test/Build)
+
+on:
+  pull_request:
+    branches: [ main, development ]
+  push:
+    branches: [ main, development ]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app:
+          - name: frontend
+            dir: Frontend
+          - name: backend
+            dir: Backend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: |
+            Frontend/package-lock.json
+            Backend/package-lock.json
+
+      - name: Install
+        working-directory: ./${{ matrix.app.dir }}
+        run: npm ci
+
+      - name: Check (lint/test/typecheck)
+        working-directory: ./${{ matrix.app.dir }}
+        env:
+          NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: ${{ secrets.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY }}
+        run: npm run check
+
+      - name: Build
+        working-directory: ./${{ matrix.app.dir }}
+        env:
+          NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: ${{ secrets.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY }}
+        run: |
+          if [ "${{ matrix.app.name }}" = "frontend" ]; then
+            NODE_ENV=production npm run build
+          else
+            npm run build
+          fi

@@ -2,15 +2,26 @@
 
 import React, { createContext, useContext } from "react";
 
+type UserType = {
+  Username: string;
+  IsAdmin: boolean;
+  Token: string;
+  Limit: number;
+  TotalPrice: number;
+};
+
 export interface JsonData {
   BACKEND_URL?: string;
+  IGNORE_TRAFFIC_TO_REMOVE?: string;
+  RENEW_FORCE_TO_PAID?: string;
+  RENEW_FORCE_TO_LIMITED_AND_EXPIRED?: string;
   PAGE_TITLE?: string;
   CHANNEL_NAME?: string;
 }
 
 type MyContextType = {
-  user: { Username: string; Token: string };
-  setUser: (data: { Username: string; Token: string }) => void;
+  user: UserType;
+  setUser: (data: UserType) => void;
   config: JsonData;
   setConfig: (data: JsonData) => void;
 };
@@ -21,8 +32,14 @@ interface PropsType {
   children: React.ReactNode;
 }
 
-export const MyContextProvider: React.FC<PropsType> = (props) => {
-  const [user, setUser] = React.useState({ Username: "", Token: "" });
+export const MyContextProvider: React.FC<PropsType> = (props): React.ReactElement => {
+  const [user, setUser] = React.useState({
+    Username: "",
+    IsAdmin: false,
+    Token: "",
+    Limit: 5,
+    TotalPrice: 5,
+  });
   const [config, setConfig] = React.useState({});
 
   return (
@@ -32,7 +49,7 @@ export const MyContextProvider: React.FC<PropsType> = (props) => {
   );
 };
 
-export const useMyContext = () => {
+export const useMyContext = (): MyContextType => {
   const context = useContext(MyContext);
 
   if (!context) {

@@ -1,51 +1,96 @@
-import { RequestHandler } from "express";
 import axios from "axios";
+import type { RequestHandler } from "express";
 import { Types } from "mongoose";
-import { v4 as uuidv4 } from "uuid";
 
-import Helper from "../utils/Helper";
-import Account from "../models/Account";
-import Seller from "../models/Seller";
-import Tariff from "../models/Tariff";
+import type { IAccount } from "../models/Account";
+import { AccountSchema } from "../models/Account";
+import type MarzbanAccount from "../models/MarzbanAccount";
+import type { ISeller } from "../models/Seller";
+import { SellerSchema } from "../models/Seller";
+import type { ITariff } from "../models/Tariff";
+import { TariffSchema } from "../models/Tariff";
+import AccountHelpers from "../utils/AccountHelpers";
+import ConfigFile from "../utils/Config";
+import MongooseDbManagement from "../utils/MongooseDbManagement";
+import { getModel } from "../utils/MongooseModel";
 
 class MarzbanController {
-  static LoginToMarzbanAPI: RequestHandler = async (req, res, next) => {
+  static Login: RequestHandler = async (req, res, next) => {
     try {
-      const apiURL = Helper.GetMarzbanURL() + "/api/admin/token";
-
-      const config = {
-        headers: { "content-type": "application/x-www-form-urlencoded" },
-      };
-
       let { username, password } = req.body as {
         username: string;
         password: string;
       };
 
-      username = username.toLowerCase().trim();
+      username = username.trim();
       password = password.trim();
 
-      const resultLogin = await Seller.findOne({
+      const sellerUsername = await ConfigFile.GetSellerAdminUsername();
+      const sellerPassword = await ConfigFile.GetSellerAdminPassword();
+
+      //Login Admin Seller Panel
+      if (username.toLowerCase() == sellerUsername.toLowerCase()) {
+        if (password !== sellerPassword) {
+          res.status(500).json({ Message: "Invalid Account Information" });
+          return;
+        }
+        try {
+          const marzbanUsername = await ConfigFile.GetMarzbanUsername();
+          const marzbanPassword = await ConfigFile.GetMarzbanPassword();
+          const token = await AccountHelpers.LoginToMarzban(marzbanUsername, marzbanPassword);
+          const totalUnpaid = await AccountHelpers.GetTotalUnpaid(undefined, true);
+
+          res.status(200).json({
+            Token: token,
+            Username: sellerUsername,
+            IsAdmin: true,
+            Limit: 0,
+            TotalPrice: totalUnpaid.TotalPriceUnpaid,
+          });
+          return;
+        } catch (error) {
+          next(error);
+          return;
+        }
+      }
+
+      //Login Seller
+      const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
+      const seller = await SellerModel.findOne({
         Username: username,
         Password: password,
+        Status: "Active",
       });
 
-      if (resultLogin) {
-        const result: { data: { access_token: string } } = await axios.post(
-          apiURL,
-          {
-            username: Helper.GetMarzbanUsername(),
-            password: Helper.GetMarzbanPassword(),
-          },
-          config
-        );
+      if (seller) {
+        try {
+          const token = await AccountHelpers.LoginToMarzban(
+            seller.MarzbanUsername,
+            seller.MarzbanPassword,
+          );
 
-        res.status(200).json({
-          Token: result.data.access_token,
-          Username: resultLogin.Title,
-        });
+          // فقط جمعه‌ها اجرا شود
+          if (
+            new Date().getDay() === 5 &&
+            (await ConfigFile.GetDeletePaidAndRemovedUsers()) == "Yes"
+          )
+            await AccountHelpers.RemoveDeletedAccountSeller(`Bearer ${token}`, seller);
+
+          const totalUnpaid = await AccountHelpers.GetTotalUnpaid(seller, false);
+
+          res.status(200).json({
+            Token: token,
+            Username: seller.Title,
+            IsAdmin: false,
+            Limit: seller.Limit - totalUnpaid.TotalLimitUnpaid,
+            TotalPrice: totalUnpaid.TotalPriceUnpaid,
+          });
+        } catch (error) {
+          next(error);
+          return;
+        }
       } else {
-        res.status(500).json({ Message: "something is wrong!" });
+        res.status(500).json({ Message: "Invalid Account Information" });
       }
     } catch (error) {
       next(error);
@@ -54,54 +99,62 @@ class MarzbanController {
 
   static GetAccounts: RequestHandler = async (req, res, next) => {
     try {
-      const apiURL = Helper.GetMarzbanURL() + "/api/users";
+      const isAll = req.params.isall === "true";
+      const seller = req.params.seller;
+      const sellerSubscriptionUrl = await ConfigFile.GetSubscriptionURL();
+      const adminUsername = await ConfigFile.GetSellerAdminUsername();
+      const isAdmin = seller === adminUsername;
+      // استفاده از متد بهینه و کش هوشمند
+      const accounts = await AccountHelpers.GetAccountsSmart(
+        req.headers.authorization,
+        isAll,
+        seller,
+        sellerSubscriptionUrl,
+        isAdmin,
+      );
+      const normalized = Array.isArray(accounts)
+        ? accounts.map(AccountHelpers.NormalizeAccountOutput)
+        : [];
+      res.status(200).json(normalized);
+    } catch (error) {
+      next(error);
+    }
+  };
 
-      const config = {
-        headers: { Authorization: req.headers.authorization },
-        params: {
-          // offset: 0,
-          // limit: 100,
-          username: req.params.username,
-        },
-      };
+  static GetAccount: RequestHandler = async (req, res, next) => {
+    try {
+      const seller = req.params.seller;
+      const search = req.params.search;
 
-      const result: {
-        data: {
-          users: {
-            username: string;
-            data_limit: number;
-            used_traffic: number;
-            expire: number;
-            status: string;
-            subscription_url: string;
-          }[];
-        };
-      } = await axios.get(apiURL, config);
+      const sellerSubscriptionUrl = await ConfigFile.GetSubscriptionURL();
 
-      const sellerAccount = await Account.find();
+      let allMixed: object[] = [];
+      const marzbanAccountsResult = await AccountHelpers.GetMarzbanAccounts(
+        req.headers.authorization,
+        undefined,
+        search,
+      );
+      const marzbanAccounts =
+        (
+          marzbanAccountsResult.data as {
+            users?: IAccount[];
+          }
+        )?.users || [];
+      // دریافت اکانت‌های دیتابیس فقط با همین سرچ
+      const AccountModel = await getModel<IAccount>("Account", AccountSchema);
+      const sellerAccounts = await AccountModel.find();
+      const mixed = await AccountHelpers.GetMixedAccount(
+        marzbanAccounts as unknown as MarzbanAccount[],
+        sellerAccounts,
+        seller,
+        sellerSubscriptionUrl,
+      );
+      allMixed = allMixed.concat(mixed);
 
-      const accounts = result.data.users.map((item) => {
-        const resultpayed = sellerAccount.filter(
-          (account) => account.Username == item.username
-        );
-
-        return {
-          id: resultpayed[0] ? resultpayed[0]._id : Math.random().toString(),
-          username: item.username,
-          data_limit: Helper.CalculateTraffic(item.data_limit),
-          used_traffic: Helper.CalculateTraffic(item.used_traffic),
-          expire: Helper.CalculateRemainDate(item.expire),
-          status: item.status,
-          subscription_url: Helper.GetMarzbanURL() + item.subscription_url,
-          payed: resultpayed[0]
-            ? resultpayed[0].Payed
-              ? "Payed"
-              : "No Pay"
-            : "No",
-        };
-      });
-
-      res.status(200).json(accounts);
+      const normalized = allMixed.map(AccountHelpers.NormalizeAccountOutput);
+      // حذف لاگ خروجی
+      res.status(200).json(normalized);
+      return;
     } catch (error) {
       next(error);
     }
@@ -109,29 +162,207 @@ class MarzbanController {
 
   static AddAccount: RequestHandler = async (req, res, next) => {
     try {
-      const apiURL = Helper.GetMarzbanURL() + "/api/user";
+      if (!(await MongooseDbManagement.checkLicense()))
+        throw new Error("License is not Available or Expired!");
 
-      const { username, tariffId } = req.body as {
+      const apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/user";
+
+      const { username, note, tariffId, onhold } = req.body as {
         username: string;
+        note: string;
         tariffId: string;
+        onhold: boolean;
       };
 
-      if (tariffId && tariffId === "") {
-        res.status(404).json("TariffId not Found");
-        return;
-      }
-
-      if (username && username === "") {
+      if (!username && username === "") {
         res.status(404).json("Username not Found");
         return;
       }
 
-      const vlessUUID = uuidv4();
-      const vmessUUID = uuidv4();
+      if (!tariffId && tariffId === "") {
+        res.status(404).json("TariffId not Found");
+        return;
+      }
+      const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
+      const TariffModel = await getModel<ITariff>("Tariff", TariffSchema);
+      const AccountModel = await getModel<IAccount>("Account", AccountSchema);
+      const seller = await SellerModel.findOne({ Title: username });
+      if (!seller) {
+        res.status(404).json("Seller not Found");
+        return;
+      }
+      const tariff = await TariffModel.findOne({
+        _id: new Types.ObjectId(tariffId),
+      });
+      if (!tariff) {
+        res.status(404).json("Tariff not Found");
+        return;
+      }
 
-      const getInbound = await this.GetInbounds(req.headers.authorization);
+      let data_limit: number | undefined = undefined;
 
-      const tariff = await Tariff.findOne({
+      let expireTimestamp: number | undefined = undefined;
+      const expireDate = new Date();
+
+      let expireDuration: number | undefined = undefined;
+      let onHoldTimeout: Date | undefined = undefined;
+
+      let status: string | undefined = undefined;
+
+      if (tariff.Duration && tariff.Duration > 0)
+        if (onhold) {
+          expireDuration = (tariff.Duration + 1) * (60 * 60 * 24);
+
+          expireDate.setDate(expireDate.getDate() + 30);
+          expireDate.setHours(20, 30, 0);
+
+          onHoldTimeout = expireDate;
+          status = "on_hold";
+        } else {
+          expireDate.setDate(expireDate.getDate() + tariff.Duration);
+          expireDate.setHours(20, 30, 0);
+
+          expireTimestamp = Math.floor(expireDate.getTime() / 1000);
+        }
+
+      if (tariff.DataLimit && tariff.DataLimit > 0)
+        data_limit = tariff.DataLimit * 1024 * 1024 * 1024;
+
+      const generateUsername = await AccountHelpers.GetUsernameAvailable(
+        seller,
+        username,
+        req.headers.authorization,
+      );
+
+      const { proxies, inbounds } = await AccountHelpers.GenerateProxiesAndInbounds(
+        req.headers.authorization,
+        tariff,
+      );
+
+      const result = await axios.post(
+        apiURL,
+        {
+          username: generateUsername,
+          note: note,
+          proxies: proxies,
+          inbounds: inbounds,
+          expire: expireTimestamp,
+          data_limit: data_limit,
+          on_hold_expire_duration: expireDuration,
+          on_hold_timeout: onHoldTimeout,
+          status: status,
+        },
+        {
+          headers: { Authorization: req.headers.authorization },
+        },
+      );
+
+      const account = new AccountModel();
+      account.Username = generateUsername;
+      account.Seller = seller;
+      account.Tariff = tariff.Title;
+      account.TariffId = tariff;
+      account.Payed = false;
+
+      await account.save();
+      await seller.save();
+      // invalidate کش فقط همین seller
+      AccountHelpers.InvalidateSellerAllCache(seller.Title);
+      res.status(200).json(result.data);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  static EditAccount: RequestHandler = async (req, res, next) => {
+    try {
+      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
+        throw new Error("Invalid Token");
+
+      const apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/user/" + req.params.username;
+      const { status } = req.body as { status: string };
+      if (!req.params.username && req.params.username === "") {
+        res.status(404).json("Username not Found");
+        return;
+      }
+      const result = await axios.put(
+        apiURL,
+        {
+          status: status,
+        },
+        {
+          headers: { Authorization: req.headers.authorization },
+        },
+      );
+      const AccountModel = await getModel<IAccount>("Account", AccountSchema);
+      const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
+      const account = await AccountModel.findOne({
+        Username: req.params.username,
+      });
+      const seller = account ? await SellerModel.findOne({ _id: account.Seller }) : null;
+      if (seller) AccountHelpers.InvalidateSellerAllCache(seller.Title);
+      res.status(200).json(result.data);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  static DisableAccount: RequestHandler = async (req, res, next) => {
+    try {
+      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
+        throw new Error("Invalid Token");
+
+      const apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/user/" + req.params.username;
+      const { status } = req.body as { status: string };
+      if (!req.params.username && req.params.username === "") {
+        res.status(404).json("Username not Found");
+        return;
+      }
+      const result = await axios.put(
+        apiURL,
+        { status: status },
+        { headers: { Authorization: req.headers.authorization } },
+      );
+      const AccountModel = await getModel<IAccount>("Account", AccountSchema);
+      const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
+      const account = await AccountModel.findOne({
+        Username: req.params.username,
+      });
+      const seller = account ? await SellerModel.findOne({ _id: account.Seller }) : null;
+      if (seller) AccountHelpers.InvalidateSellerAllCache(seller.Title);
+      res.status(200).json(result.data);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  static RenewAccount: RequestHandler = async (req, res, next) => {
+    try {
+      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
+        throw new Error("Invalid Token");
+
+      if (!(await MongooseDbManagement.checkLicense()))
+        throw new Error("License is not Available or Expired!");
+
+      const AccountModel = await getModel<IAccount>("Account", AccountSchema);
+      const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
+      const TariffModel = await getModel<ITariff>("Tariff", TariffSchema);
+      const { tariffId, username } = req.body as {
+        tariffId: string;
+        username: string;
+      };
+
+      if (!username && username === "") {
+        res.status(404).json("Username not Found");
+        return;
+      }
+
+      if (!tariffId && tariffId === "") {
+        res.status(404).json("TariffId not Found");
+        return;
+      }
+
+      const tariff = await TariffModel.findOne({
         _id: new Types.ObjectId(tariffId),
       });
 
@@ -140,87 +371,65 @@ class MarzbanController {
         return;
       }
 
-      const seller = await Seller.findOne({ Title: username });
+      const seller = await SellerModel.findOne({ Title: req.params.seller });
 
       if (!seller) {
         res.status(404).json("Seller not Found");
         return;
       }
 
-      seller.Counter++;
+      let data_limit: number | undefined = undefined;
 
-      const currentDate = new Date();
+      let expireTimestamp: number | undefined = undefined;
 
-      currentDate.setDate(currentDate.getDate() + (tariff.Duration ?? 0));
-      currentDate.setHours(23, 59, 59);
+      if (tariff.Duration && tariff.Duration > 0) {
+        const currentDate = new Date();
 
-      const expireTimestamp = Math.floor(currentDate.getTime() / 1000);
+        currentDate.setDate(currentDate.getDate() + tariff.Duration);
+        currentDate.setHours(20, 30, 0);
 
-      const generateUsername =
-        username + seller?.Counter.toString().padStart(3, "0");
-
-      let inbounds: { vmess?: string[]; vless?: string[]; trojan?: string[] } =
-        {};
-      let proxies: {
-        vmess?: { id: string };
-        vless?: { id: string; flow: string };
-        trojan?: { password: string };
-      } = {};
-
-      if (getInbound.vmess) {
-        proxies = {
-          ...proxies,
-          vmess: {
-            id: vmessUUID,
-          },
-        };
-        inbounds = { ...inbounds, vmess: getInbound.vmess };
+        expireTimestamp = Math.floor(currentDate.getTime() / 1000);
       }
 
-      if (getInbound.vless) {
-        proxies = {
-          ...proxies,
-          vless: {
-            id: vlessUUID,
-            flow: "xtls-rprx-vision",
-          },
-        };
-        inbounds = { ...inbounds, vless: getInbound.vless };
-      }
+      if (tariff.DataLimit && tariff.DataLimit > 0)
+        data_limit = tariff.DataLimit * 1024 * 1024 * 1024;
 
-      if (getInbound.trojan) {
-        proxies = {
-          ...proxies,
-          trojan: {
-            password: Helper.GenerateRandomPassword(12),
-          },
-        };
-        inbounds = { ...inbounds, trojan: getInbound.trojan };
-      }
+      const { inbounds } = await AccountHelpers.GenerateProxiesAndInbounds(
+        req.headers.authorization,
+        tariff,
+      );
 
-      const result = await axios.post(
+      let apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/user/" + username;
+      const result = await axios.put(
         apiURL,
         {
-          username: generateUsername,
-          proxies: proxies,
-          inbounds: inbounds,
           expire: expireTimestamp,
-          data_limit: (tariff?.DataLimit ?? 0) * 1024 * 1024 * 1024,
+          data_limit: data_limit,
+          inbounds: inbounds,
         },
         {
           headers: { Authorization: req.headers.authorization },
-        }
+        },
       );
 
-      const account = new Account();
-      account.Username = generateUsername;
-      account.Seller = seller._id;
+      apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/user/" + username + "/reset";
+      await axios.post(
+        apiURL,
+        {},
+        {
+          headers: { Authorization: req.headers.authorization },
+        },
+      );
+
+      const account = new AccountModel();
+      account.Username = username;
+      account.Seller = seller;
       account.Tariff = tariff.Title;
+      account.TariffId = tariff;
       account.Payed = false;
       await account.save();
-
-      await seller.save();
-
+      // invalidate کش فقط همین seller و ادمین
+      AccountHelpers.InvalidateSellerAllCache(seller.Title);
       res.status(200).json(result.data);
     } catch (error) {
       next(error);
@@ -229,63 +438,87 @@ class MarzbanController {
 
   static RemoveAccount: RequestHandler = async (req, res, next) => {
     try {
-      const apiURL =
-        Helper.GetMarzbanURL() + "/api/user/" + req.params.username;
+      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
+        throw new Error("Invalid Token");
 
-      const resultget = await axios.get(apiURL, {
-        headers: { Authorization: req.headers.authorization },
+      const AccountModel = await getModel<IAccount>("Account", AccountSchema);
+      const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
+      const account = await AccountModel.findOne({
+        Username: req.params.username,
+        Payed: false,
       });
-
-      if (resultget.status == 200 && resultget.data) {
-        const used_traffic =
-          (resultget?.data?.used_traffic ?? 0) / (1024 * 1024 * 1024);
-
-        if (used_traffic < 1.0) {
-          const result = await axios.delete(apiURL, {
-            headers: { Authorization: req.headers.authorization },
-          });
-
-          if (result.status == 200) {
-            const result = await Account.findOneAndRemove({
-              Username: req.params.username,
-            });
-
-            if (result?.Username !== req.params.username)
-              throw new Error("User Not Found");
-          }
-
-          res.status(200).json({ message: "Delete Success!" });
+      if (!account) {
+        res.status(404).json({ message: "Account Not Found!" });
+        return;
+      }
+      const apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/user/" + req.params.username;
+      try {
+        await axios.delete(apiURL, {
+          headers: { Authorization: req.headers.authorization },
+        });
+      } catch (err: unknown) {
+        // اگر خطا 404 بود، یعنی اکانت در مرزبان نیست، پس می‌توان حذف کرد
+        interface AxiosErrorWithResponse {
+          response?: {
+            status?: number;
+          };
+        }
+        const error = err as AxiosErrorWithResponse;
+        if (
+          typeof err === "object" &&
+          err !== null &&
+          "response" in err &&
+          typeof error.response === "object" &&
+          error.response !== null &&
+          "status" in error.response &&
+          error.response.status !== 404
+        ) {
+          // اگر خطای دیگری بود، حذف نکن و خطا را برگردان
+          return next(err);
         }
       }
+      const seller = await SellerModel.findOne({ _id: account.Seller });
+      await AccountModel.findOneAndDelete({
+        Username: req.params.username,
+        Payed: false,
+      });
+      if (seller) AccountHelpers.InvalidateSellerAllCache(seller.Title);
+      res.status(200).json({ message: "Delete Success!" });
     } catch (error) {
       next(error);
     }
   };
 
-  static GetInbounds = async (authorization: string | undefined) => {
-    let vmesses: string[] | undefined = undefined;
-    let vlesses: string[] | undefined = undefined;
-    let trojans: string[] | undefined = undefined;
+  static RevokeSub: RequestHandler = async (req, res, next) => {
+    try {
+      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
+        throw new Error("Invalid Token");
 
-    const apiURL = Helper.GetMarzbanURL() + "/api/inbounds";
+      const apiURL = `${await ConfigFile.GetMarzbanURL()}/api/user/${
+        req.params.username
+      }/revoke_sub`;
 
-    const result = await axios.get(apiURL, {
-      headers: { Authorization: authorization },
-    });
-    if (result && result.status == 200) {
-      const inbounds = result.data as {
-        vmess: { tag: string }[];
-        vless: { tag: string }[];
-        trojan: { tag: string }[];
-      };
-      if (inbounds.vmess) vmesses = inbounds.vmess.map((vmess) => vmess.tag);
-      if (inbounds.vless) vlesses = inbounds.vless.map((vless) => vless.tag);
-      if (inbounds.trojan)
-        trojans = inbounds.trojan.map((trojan) => trojan.tag);
+      await axios.post(
+        apiURL,
+        {},
+        {
+          headers: { Authorization: req.headers.authorization },
+        },
+      );
 
-      return { vmess: vmesses, vless: vlesses, trojan: trojans };
+      // invalidate کش seller مربوط به این یوزر
+      const AccountModel = await getModel<IAccount>("Account", AccountSchema);
+      const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
+      const account = await AccountModel.findOne({
+        Username: req.params.username,
+      });
+      const seller = account ? await SellerModel.findOne({ _id: account.Seller }) : null;
+      if (seller) AccountHelpers.InvalidateSellerAllCache(seller.Title);
+
+      res.status(200).json({ message: "Revoke Success!" });
+    } catch (error) {
+      next(error);
     }
-    throw new Error("No Inbound Found!!");
   };
 }
 

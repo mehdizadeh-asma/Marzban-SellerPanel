@@ -1,15 +1,26 @@
-FROM node:slim
-
+FROM node:22-slim AS base
 WORKDIR /frontend
+ENV NEXT_TELEMETRY_DISABLED=1
 
-COPY ./package.json .
+FROM base AS prod-deps
+WORKDIR /frontend
+ENV NODE_ENV=production
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
 
-RUN npm install --production
+FROM base AS runner
+WORKDIR /frontend
+ENV NODE_ENV=production
 
-COPY ./.next ./.next
+RUN useradd -m -u 1001 nextjs \
+  && chown -R nextjs:nextjs /frontend
 
-COPY ./public ./public
+USER nextjs
+
+COPY --from=prod-deps /frontend/node_modules ./node_modules
+COPY .next ./.next
+COPY public ./public
+COPY package.json ./
 
 EXPOSE 3000
-
 CMD ["npm", "start"]

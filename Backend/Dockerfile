@@ -1,13 +1,28 @@
-FROM node:slim
-
+FROM node:22-slim AS base
 WORKDIR /backend
 
-COPY package.json ./package.json
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
 
-RUN npm install --production
+FROM base AS prod-deps
+WORKDIR /backend
+ENV NODE_ENV=production
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
 
-COPY ./dist ./dist
+FROM base AS runner
+WORKDIR /backend
+ENV NODE_ENV=production
 
-EXPOSE 8443
+RUN useradd -m -u 1001 app \
+  && chown -R app:app /backend
 
-CMD ["npm", "start"]
+USER app
+
+COPY --from=prod-deps /backend/node_modules ./node_modules
+COPY dist ./dist
+COPY package.json ./
+
+EXPOSE 8080
+CMD ["node", "dist/app.js"]

@@ -1,9 +1,4 @@
 {
   "extends": "./tsconfig.json",
-  "include": [
-    // 👇️ add all the directories and files
-    // that you want to lint here
-    "src",
-    "tests"
-  ]
+  "include": ["src", "test", "jest.config.ts"]
 }
