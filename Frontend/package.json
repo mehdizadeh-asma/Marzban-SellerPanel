@@ -11,7 +11,7 @@
     "test-coverage": "jest --coverage",
     "lint:fix": "eslint --fix .",
     "format": "prettier --write .",
-    "check": "npm run lint"
+    "check": "npm run lint && npm run test"
   },
   "lint-staged": {
     "*.{ts,tsx,js,json,md}": [
