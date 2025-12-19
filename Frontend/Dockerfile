@@ -1,4 +1,4 @@
-FROM node:22-slim AS base
+FROM node:24-slim AS base
 WORKDIR /frontend
 ENV NEXT_TELEMETRY_DISABLED=1
 
