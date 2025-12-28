@@ -1,147 +1,97 @@
 import type { RequestHandler } from "express";
-import { Types } from "mongoose";
 
-import type { ITariff } from "../models/Tariff";
-import { TariffSchema } from "../models/Tariff";
-import type { ITariffSeller } from "../models/TariffSeller";
-import { TariffSellerSchema } from "../models/TariffSeller";
-import AccountHelpers from "../utils/AccountHelpers";
-import { getModel } from "../utils/MongooseModel";
+import * as TariffSellerService from "../services/TariffSellerService";
+import { HttpError } from "../utils/HttpError";
+import { handleControllerError } from "../utils/handleError";
+import { isValidObjectId } from "../utils/validation";
 
 class TariffSellerController {
   static GetTariffSellerListBySellerId: RequestHandler = async (req, res, next) => {
     try {
-      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
-        throw new Error("Invalid Token");
-
-      const TariffSellerModel = await getModel<ITariffSeller>("TariffSeller", TariffSellerSchema);
-      const TariffModel = await getModel<ITariff>("Tariff", TariffSchema);
       const sellerId: string = req.params.sellerId;
-      const sellerTariffs = await TariffSellerModel.find({
-        SellerId: new Types.ObjectId(sellerId),
-      });
-      const sellerTariffIds = new Set(
-        sellerTariffs.map((ts) =>
-          ts.TariffId instanceof Types.ObjectId ? ts.TariffId.toString() : ts.TariffId,
-        ),
-      );
-      const allTariffs = await TariffModel.find();
-      const tariffList = [
-        ...allTariffs
-          .filter((tariff) => sellerTariffIds.has((tariff._id as Types.ObjectId).toString()))
-          .map((tariff) => ({
-            TariffId: tariff._id,
-            Title: tariff.Title,
-            SellerId: sellerId,
-            Price: tariff.Price,
-          })),
-        ...allTariffs
-          .filter((tariff) => !sellerTariffIds.has((tariff._id as Types.ObjectId).toString()))
-          .map((tariff) => ({
-            TariffId: tariff._id,
-            Title: tariff.Title,
-            SellerId: "",
-            Price: tariff.Price,
-          })),
-      ];
-      res.status(200).json(tariffList);
+      if (!isValidObjectId(sellerId)) {
+        throw new HttpError(400, "Invalid sellerId");
+      }
+      const visibleOnly = String(req.query?.visibleOnly ?? "").toLowerCase() === "true";
+      const result = await TariffSellerService.getTariffSellerListBySellerId(sellerId, visibleOnly);
+      res.status(200).json(result);
     } catch (error) {
-      next(error);
+      handleControllerError(error, res, next);
     }
   };
   static GetTariffSeller: RequestHandler = async (req, res, next) => {
     try {
-      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
-        throw new Error("Invalid Token");
-
-      const TariffSellerModel = await getModel<ITariffSeller>("TariffSeller", TariffSellerSchema);
       const id: string = req.params.id;
-      const tariffSeller = await TariffSellerModel.findOne({
-        _id: new Types.ObjectId(id),
-      });
-      if (!tariffSeller) throw new Error("The Seller's Packages not found!");
+      if (!isValidObjectId(id)) {
+        throw new HttpError(400, "Invalid tariff seller id");
+      }
+      const tariffSeller = await TariffSellerService.getTariffSeller(id);
       res.status(200).json(tariffSeller);
     } catch (error) {
-      next(error);
+      handleControllerError(error, res, next);
     }
   };
   static AddTariffSeller: RequestHandler = async (req, res, next) => {
     try {
-      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
-        throw new Error("Invalid Token");
-
-      const TariffSellerModel = await getModel<ITariffSeller>("TariffSeller", TariffSellerSchema);
       const { TariffID, SellerID } = req.body as {
         TariffID: string | undefined;
         SellerID: string | undefined;
       };
-      const tariffSeller = new TariffSellerModel({
-        TariffId: new Types.ObjectId(TariffID),
-        SellerId: new Types.ObjectId(SellerID),
-      });
-      const result = await tariffSeller.save();
+      if (!isValidObjectId(TariffID) || !isValidObjectId(SellerID)) {
+        throw new HttpError(400, "TariffID and SellerID are required and must be valid");
+      }
+      const result = await TariffSellerService.addTariffSeller(TariffID, SellerID);
       res.status(200).json(result);
     } catch (error) {
-      next(error);
+      handleControllerError(error, res, next);
     }
   };
   static AssignTariffSeller: RequestHandler = async (req, res, next) => {
     try {
-      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
-        throw new Error("Invalid Token");
-
-      const TariffSellerModel = await getModel<ITariffSeller>("TariffSeller", TariffSellerSchema);
-      const sellerId: string = req.params.sellerid;
+      const sellerId: string = req.params.sellerId ?? req.params.sellerid;
+      if (!isValidObjectId(sellerId)) {
+        throw new HttpError(400, "Invalid sellerId");
+      }
       const tariffIds = (req.body as { TariffIds: string[] }).TariffIds;
-      await TariffSellerModel.deleteMany({
-        SellerId: new Types.ObjectId(sellerId),
-      });
-      const newEntries = tariffIds.map((tariffId) => ({
-        SellerId: new Types.ObjectId(sellerId),
-        TariffId: new Types.ObjectId(tariffId),
-      }));
-      const result = await TariffSellerModel.insertMany(newEntries);
+      if (!Array.isArray(tariffIds)) {
+        throw new HttpError(400, "TariffIds must be an array");
+      }
+      if (tariffIds.some((tariffId) => !isValidObjectId(tariffId))) {
+        throw new HttpError(400, "TariffIds contain invalid entries");
+      }
+      const result = await TariffSellerService.assignTariffSeller(sellerId, tariffIds);
       res.status(200).json({
         message: "Tariffs successfully assigned to seller.",
         result,
       });
     } catch (error) {
-      next(error);
+      handleControllerError(error, res, next);
     }
   };
   static RemoveTariffSellerBySellerId: RequestHandler = async (req, res, next) => {
     try {
-      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
-        throw new Error("Invalid Token");
-
-      const TariffSellerModel = await getModel<ITariffSeller>("TariffSeller", TariffSellerSchema);
-      const id: string = req.params.sellerid;
-      const result = await TariffSellerModel.deleteMany({
-        SellerId: new Types.ObjectId(id),
-      });
-      res.status(200).json(result);
+      const id: string = req.params.sellerId ?? req.params.sellerid;
+      if (!isValidObjectId(id)) {
+        throw new HttpError(400, "Invalid sellerId");
+      }
+      await TariffSellerService.removeTariffSellerBySellerId(id);
+      res.status(200).json({ deletedCount: 1 });
     } catch (error) {
-      next(error);
+      handleControllerError(error, res, next);
     }
   };
   static ChangeStatusTariffSeller: RequestHandler = async (req, res, next) => {
     try {
-      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
-        throw new Error("Invalid Token");
-
-      const TariffSellerModel = await getModel<ITariffSeller>("TariffSeller", TariffSellerSchema);
-      const _id = new Types.ObjectId(req.params.id);
-      const tariffSeller = await TariffSellerModel.findOne({ _id: _id });
-      if (tariffSeller) {
-        if (tariffSeller.Status == "Active") tariffSeller.Status = "Deactive";
-        else tariffSeller.Status = "Active";
-        await tariffSeller.save();
-        res.status(200).json({
-          result: "The Status Changed To" + tariffSeller.Status + " Successfully!",
-        });
+      const id = req.params.id;
+      if (!isValidObjectId(id)) {
+        throw new HttpError(400, "Invalid tariff seller id");
       }
+      const status = await TariffSellerService.toggleTariffSellerStatus(id);
+      res.status(200).json({
+        result: `The Status Changed To${status} Successfully!`,
+      });
     } catch (error) {
-      next(error);
+      handleControllerError(error, res, next);
     }
   };
 }

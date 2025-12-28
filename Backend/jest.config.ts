@@ -1,20 +1,17 @@
-export default {
+﻿export default {
+  preset: "ts-jest",
+  testEnvironment: "node",
+  roots: ["<rootDir>/test"],
+  testMatch: ["**/*.spec.ts"],
   collectCoverage: true,
   coverageDirectory: "coverage",
-  coverageProvider: "v8",
   coverageReporters: ["json", "text", "lcov", "clover", "html"],
-  preset: "ts-jest",
+  setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
+  moduleFileExtensions: ["ts", "js", "json"],
   transform: {
-    "^.+\\.tsx?$": [
-      "ts-jest",
-      {
-        tsconfig: "<rootDir>/../tsconfig.jest.json",
-      },
-    ],
+    "^.+\\.tsx?$": ["ts-jest", { tsconfig: "tsconfig.json" }],
   },
-  reporters: ["default"],
-  rootDir: "test",
-  setupFilesAfterEnv: ["<rootDir>/../jest.setup.ts"],
-  verbose: true,
-  testEnvironment: "node",
+  moduleNameMapper: {
+    "^@/(.*)$": "<rootDir>/src/$1",
+  },
 };

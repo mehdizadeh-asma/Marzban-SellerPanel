@@ -1,11 +1,13 @@
 import { Router } from "express";
 
 import TariffInboundController from "../controllers/TariffInboundController";
+import { authenticate, requireAdmin } from "../middleware/auth";
 
 const router = Router();
 
-router.get("/TariffInbound/:tariffId", TariffInboundController.GetTariffInboundListByTariffId);
+router.use(authenticate, requireAdmin);
 
-router.put("/TariffInbound/:tariffid", TariffInboundController.AssignTariffInbound);
+router.get("/TariffInbound/:tariffId", TariffInboundController.GetTariffInboundListByTariffId);
+router.put("/TariffInbound/:tariffId", TariffInboundController.AssignTariffInbound);
 
 export default router;

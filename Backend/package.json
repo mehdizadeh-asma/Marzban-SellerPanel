@@ -5,7 +5,7 @@
   "private": true,
   "main": "dist/app.js",
   "scripts": {
-    "dev": "nodemon -L dist/app.js",
+    "dev": "nodemon -L --exec \"node --env-file .env.development.local\" dist/app.js",
     "build-dev": "tsc -w",
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.build.json --noEmit",
@@ -16,7 +16,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "check": "npm run lint && npm run test"
+    "check": "npm run format &&npm run lint && npm run test"
   },
   "dependencies": {
     "axios": "1.13.2",

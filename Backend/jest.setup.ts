@@ -1,3 +1,5 @@
+/// <reference types="jest" />
+
 export type MockResponse = {
   status: jest.Mock;
   json: jest.Mock;
@@ -13,6 +15,16 @@ export const mockResponse = (): MockResponse => {
 };
 
 export const mockNext = (): jest.Mock => jest.fn();
+
+export const expectHttpError = (next: jest.Mock, status: number, message?: string): void => {
+  expect(next).toHaveBeenCalled();
+  const err = next.mock.calls[0][0] as Error & { status?: number };
+  expect(err).toBeInstanceOf(Error);
+  expect(err.status).toBe(status);
+  if (message) {
+    expect(err.message).toBe(message);
+  }
+};
 
 type CreateModelOverrides = {
   find?: unknown;
@@ -48,7 +60,7 @@ const isControllerTest =
   typeof testPath === "string" && /[\\/]test[\\/]controllers[\\/]/.test(testPath);
 
 if (isControllerTest) {
-  jest.mock("./src/utils/MongooseModel", () => ({
+  jest.mock("./src/db/MongooseModel", () => ({
     __esModule: true,
     getModel: jest.fn(() => ({
       find: jest.fn(),
@@ -72,14 +84,16 @@ if (isControllerTest) {
     },
   }));
 
-  jest.mock("./src/utils/Config", () => ({
+  jest.mock("./src/config/Config", () => ({
     __esModule: true,
     default: {
+      GetJwtSecret: jest.fn().mockResolvedValue("jwt-secret"),
       GetMarzbanURL: jest.fn().mockResolvedValue("http://marzban.test"),
       GetMarzbanUsername: jest.fn().mockResolvedValue("marz_user"),
       GetMarzbanPassword: jest.fn().mockResolvedValue("marz_pass"),
       GetSellerAdminUsername: jest.fn().mockResolvedValue("admin"),
       GetSellerAdminPassword: jest.fn().mockResolvedValue("pass"),
+      GetSellerPasswordKey: jest.fn().mockResolvedValue("enc-secret"),
       GetDeletePaidAndRemovedUsers: jest.fn().mockResolvedValue("No"),
       GetSubscriptionURL: jest.fn().mockResolvedValue("http://sub.test"),
       GetAllUsersForAgent: jest.fn().mockResolvedValue("No"),
@@ -87,14 +101,22 @@ if (isControllerTest) {
     },
   }));
 
-  jest.mock("./src/utils/MongooseDbManagement", () => ({
+  jest.mock("./src/db/MongooseDbManagement", () => ({
     __esModule: true,
     default: {
       checkLicense: jest.fn().mockResolvedValue(true),
+      getMainConnection: jest.fn().mockReturnValue({
+        startSession: jest.fn().mockResolvedValue({
+          startTransaction: jest.fn(),
+          commitTransaction: jest.fn(),
+          abortTransaction: jest.fn(),
+          endSession: jest.fn(),
+        }),
+      }),
     },
   }));
 
-  jest.mock("./src/utils/AccountHelpers", () => ({
+  jest.mock("./src/services/account/AccountHelpers", () => ({
     __esModule: true,
     default: {
       LoginToMarzban: jest.fn(),
@@ -103,9 +125,16 @@ if (isControllerTest) {
       NormalizeAccountOutput: jest.fn(),
       GetMarzbanAccounts: jest.fn(),
       GetMixedAccount: jest.fn(),
+      GetMarzbanAccountByUsername: jest.fn(),
       GetUsernameAvailable: jest.fn(),
       GenerateProxiesAndInbounds: jest.fn(),
       InvalidateSellerAllCache: jest.fn(),
+      UpsertSellerAccountCache: jest.fn(),
+      RemoveSellerAccountFromCache: jest.fn(),
+      GetAccountSellerId: jest.fn(),
+      UpsertMarzbanAccountCache: jest.fn(),
+      PatchMarzbanAccountCache: jest.fn(),
+      RemoveMarzbanAccountFromCache: jest.fn(),
       CheckToken: jest.fn(),
       GetInbounds: jest.fn(),
       RemoveDeletedAccountSeller: jest.fn(),
@@ -113,8 +142,8 @@ if (isControllerTest) {
     },
   }));
 
-  jest.requireMock("./src/utils/MongooseDbManagement").checkLicense = jest.requireMock(
-    "./src/utils/MongooseDbManagement",
+  jest.requireMock("./src/db/MongooseDbManagement").checkLicense = jest.requireMock(
+    "./src/db/MongooseDbManagement",
   ).default.checkLicense;
 
   jest.mock("uuid", () => ({
@@ -131,14 +160,16 @@ if (isControllerTest) {
 type ConfigMock = Partial<Record<string, jest.Mock>>;
 
 export const mockConfigDefaults = (overrides: ConfigMock = {}) => {
-  const cf = jest.requireMock("./src/utils/Config");
+  const cf = jest.requireMock("./src/config/Config");
   if (!cf || !cf.default) throw new Error("Config mock not found");
   const defaultValues: ConfigMock = {
+    GetJwtSecret: jest.fn().mockResolvedValue("jwt-secret"),
     GetMarzbanURL: jest.fn().mockResolvedValue("http://marzban.test"),
     GetMarzbanUsername: jest.fn().mockResolvedValue("marz_user"),
     GetMarzbanPassword: jest.fn().mockResolvedValue("marz_pass"),
     GetSellerAdminUsername: jest.fn().mockResolvedValue("admin"),
     GetSellerAdminPassword: jest.fn().mockResolvedValue("pass"),
+    GetSellerPasswordKey: jest.fn().mockResolvedValue("enc-secret"),
     GetDeletePaidAndRemovedUsers: jest.fn().mockResolvedValue("No"),
     GetSubscriptionURL: jest.fn().mockResolvedValue("http://sub.test"),
     GetAllUsersForAgent: jest.fn().mockResolvedValue("No"),
@@ -158,7 +189,6 @@ export const mockConfigDefaults = (overrides: ConfigMock = {}) => {
 
 export const resetAllMocks = () => jest.resetAllMocks();
 
-// Silence console output during tests to keep CI logs clean.
 const _console = {
   log: console.log,
   error: console.error,

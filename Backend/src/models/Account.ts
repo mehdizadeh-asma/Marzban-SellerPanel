@@ -1,19 +1,21 @@
-import type { Document } from "mongoose";
+import type { HydratedDocument, PopulatedDoc } from "mongoose";
 import { Schema, Types } from "mongoose";
 
 import type { ISeller } from "./Seller";
 import type { ITariff } from "./Tariff";
 
-export interface IAccount extends Document {
+export interface IAccount {
   _id: Types.ObjectId;
   Username: string;
   Tariff: string;
-  TariffId: Types.ObjectId | ITariff;
-  Seller: Types.ObjectId | ISeller;
+  TariffId: PopulatedDoc<ITariff>;
+  Seller: PopulatedDoc<ISeller>;
   Payed: boolean;
 }
 
-export const AccountSchema: Schema = new Schema({
+export type AccountDocument = HydratedDocument<IAccount>;
+
+export const AccountSchema = new Schema<IAccount>({
   Username: {
     type: String,
     required: [true, "Username is required"],

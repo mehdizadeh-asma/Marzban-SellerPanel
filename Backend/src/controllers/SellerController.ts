@@ -1,51 +1,31 @@
-import axios from "axios";
 import type { RequestHandler } from "express";
-import { Types } from "mongoose";
-
-import type { ISeller } from "../models/Seller";
-import { SellerSchema } from "../models/Seller";
-import AccountHelpers from "../utils/AccountHelpers";
-import ConfigFile from "../utils/Config";
-import { getModel } from "../utils/MongooseModel";
+import * as SellerService from "../services/SellerService";
+import { HttpError } from "../utils/HttpError";
+import { handleControllerError } from "../utils/handleError";
+import { isValidObjectId, parsePagination } from "../utils/validation";
 
 class SellerController {
   static GetSellerList: RequestHandler = async (req, res, next) => {
     try {
-      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
-        throw new Error("Invalid Token");
-
-      const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
-      const result = await SellerModel.find();
-
-      const customSellers = await Promise.all(
-        result.map(async (seller) => {
-          const totalUnpaid = await AccountHelpers.GetTotalUnpaid(seller, false);
-
-          return {
-            ...seller.toObject(), // Convert mongoose doc to plain object
-            TotalPrice: totalUnpaid.TotalPriceUnpaid,
-          };
-        }),
-      );
-
-      res.status(200).json(customSellers);
+      const query = req.query ?? {};
+      const { page, limit } = parsePagination(query.page, query.limit);
+      const result = await SellerService.getSellerList({ page, limit });
+      res.status(200).json(result);
     } catch (error) {
-      next(error);
+      handleControllerError(error, res, next);
     }
   };
 
   static GetSeller: RequestHandler = async (req, res, next) => {
     try {
       const id: string = req.params.id;
-      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
-        throw new Error("Invalid Token");
-
-      const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
-      const seller = await SellerModel.findOne({ _id: new Types.ObjectId(id) });
-      if (!seller) throw new Error("Seller not found!");
-      res.status(200).json(seller);
+      if (!isValidObjectId(id)) {
+        throw new HttpError(400, "Invalid seller id");
+      }
+      const result = await SellerService.getSellerById(id);
+      res.status(200).json(result);
     } catch (error) {
-      next(error);
+      handleControllerError(error, res, next);
     }
   };
 
@@ -53,145 +33,110 @@ class SellerController {
     try {
       const { Title, Limit, Username, Password, MarzbanUsername, MarzbanPassword } = req.body as {
         Title: string | undefined;
-        Limit: string;
+        Limit: string | number;
         Username: string | undefined;
         Password: string | undefined;
         MarzbanUsername: string | undefined;
         MarzbanPassword: string | undefined;
       };
-      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
-        throw new Error("Invalid Token");
+      const normalizedTitle = Title?.trim();
+      const normalizedUsername = Username?.trim();
+      const normalizedPassword = Password?.trim();
+      const normalizedMarzbanUsername = MarzbanUsername?.trim();
+      const normalizedMarzbanPassword = MarzbanPassword?.trim();
+      const limitValue = Number(Limit);
 
-      try {
-        const apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/admin/token";
-        const config = {
-          headers: { "content-type": "application/x-www-form-urlencoded" },
-        };
-        await axios.post(
-          apiURL,
-          {
-            username: MarzbanUsername,
-            password: MarzbanPassword,
-          },
-          config,
-        );
-      } catch (error) {
-        res.status(404).json({ Message: "Invalid Marzban Account Information" });
-        next(error);
-        return;
+      if (
+        !normalizedTitle ||
+        !normalizedUsername ||
+        !normalizedPassword ||
+        !normalizedMarzbanUsername ||
+        !normalizedMarzbanPassword ||
+        !Number.isFinite(limitValue) ||
+        limitValue < 0
+      ) {
+        throw new HttpError(400, "Required seller fields are missing or invalid");
       }
-      const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
-      const seller = new SellerModel({
-        Title: Title,
-        Limit: +Limit,
-        Username: Username,
-        Password: Password,
-        MarzbanUsername: MarzbanUsername,
-        MarzbanPassword: MarzbanPassword,
+      const result = await SellerService.addSeller({
+        title: normalizedTitle,
+        limit: limitValue,
+        username: normalizedUsername,
+        password: normalizedPassword,
+        marzbanUsername: normalizedMarzbanUsername,
+        marzbanPassword: normalizedMarzbanPassword,
       });
-      const result = await seller.save();
       res.status(200).json(result);
     } catch (error) {
-      next(error);
+      handleControllerError(error, res, next);
     }
   };
 
   static EditSeller: RequestHandler = async (req, res, next) => {
     try {
       const id = req.params.id;
-      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
-        throw new Error("Invalid Token");
+      if (!isValidObjectId(id)) {
+        throw new HttpError(400, "Invalid seller id");
+      }
       const { Title, Limit, Username, Password, MarzbanUsername, MarzbanPassword } = req.body as {
-        Title: string;
-        Limit: number;
-        Username: string;
-        Password: string;
-        MarzbanUsername: string;
-        MarzbanPassword: string;
+        Title?: string;
+        Limit?: number | string;
+        Username?: string;
+        Password?: string;
+        MarzbanUsername?: string;
+        MarzbanPassword?: string;
       };
-      try {
-        const apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/admin/token";
-        const config = {
-          headers: { "content-type": "application/x-www-form-urlencoded" },
-        };
-        await axios.post(
-          apiURL,
-          {
-            username: MarzbanUsername,
-            password: MarzbanPassword,
-          },
-          config,
-        );
-      } catch (error) {
-        res.status(404).json({ Message: "Invalid Marzban Account Information" });
-        next(error);
-        return;
+      const normalizedMarzbanUsername = MarzbanUsername?.trim();
+      const normalizedMarzbanPassword = MarzbanPassword?.trim();
+      if (!normalizedMarzbanUsername || !normalizedMarzbanPassword) {
+        throw new HttpError(400, "Marzban credentials are required");
       }
-      const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
-      const existingSeller = await SellerModel.findOne({
-        $or: [
-          { Title: new RegExp(`^${Title}$`, "i") },
-          { Username: new RegExp(`^${Username}$`, "i") },
-        ],
-        _id: { $ne: id },
+      const normalizedTitle = Title?.trim();
+      const normalizedUsername = Username?.trim();
+      const normalizedPassword = Password?.trim();
+      const limitValue = Limit !== undefined ? Number(Limit) : undefined;
+      if (limitValue !== undefined && (!Number.isFinite(limitValue) || limitValue < 0)) {
+        throw new HttpError(400, "Limit must be a valid number");
+      }
+      const updatedSeller = await SellerService.editSeller(id, {
+        title: normalizedTitle,
+        limit: limitValue,
+        username: normalizedUsername,
+        password: normalizedPassword,
+        marzbanUsername: normalizedMarzbanUsername,
+        marzbanPassword: normalizedMarzbanPassword,
       });
-      if (existingSeller) {
-        return res.status(400).json({ error: "Title Or Username Already Exists!" });
-      }
-      const updateFields: Partial<typeof req.body> = {};
-      if (Title) updateFields.Title = Title;
-      if (Limit !== undefined) updateFields.Limit = Limit;
-      if (Username) updateFields.Username = Username;
-      if (Password) updateFields.Password = Password;
-      if (MarzbanUsername) updateFields.MarzbanUsername = MarzbanUsername;
-      if (MarzbanPassword) updateFields.MarzbanPassword = MarzbanPassword;
-      const updatedSeller = await SellerModel.findByIdAndUpdate(id, updateFields, {
-        new: true,
-        runValidators: true,
-      });
-      if (!updatedSeller) {
-        return res.status(404).json({ error: "Seller Not Found" });
-      }
       res.status(200).json({
         message: "Seller updated successfully",
         seller: updatedSeller,
       });
     } catch (error) {
-      next(error);
+      handleControllerError(error, res, next);
     }
   };
 
   static RemoveSeller: RequestHandler = async (req, res, next) => {
     try {
       const id: string = req.params.id;
-      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
-        throw new Error("Invalid Token");
-      const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
-      const result = await SellerModel.deleteOne({
-        _id: new Types.ObjectId(id),
-      });
+      if (!isValidObjectId(id)) {
+        throw new HttpError(400, "Invalid seller id");
+      }
+      const result = await SellerService.removeSeller(id);
       res.status(200).json(result);
     } catch (error) {
-      next(error);
+      handleControllerError(error, res, next);
     }
   };
 
   static DisableSeller: RequestHandler = async (req, res, next) => {
     try {
-      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
-        throw new Error("Invalid Token");
-
-      const _id = new Types.ObjectId(req.params.id);
-      const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
-      const seller = await SellerModel.findOne({ _id: _id });
-      if (seller) {
-        if (seller.Status == "Active") seller.Status = "Deactive";
-        else seller.Status = "Active";
-        await seller.save();
-        res.status(200).json({ result: "Seller Changed!" });
+      const id = req.params.id;
+      if (!isValidObjectId(id)) {
+        throw new HttpError(400, "Invalid seller id");
       }
+      const status = await SellerService.toggleSellerStatus(id);
+      res.status(200).json({ result: "Seller Changed!", status });
     } catch (error) {
-      next(error);
+      handleControllerError(error, res, next);
     }
   };
 }

@@ -1,56 +1,61 @@
-import type { AxiosResponse } from "axios";
 import axios from "axios";
-import type { Document } from "mongoose";
 import { Types } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
 
-import type { IAccount } from "../models/Account";
-import { AccountSchema } from "../models/Account";
-import type MarzbanAccount from "../models/MarzbanAccount";
-import type { ISeller } from "../models/Seller";
-import { SellerSchema } from "../models/Seller";
-import type { ITariff } from "../models/Tariff";
-import { TariffSchema } from "../models/Tariff";
-import type { ITariffInbound } from "../models/TariffInbound";
-import { TariffInboundSchema } from "../models/TariffInbound";
-import ConfigFile from "./Config";
-import Helper from "./Helper";
-import { getModel } from "./MongooseModel";
+import ConfigFile from "../../config/Config";
+import { getModel } from "../../db/MongooseModel";
+import type { IAccount } from "../../models/Account";
+import { AccountSchema } from "../../models/Account";
+import type MarzbanAccount from "../../models/MarzbanAccount";
+import type { ISeller } from "../../models/Seller";
+import { SellerSchema } from "../../models/Seller";
+import type { ITariff } from "../../models/Tariff";
+import { TariffSchema } from "../../models/Tariff";
+import type { ITariffInbound } from "../../models/TariffInbound";
+import { TariffInboundSchema } from "../../models/TariffInbound";
+import Helper from "../../utils/Helper";
+import * as MarzbanClient from "../marzban/MarzbanClient";
+import type { MarzbanAccountsCache, SellerAccountsCache } from "./AccountCache";
+import * as AccountCache from "./AccountCache";
+import * as AccountFormatter from "./AccountFormatter";
 
 class AccountHelpers {
-  static MarzbanAccountsList: Record<
-    string,
-    Record<string, { users: MarzbanAccount[]; timestamp: number }>
-  > = {};
-  static CACHE_TTL_MS = 20 * 60 * 1000; // 20 دقیقه
+  static get MarzbanAccountsList(): MarzbanAccountsCache {
+    return AccountCache.getMarzbanAccountsCache();
+  }
 
-  static GetInbounds = async (
-    authorization: string | undefined,
-  ): Promise<{ InboundType: string; InboundTag: string }[]> => {
-    const apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/inbounds";
+  static set MarzbanAccountsList(value: MarzbanAccountsCache) {
+    AccountCache.setMarzbanAccountsCache(value);
+  }
 
-    const result = await axios.get(apiURL, {
-      headers: { Authorization: authorization },
-    });
-    if (result && result.status == 200) {
-      const inbounds = result.data as {
-        vmess: { tag: string }[];
-        vless: { tag: string }[];
-        trojan: { tag: string }[];
-        shadowsocks: { tag: string }[];
-      };
+  static get SellerAccountsList(): SellerAccountsCache {
+    return AccountCache.getSellerAccountsCache();
+  }
 
-      const formattedInbounds = Object.entries(inbounds).flatMap(([inboundType, inboundTags]) =>
-        inboundTags.map(({ tag }) => ({
-          InboundType: inboundType,
-          InboundTag: tag,
-        })),
-      );
+  static set SellerAccountsList(value: SellerAccountsCache) {
+    AccountCache.setSellerAccountsCache(value);
+  }
 
-      return formattedInbounds;
-    }
-    throw new Error("No Inbound Found!!");
-  };
+  static CACHE_TTL_MS = 20 * 60 * 1000;
+
+  static GetInbounds = MarzbanClient.getInbounds;
+  static LoginToMarzban = MarzbanClient.loginToMarzban;
+  static CheckToken = MarzbanClient.checkToken;
+  static GetMarzbanAccounts = MarzbanClient.getMarzbanAccounts;
+  static GetMarzbanAccountByUsername = MarzbanClient.getMarzbanAccountByUsername;
+  static GetSellerMarzbanPassword = MarzbanClient.getSellerMarzbanPassword;
+
+  static InvalidateSellerAllCache = AccountCache.invalidateSellerAllCache;
+  static InvalidateSellerAccountCache = AccountCache.invalidateSellerAccountCache;
+  static UpsertSellerAccountCache = AccountCache.upsertSellerAccountCache;
+  static RemoveSellerAccountFromCache = AccountCache.removeSellerAccountFromCache;
+  static UpsertMarzbanAccountCache = AccountCache.upsertMarzbanAccountCache;
+  static PatchMarzbanAccountCache = AccountCache.patchMarzbanAccountCache;
+  static RemoveMarzbanAccountFromCache = AccountCache.removeMarzbanAccountFromCache;
+
+  static GetSubscriptionUrl = AccountFormatter.getSubscriptionUrl;
+  static GetMixedAccount = AccountFormatter.getMixedAccount;
+  static NormalizeAccountOutput = AccountFormatter.normalizeAccountOutput;
 
   static GenerateProxiesAndInbounds = async (
     authorization: string | undefined,
@@ -91,7 +96,6 @@ class AccountHelpers {
       shadowsocks?: { password: string; method: string };
     } = {};
 
-    // Handle vmess
     const vmessInbounds = getInbound.filter((inbound) => inbound.InboundType === "vmess");
     if (
       vmessInbounds.length > 0 &&
@@ -110,7 +114,6 @@ class AccountHelpers {
         .map((inbound) => inbound.InboundTag);
     }
 
-    // Handle vless
     const vlessInbounds = getInbound.filter((inbound) => inbound.InboundType === "vless");
     if (
       vlessInbounds.length > 0 &&
@@ -133,7 +136,6 @@ class AccountHelpers {
         .map((inbound) => inbound.InboundTag);
     }
 
-    // Handle trojan
     const trojanInbounds = getInbound.filter((inbound) => inbound.InboundType === "trojan");
     if (
       trojanInbounds.length > 0 &&
@@ -152,7 +154,6 @@ class AccountHelpers {
         .map((inbound) => inbound.InboundTag);
     }
 
-    // Handle shadowsocks
     const shadowsocksInbounds = getInbound.filter(
       (inbound) => inbound.InboundType === "shadowsocks",
     );
@@ -176,13 +177,11 @@ class AccountHelpers {
         .map((inbound) => inbound.InboundTag);
     }
 
-    // Remove entries with no inbounds
     if (!inbounds.vmess?.length) delete proxies.vmess;
     if (!inbounds.vless?.length) delete proxies.vless;
     if (!inbounds.trojan?.length) delete proxies.trojan;
     if (!inbounds.shadowsocks?.length) delete proxies.shadowsocks;
 
-    // Remove inbounds entry if no proxy was created
     if (!proxies.vmess) delete inbounds.vmess;
     if (!proxies.vless) delete inbounds.vless;
     if (!proxies.trojan) delete inbounds.trojan;
@@ -191,25 +190,44 @@ class AccountHelpers {
     return { proxies, inbounds };
   };
 
-  static InvalidateSellerAllCache = (seller: string): void => {
-    if (AccountHelpers.MarzbanAccountsList[seller]) {
-      delete AccountHelpers.MarzbanAccountsList[seller]["all"];
-      delete AccountHelpers.MarzbanAccountsList[seller]["unpaid"];
+  static GetAccountSellerId = (account: IAccount): string | undefined => {
+    if (!account.Seller) return undefined;
+    if (account.Seller instanceof Types.ObjectId) {
+      return account.Seller.toString();
     }
+    if (typeof account.Seller === "object" && account.Seller._id) {
+      return (account.Seller._id as Types.ObjectId).toString();
+    }
+    return undefined;
   };
 
   static GetSellerAccounts = async (seller: ISeller, IsAll: boolean): Promise<IAccount[]> => {
-    const adminUsername = await ConfigFile.GetSellerAdminUsername();
-    let condition = {};
-    if (seller.Title.toLowerCase() !== adminUsername.toLowerCase()) {
-      condition = {
-        ...condition,
-        Seller: seller?._id,
-      };
+    const startTime = Date.now();
+    const cacheKey = IsAll ? "all" : "unpaid";
+    const sellerCacheKey = seller._id.toString();
+    const now = Date.now();
+    if (
+      AccountHelpers.SellerAccountsList[sellerCacheKey]?.[cacheKey] &&
+      now - AccountHelpers.SellerAccountsList[sellerCacheKey][cacheKey].timestamp <
+        AccountHelpers.CACHE_TTL_MS
+    ) {
+      return AccountHelpers.SellerAccountsList[sellerCacheKey][cacheKey].accounts;
     }
+    let condition = { Seller: seller._id } as { Seller: Types.ObjectId; Payed?: boolean };
     if (!IsAll) condition = { ...condition, Payed: false };
     const AccountModel = await getModel<IAccount>("Account", AccountSchema);
     const accounts = await AccountModel.find(condition);
+    if (!AccountHelpers.SellerAccountsList[sellerCacheKey]) {
+      AccountHelpers.SellerAccountsList[sellerCacheKey] = {};
+    }
+    AccountHelpers.SellerAccountsList[sellerCacheKey][cacheKey] = {
+      accounts,
+      timestamp: now,
+    };
+    const durationMs = Date.now() - startTime;
+    console.log(
+      `[GetSellerAccounts] seller=${seller.Title} isAll=${IsAll} count=${accounts.length} duration_ms=${durationMs}`,
+    );
     return accounts;
   };
 
@@ -224,14 +242,12 @@ class AccountHelpers {
 
       const AccountModel = await getModel<IAccount>("Account", AccountSchema);
       const sellerAccounts = await AccountModel.find({
-        Seller: seller,
+        Seller: seller._id,
         Payed: true,
       });
 
-      // پیدا کردن اکانت‌هایی که در مرزبان نیستند
       const accountsToDelete = sellerAccounts.filter((acc) => !marzbanUsernames.has(acc.Username));
 
-      // حذف اکانت‌ها
       await AccountModel.deleteMany({
         _id: { $in: accountsToDelete.map((acc) => acc._id) },
       });
@@ -239,7 +255,7 @@ class AccountHelpers {
   };
 
   static GetTotalUnpaid = async (
-    seller: Document | undefined,
+    seller: ISeller | null | undefined,
     IsAdmin: boolean,
   ): Promise<{ TotalLimitUnpaid: number; TotalPriceUnpaid: number }> => {
     let totalLimitUnpaid = 0;
@@ -248,15 +264,21 @@ class AccountHelpers {
     const TariffModel = await getModel<ITariff>("Tariff", TariffSchema);
     const accounts = IsAdmin
       ? await AccountModel.find({ Payed: false })
-      : await AccountModel.find({ Seller: seller, Payed: false });
+      : await AccountModel.find({ Seller: seller?._id, Payed: false });
     const tariffs = await TariffModel.find({ IsFree: false });
+    const tariffMap = new Map(tariffs.map((tariff) => [tariff._id.toString(), tariff]));
+
     for (const account of accounts) {
-      const tariffIdObj = account.TariffId as unknown as {
-        _id?: { toString(): string };
-        toString?: () => string;
-      };
-      const tariffIdString = tariffIdObj?._id?.toString() ?? tariffIdObj?.toString?.() ?? undefined;
-      const tariff = tariffs.find((t) => t._id.toString() === tariffIdString);
+      const tariffId =
+        account.TariffId instanceof Types.ObjectId
+          ? account.TariffId.toString()
+          : typeof account.TariffId === "string"
+            ? account.TariffId
+            : account.TariffId?._id?.toString();
+      if (!tariffId) {
+        continue;
+      }
+      const tariff = tariffMap.get(tariffId);
       if (tariff) {
         totalPriceUnpaid += tariff.Price ?? 0;
         totalLimitUnpaid += tariff.DataLimit ?? 0;
@@ -276,141 +298,26 @@ class AccountHelpers {
     const apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/user/";
     let generateUsername = "";
 
-    try {
-      do {
-        seller.Counter++;
-        generateUsername = username + seller.Counter.toString().padStart(3, "0");
-
+    while (seller.Counter < 10000000) {
+      seller.Counter++;
+      generateUsername = username + seller.Counter.toString().padStart(3, "0");
+      try {
         await axios.get(apiURL + generateUsername, {
           headers: { Authorization: authorization },
         });
-      } while (seller.Counter < 10000000);
-    } catch {
-      // empty
-    }
-
-    if (generateUsername != "") return generateUsername;
-
-    throw new Error("Username is Empty");
-  };
-
-  static GetSubscriptionUrl = (
-    marzbanSubscriptionUrl: string,
-    sellerSubscriptionUrl: string,
-  ): string => {
-    const url =
-      sellerSubscriptionUrl.trim() !== ""
-        ? sellerSubscriptionUrl + "/sub/" + marzbanSubscriptionUrl.split("/sub/")[1]
-        : marzbanSubscriptionUrl;
-
-    return url;
-  };
-
-  static CheckToken = async (authorization?: string): Promise<boolean> => {
-    try {
-      const apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/admin";
-
-      const config = {
-        headers: { Authorization: authorization },
-        params: {},
-      };
-
-      const resultMarzban = await axios.get(apiURL, config);
-
-      return resultMarzban.status === 200;
-    } catch (error) {
-      console.log(error);
-      return false;
-    }
-  };
-
-  static GetMixedAccount = async (
-    marzbanAccounts: MarzbanAccount[],
-    sellerAccounts: IAccount[],
-    sellername: string,
-    sellerSubscriptionUrl: string,
-  ): Promise<Record<string, unknown>[]> => {
-    const marzbanAccountMap = new Map(
-      marzbanAccounts.map((account) => [account.username, account]),
-    );
-
-    const tariffIds = sellerAccounts.map((item) => item.TariffId);
-    const TariffModel = await getModel<ITariff>("Tariff", TariffSchema);
-    const tariffs = (await TariffModel.find({ _id: { $in: tariffIds } }).lean()) as Array<
-      ITariff & { _id: Types.ObjectId }
-    >;
-    const tariffMap = new Map(tariffs.map((tariff) => [tariff._id.toString(), tariff]));
-
-    const accounts = sellerAccounts.map((item) => {
-      const tariffIdString =
-        item.TariffId instanceof Types.ObjectId
-          ? item.TariffId.toString()
-          : item.TariffId?._id?.toString();
-
-      const marzbanAccount = marzbanAccountMap.get(item.Username);
-      const tariff = tariffMap.get(tariffIdString);
-      if (!marzbanAccount) {
-        return {
-          id: item._id,
-          username: item.Username,
-          tarif: item.Tariff,
-          payed: item.Payed ? "Paid" : "Unpaid",
-        };
+      } catch (error) {
+        if (
+          axios.isAxiosError(error) &&
+          error.response &&
+          (error.response.status === 404 || error.response.status === 400)
+        ) {
+          return generateUsername;
+        }
+        throw error;
       }
+    }
 
-      // Pre-calculate data-related fields
-      const dataLimitString = Helper.CalculateTraffic(marzbanAccount.data_limit);
-      const usedTrafficString = Helper.CalculateTraffic(marzbanAccount.used_traffic);
-      const expireString = Helper.CalculateRemainDate(marzbanAccount.expire);
-      const isOnline = Helper.IsOnline(marzbanAccount.online_at);
-      const onlineAt = Helper.CalculateOnlineDate(marzbanAccount.online_at);
-      const subUpdatedAt = Helper.CalculateUpdateSubscriptionDate(marzbanAccount.sub_updated_at);
-
-      return {
-        id: item._id,
-        counter: +marzbanAccount.username.replace(sellername, ""),
-        username: marzbanAccount.username,
-        package: item.Tariff,
-        price: tariff?.Price,
-        data_limit: marzbanAccount.data_limit,
-        data_limit_string: dataLimitString,
-        used_traffic: marzbanAccount.used_traffic,
-        used_traffic_string: usedTrafficString,
-        expire: marzbanAccount.expire,
-        expire_string: expireString,
-        status: marzbanAccount.status,
-        subscription_url: AccountHelpers.GetSubscriptionUrl(
-          marzbanAccount.subscription_url,
-          sellerSubscriptionUrl,
-        ),
-        online: isOnline,
-        online_at: onlineAt,
-        sub_updated_at: subUpdatedAt,
-        sub_last_user_agent: marzbanAccount.sub_last_user_agent,
-        payed: item.Payed ? "Paid" : "Unpaid",
-        note: marzbanAccount.note,
-      };
-    });
-
-    return accounts.filter((acc) => acc.data_limit).reverse();
-  };
-
-  static LoginToMarzban = async (username: string, password: string): Promise<string> => {
-    const apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/admin/token";
-
-    const config = {
-      headers: { "content-type": "application/x-www-form-urlencoded" },
-    };
-
-    const resultLogin = await axios.post(
-      apiURL,
-      {
-        username: username,
-        password: password,
-      },
-      config,
-    );
-    return (resultLogin.data as { access_token: string }).access_token;
+    throw new Error("Unable to generate username");
   };
 
   static GetAccountsSmart = async (
@@ -420,7 +327,7 @@ class AccountHelpers {
     sellerSubscriptionUrl: string,
     isAdmin: boolean,
   ): Promise<Record<string, unknown>[]> => {
-    const startTime = Date.now(); // زمان شروع کل
+    const startTime = Date.now();
     if (isAdmin) {
       const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
       const sellers = await SellerModel.find({});
@@ -443,8 +350,6 @@ class AccountHelpers {
               sellerSubscriptionUrl,
             );
 
-            // --- لاگ اکانت‌های حذف‌شده و پرداخت‌نشده فقط برای ادمین ---
-            // اکانت‌های حذف‌شده و پرداخت‌نشده (در دیتابیس Payed=false و در مرزبان نیستند)
             const marzbanUsernames = new Set(marzbanAccountsResult.users.map((u) => u.username));
             const deletedAndUnpaidAccounts = sellerAccounts.filter(
               (acc) => !marzbanUsernames.has(acc.Username) && acc.Payed === false,
@@ -455,7 +360,6 @@ class AccountHelpers {
                 deletedAndUnpaidAccounts.map((acc) => acc.Username),
               );
             }
-            // --- پایان لاگ ---
             return mixed;
           } catch {
             return [];
@@ -501,7 +405,6 @@ class AccountHelpers {
     }
   };
 
-  // متد کش هوشمند برای گرفتن کاربران مرزبان و ذخیره در کش
   static GetMarzbanAccountsAndStoreSmart = async (
     authorization: string | undefined,
     seller: ISeller,
@@ -514,18 +417,13 @@ class AccountHelpers {
       now - AccountHelpers.MarzbanAccountsList[seller.Title][cacheKey].timestamp <
         AccountHelpers.CACHE_TTL_MS
     ) {
-      // console.error(`[GetMarzbanAccountsAndStoreSmart] seller=${seller} cache HIT`); // کامنت شد طبق درخواست
       return {
         users: AccountHelpers.MarzbanAccountsList[seller.Title][cacheKey].users,
         failed: false,
       };
     }
-    // اگر کش نبود یا منقضی شده بود، از مرزبان بگیر
     try {
-      //const marzbanStart = Date.now();
       const resultMarzban = await AccountHelpers.GetMarzbanAccounts(authorization, seller);
-      //const marzbanEnd = Date.now();
-      // console.error(`[GetMarzbanAccountsAndStoreSmart] seller=${seller} Marzban API: ${marzbanEnd - marzbanStart} ms`); // کامنت شد طبق درخواست
       const sellerUsers = (resultMarzban.data as { users: MarzbanAccount[] }).users;
       if (!AccountHelpers.MarzbanAccountsList[seller.Title])
         AccountHelpers.MarzbanAccountsList[seller.Title] = {};
@@ -533,7 +431,6 @@ class AccountHelpers {
         users: sellerUsers,
         timestamp: now,
       };
-      // console.error(`[GetMarzbanAccountsAndStoreSmart] seller=${seller} cache MISS`); // کامنت شد طبق درخواست
       return { users: sellerUsers, failed: false };
     } catch (error) {
       const err = error;
@@ -546,90 +443,8 @@ class AccountHelpers {
         };
         status = e?.response?.status || e?.code || e?.message || err;
       }
-      // console.warn(`[GetMarzbanAccountsAndStoreSmart] seller=${seller} failed with status=${status}`); // کامنت شد طبق درخواست
       return { users: [], failed: true, error: status };
     }
-  };
-
-  // متد گرفتن کاربران مرزبان (با سرچ)
-  static GetMarzbanAccounts = async (
-    authorization: string | undefined,
-    seller: ISeller | undefined,
-    search = "",
-  ): Promise<AxiosResponse> => {
-    const apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/users";
-    const params = { search: "" };
-
-    if (seller) {
-      const getAllUsersForAgent = await ConfigFile.GetAllUsersForAgent();
-      if (getAllUsersForAgent === "Yes") {
-        const token = await this.LoginToMarzban(seller.MarzbanUsername, seller.MarzbanPassword);
-        authorization = "Bearer " + token;
-      } else {
-        params.search = seller.Title;
-      }
-    }
-
-    if (search != "") params.search = search;
-
-    const config = {
-      headers: { Authorization: authorization },
-      params: params,
-      timeout: 300000, // افزایش به 5 دقیقه
-    };
-    return axios.get(apiURL, config);
-  };
-
-  static NormalizeAccountOutput = (account: unknown): Record<string, unknown> => {
-    if (typeof account !== "object" || account === null) {
-      return {};
-    }
-    const acc = account as {
-      id?: unknown;
-      _id?: unknown;
-      counter?: unknown;
-      username?: unknown;
-      Username?: unknown;
-      package?: unknown;
-      Tariff?: unknown;
-      price?: unknown;
-      data_limit?: unknown;
-      data_limit_string?: unknown;
-      used_traffic?: unknown;
-      used_traffic_string?: unknown;
-      expire?: unknown;
-      expire_string?: unknown;
-      status?: unknown;
-      subscription_url?: unknown;
-      online?: unknown;
-      online_at?: unknown;
-      sub_updated_at?: unknown;
-      sub_last_user_agent?: unknown;
-      payed?: unknown;
-      Payed?: unknown;
-      note?: unknown;
-    };
-    return {
-      id: acc.id ?? acc._id ?? null,
-      counter: acc.counter ?? null,
-      username: acc.username ?? acc.Username ?? null,
-      package: acc.package ?? acc.Tariff ?? null,
-      price: acc.price ?? null,
-      data_limit: acc.data_limit ?? null,
-      data_limit_string: acc.data_limit_string ?? null,
-      used_traffic: acc.used_traffic ?? null,
-      used_traffic_string: acc.used_traffic_string ?? null,
-      expire: acc.expire ?? null,
-      expire_string: acc.expire_string ?? null,
-      status: acc.status ?? null,
-      subscription_url: acc.subscription_url ?? null,
-      online: acc.online ?? null,
-      online_at: acc.online_at ?? null,
-      sub_updated_at: acc.sub_updated_at ?? null,
-      sub_last_user_agent: acc.sub_last_user_agent ?? null,
-      payed: acc.payed ?? (acc.Payed === true ? "Paid" : acc.Payed === false ? "Unpaid" : null),
-      note: acc.note ?? null,
-    };
   };
 }
 

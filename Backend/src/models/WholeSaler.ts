@@ -1,7 +1,8 @@
-import type { Document } from "mongoose";
+import type { HydratedDocument, Types } from "mongoose";
 import { Schema } from "mongoose";
 
-export interface IWholeSaler extends Document {
+export interface IWholeSaler {
+  _id: Types.ObjectId;
   Owner: string;
   MarzbanUrl: string;
   SN: string;
@@ -12,7 +13,9 @@ export interface IWholeSaler extends Document {
   DbPassword: string;
 }
 
-export const WholeSalerSchema = new Schema({
+export type WholeSalerDocument = HydratedDocument<IWholeSaler>;
+
+export const WholeSalerSchema = new Schema<IWholeSaler>({
   Owner: { type: String, required: [true, "Owner is required"] },
 
   MarzbanUrl: {

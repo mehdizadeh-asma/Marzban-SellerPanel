@@ -1,141 +1,161 @@
 import type { RequestHandler } from "express";
-import { Types } from "mongoose";
 
-import type { ISeller } from "../models/Seller";
-import { SellerSchema } from "../models/Seller";
-import type { ITariff } from "../models/Tariff";
-import { TariffSchema } from "../models/Tariff";
-import type { ITariffSeller } from "../models/TariffSeller";
-import { TariffSellerSchema } from "../models/TariffSeller";
-import AccountHelpers from "../utils/AccountHelpers";
-import { getModel } from "../utils/MongooseModel";
+import type { AuthenticatedRequest } from "../middleware/auth";
+import * as TariffService from "../services/TariffService";
+import { HttpError } from "../utils/HttpError";
+import { handleControllerError } from "../utils/handleError";
+import { isValidObjectId } from "../utils/validation";
 
 class TariffController {
   static GetTariffList: RequestHandler = async (req, res, next) => {
-    try {
-      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
-        throw new Error("Invalid Token");
+    const authReq = req as AuthenticatedRequest;
 
-      const TariffModel = await getModel<ITariff>("Tariff", TariffSchema);
-      const SellerModel = await getModel<ISeller>("Seller", SellerSchema);
-      const TariffSellerModel = await getModel<ITariffSeller>("TariffSeller", TariffSellerSchema);
-      if (req.params.isall === "false") {
-        if (!req.params.title) {
-          res.status(404).json({ result: "Seller Not Found!" });
-          return;
-        }
-        const seller = await SellerModel.findOne({ Title: req.params.title });
-        if (!seller) {
-          res.status(404).json({ result: "Seller Not Found!" });
-          return;
-        }
-        const tariffSellers = await TariffSellerModel.find({
-          SellerId: seller._id,
-        });
-        const tariffIds = tariffSellers.map((entry) => entry.TariffId);
-        const condition = { _id: { $in: tariffIds }, IsVisible: true };
-        const result = await TariffModel.find(condition); //.sort({ Title: "asc" });
-        res.status(200).json(result);
-        return;
-      } else {
-        const result = await TariffModel.find();
-        res.status(200).json(result);
-      }
+    try {
+      const result = await TariffService.getTariffList({
+        user: authReq.user,
+        isAll: req.params.isall === "true",
+        title: req.params.title,
+      });
+      res.status(200).json(result);
     } catch (error) {
-      next(error);
+      handleControllerError(error, res, next);
     }
   };
 
-  static GetTariff: RequestHandler = (req, res, next) => {
+  static GetTariff: RequestHandler = async (req, res, next) => {
     try {
-      res.status(200).json({ result: "Not Implimented!" });
+      const id = req.params.id;
+      if (!isValidObjectId(id)) {
+        throw new HttpError(400, "Invalid Tariff Id");
+      }
+      const tariff = await TariffService.getTariffById(id);
+      res.status(200).json(tariff);
     } catch (error) {
-      next(error);
+      handleControllerError(error, res, next);
     }
   };
 
   static AddTariff: RequestHandler = async (req, res, next) => {
     try {
-      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
-        throw new Error("Invalid Token");
-
       const { Title, DataLimit, Duration, Price, IsFree, IsVisible } = req.body as {
         Title: string | undefined;
-        DataLimit: number | undefined;
-        Duration: number | undefined;
-        Price: number | undefined;
+        DataLimit: number | string | undefined;
+        Duration: number | string | undefined;
+        Price: number | string | undefined;
         IsFree: boolean | undefined;
         IsVisible: boolean | undefined;
       };
-      const TariffModel = await getModel<ITariff>("Tariff", TariffSchema);
-      const tariff = new TariffModel({
-        Title: Title,
-        DataLimit: DataLimit,
-        Duration: Duration,
-        Price: Price,
-        IsFree: IsFree,
-        IsVisible: IsVisible,
+      const normalizedTitle = Title?.trim();
+      const dataLimitValue = Number(DataLimit);
+      const durationValue = Number(Duration);
+      const priceValue = Number(Price);
+      if (
+        !normalizedTitle ||
+        !Number.isFinite(dataLimitValue) ||
+        !Number.isFinite(durationValue) ||
+        !Number.isFinite(priceValue) ||
+        dataLimitValue < 0 ||
+        durationValue < 0 ||
+        priceValue < 0 ||
+        (IsFree !== undefined && typeof IsFree !== "boolean") ||
+        (IsVisible !== undefined && typeof IsVisible !== "boolean")
+      ) {
+        throw new HttpError(400, "Invalid tariff payload");
+      }
+      const result = await TariffService.addTariff({
+        title: normalizedTitle,
+        dataLimit: dataLimitValue,
+        duration: durationValue,
+        price: priceValue,
+        isFree: IsFree,
+        isVisible: IsVisible,
       });
-      const result = await tariff.save();
       res.status(200).json(result);
     } catch (error) {
-      next(error);
+      handleControllerError(error, res, next);
     }
   };
 
-  static EditTariff: RequestHandler = (req, res, next) => {
+  static EditTariff: RequestHandler = async (req, res, next) => {
     try {
-      res.status(200).json({ result: "" });
+      const id = req.params.id;
+      if (!isValidObjectId(id)) {
+        throw new HttpError(400, "Invalid Tariff Id");
+      }
+      const { Title, DataLimit, Duration, Price, IsFree, IsVisible } = req.body as {
+        Title?: string;
+        DataLimit?: number | string;
+        Duration?: number | string;
+        Price?: number | string;
+        IsFree?: boolean;
+        IsVisible?: boolean;
+      };
+      const normalizedTitle = Title?.trim();
+      const dataLimitValue = DataLimit !== undefined ? Number(DataLimit) : undefined;
+      const durationValue = Duration !== undefined ? Number(Duration) : undefined;
+      const priceValue = Price !== undefined ? Number(Price) : undefined;
+
+      if (
+        (dataLimitValue !== undefined &&
+          (!Number.isFinite(dataLimitValue) || dataLimitValue < 0)) ||
+        (durationValue !== undefined && (!Number.isFinite(durationValue) || durationValue < 0)) ||
+        (priceValue !== undefined && (!Number.isFinite(priceValue) || priceValue < 0)) ||
+        (IsFree !== undefined && typeof IsFree !== "boolean") ||
+        (IsVisible !== undefined && typeof IsVisible !== "boolean")
+      ) {
+        throw new HttpError(400, "Invalid tariff payload");
+      }
+
+      const tariff = await TariffService.editTariff(id, {
+        title: normalizedTitle,
+        dataLimit: dataLimitValue,
+        duration: durationValue,
+        price: priceValue,
+        isFree: IsFree,
+        isVisible: IsVisible,
+      });
+      res.status(200).json(tariff);
     } catch (error) {
-      next(error);
+      handleControllerError(error, res, next);
     }
   };
 
-  static RemoveTariff: RequestHandler = (req, res, next) => {
+  static RemoveTariff: RequestHandler = async (req, res, next) => {
     try {
-      res.status(200).json({ result: "" });
+      const id = req.params.id;
+      if (!isValidObjectId(id)) {
+        throw new HttpError(400, "Invalid Tariff Id");
+      }
+      await TariffService.removeTariff(id);
+      res.status(200).json({ deletedCount: 1 });
     } catch (error) {
-      next(error);
+      handleControllerError(error, res, next);
     }
   };
 
   static DisableTariff: RequestHandler = async (req, res, next) => {
     try {
-      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
-        throw new Error("Invalid Token");
-
-      const _id = new Types.ObjectId(req.params.id);
-      const TariffModel = await getModel<ITariff>("Tariff", TariffSchema);
-      const tariff = await TariffModel.findOne({ _id: _id });
-      if (tariff) {
-        tariff.IsVisible = !tariff.IsVisible;
-        await tariff.save();
-        res.status(200).json({ result: "Tariff Changed!" });
-      } else {
-        res.status(404).json({ result: "Tariff Not Found!" });
+      const id = req.params.id;
+      if (!isValidObjectId(id)) {
+        throw new HttpError(400, "Invalid Tariff Id");
       }
+      const isVisible = await TariffService.toggleTariffVisibility(id);
+      res.status(200).json({ result: "Tariff Changed!", IsVisible: isVisible });
     } catch (error) {
-      next(error);
+      handleControllerError(error, res, next);
     }
   };
 
   static FreeChanged: RequestHandler = async (req, res, next) => {
     try {
-      if (!(await AccountHelpers.CheckToken(req.headers.authorization)))
-        throw new Error("Invalid Token");
-
-      const _id = new Types.ObjectId(req.params.id);
-      const TariffModel = await getModel<ITariff>("Tariff", TariffSchema);
-      const tariff = await TariffModel.findOne({ _id: _id });
-      if (tariff) {
-        tariff.IsFree = !tariff.IsFree;
-        await tariff.save();
-        res.status(200).json({ result: "Tariff Changed!" });
-      } else {
-        res.status(404).json({ result: "Tariff Not Found!" });
+      const id = req.params.id;
+      if (!isValidObjectId(id)) {
+        throw new HttpError(400, "Invalid Tariff Id");
       }
+      const isFree = await TariffService.toggleTariffFree(id);
+      res.status(200).json({ result: "Tariff Changed!", IsFree: isFree });
     } catch (error) {
-      next(error);
+      handleControllerError(error, res, next);
     }
   };
 }

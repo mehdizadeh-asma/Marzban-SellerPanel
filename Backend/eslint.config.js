@@ -1,4 +1,3 @@
-// ESLint Flat Config (ESLint v9+)
 const tsParser = require("@typescript-eslint/parser");
 const tsPlugin = require("@typescript-eslint/eslint-plugin");
 const prettierPlugin = require("eslint-plugin-prettier");
@@ -7,8 +6,6 @@ const unusedImports = require("eslint-plugin-unused-imports");
 
 module.exports = [
   {
-    // ignore generated coverage folders (both test/coverage and tests/coverage),
-    // build outputs and JS files so ESLint focuses on TypeScript sources/tests
     ignores: [
       "node_modules/**",
       "dist/**",
@@ -17,7 +14,6 @@ module.exports = [
       "tests/coverage/**",
       "jest.config.ts",
       "**/*.js",
-      "types/mongoose-shim.d.ts",
     ],
   },
   {
@@ -44,7 +40,7 @@ module.exports = [
       "no-console": "off",
 
       // Unused imports/vars
-      "no-unused-vars": "warn",
+      "no-unused-vars": ["warn", { varsIgnorePattern: "^_", argsIgnorePattern: "^_" }],
       "@typescript-eslint/no-unused-vars": "warn",
       "unused-imports/no-unused-imports": "error",
       "unused-imports/no-unused-vars": [

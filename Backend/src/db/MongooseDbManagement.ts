@@ -1,20 +1,10 @@
-import type { Connection, ConnectOptions, Document, Model } from "mongoose";
+import type { Connection, ConnectOptions } from "mongoose";
 import mongoose from "mongoose";
 
-import type { IAccount } from "../models/Account";
-import { AccountSchema } from "../models/Account";
-import type { ISeller } from "../models/Seller";
-import { SellerSchema } from "../models/Seller";
-import type { ITariff } from "../models/Tariff";
-import { TariffSchema } from "../models/Tariff";
-import type { ITariffInbound } from "../models/TariffInbound";
-import { TariffInboundSchema } from "../models/TariffInbound";
-import type { ITariffSeller } from "../models/TariffSeller";
-import { TariffSellerSchema } from "../models/TariffSeller";
-import { WholeSalerSchema } from "../models/WholeSaler";
-import ConfigFile from "./Config";
+import ConfigFile from "../config/Config";
+import { copyDatabase as copyDatabaseWithDeps } from "./DbCopyService";
+import { checkLicense as checkLicenseWithDeps } from "./LicenseService";
 
-// تنظیمات پیش‌فرض اتصال
 const DEFAULT_CONNECTION_OPTIONS: ConnectOptions = {
   maxPoolSize: 10,
   minPoolSize: 5,
@@ -23,7 +13,7 @@ const DEFAULT_CONNECTION_OPTIONS: ConnectOptions = {
   serverSelectionTimeoutMS: 15000,
   heartbeatFrequencyMS: 30000,
   tls: true,
-  tlsInsecure: false, // برای تست می‌توانید true بگذارید، اما برای امنیت بهتر false باشد
+  tlsInsecure: false,
   waitQueueTimeoutMS: 5000,
   maxIdleTimeMS: 30000,
 };
@@ -55,8 +45,6 @@ class MongooseDbManagement {
       const now = Date.now();
       const maxIdleTime = 5 * 60 * 1000;
       const connections = Array.from(this.activeConnections.entries());
-      const connectedState = (mongoose as { ConnectionStates?: { connected?: unknown } })
-        .ConnectionStates?.connected;
 
       for (const [connectionString, connection] of connections) {
         try {
@@ -68,9 +56,7 @@ class MongooseDbManagement {
           const isMain =
             this.mainConnection &&
             (this.mainConnection as ConnectionWithClient).client?.s?.url === connectionString;
-          const isConnected =
-            connectedState !== undefined && connection.readyState === connectedState;
-          if (isConnected && isIdle && !isMain) {
+          if (connection.readyState === mongoose.ConnectionStates.connected && isIdle && !isMain) {
             console.log(`Closing idle Main connection`);
             await this.closeConnection(connectionString);
           }
@@ -89,11 +75,7 @@ class MongooseDbManagement {
 
   static async connectMainDatabase(): Promise<void> {
     if (this.mainConnection) {
-      const connectedState = (mongoose as { ConnectionStates?: { connected?: unknown } })
-        .ConnectionStates?.connected;
-      const isConnected =
-        connectedState !== undefined && this.mainConnection.readyState === connectedState;
-      if (!isConnected) {
+      if (this.mainConnection.readyState !== mongoose.ConnectionStates.connected) {
         try {
           await this.mainConnection.close();
         } catch (e) {
@@ -137,25 +119,29 @@ class MongooseDbManagement {
           resolve();
         };
 
-        const errorHandler = (err: unknown): void => {
+        const errorHandler = (...args: unknown[]): void => {
           cleanup();
-          reject(err instanceof Error ? err : new Error(String(err)));
+          const err = args[0] instanceof Error ? args[0] : new Error(String(args[0]));
+          reject(err);
         };
 
-        const timeoutMs = Number((options as Record<string, unknown>).connectTimeoutMS ?? 15000);
+        const rawTimeout = (options as { connectTimeoutMS?: unknown }).connectTimeoutMS;
+        const timeoutMs =
+          typeof rawTimeout === "number" && Number.isFinite(rawTimeout) ? rawTimeout : 15000;
+
         const timeout = setTimeout(() => {
           cleanup();
           reject(new Error("Connection timed out"));
         }, timeoutMs);
 
         const cleanup = (): void => {
-          connection.removeListener?.("connected", connectHandler);
-          connection.removeListener?.("error", errorHandler);
+          connection.removeListener("connected", connectHandler);
+          connection.removeListener("error", errorHandler);
           clearTimeout(timeout);
         };
 
-        connection.once?.("connected", connectHandler);
-        connection.once?.("error", errorHandler);
+        connection.once("connected", connectHandler);
+        connection.once("error", errorHandler);
       });
 
       this.setupConnectionMonitoring(connection, connectionName);
@@ -180,13 +166,7 @@ class MongooseDbManagement {
     poolSize = 10,
   ): Promise<Connection> {
     const cachedConnection = this.activeConnections.get(connectionString);
-    const connectedState = (mongoose as { ConnectionStates?: { connected?: unknown } })
-      .ConnectionStates?.connected;
-    const isConnected =
-      cachedConnection &&
-      connectedState !== undefined &&
-      cachedConnection.readyState === connectedState;
-    if (isConnected) {
+    if (cachedConnection && cachedConnection.readyState === mongoose.ConnectionStates.connected) {
       this.connectionLastUsedMap.set(cachedConnection, Date.now());
       return cachedConnection;
     }
@@ -202,7 +182,6 @@ class MongooseDbManagement {
     return this.mainConnection;
   }
 
-  // بستن اتصال
   static async closeConnection(connectionString: string): Promise<void> {
     const mainConn = this.mainConnection as ConnectionWithClient;
 
@@ -229,25 +208,25 @@ class MongooseDbManagement {
   }
 
   private static setupConnectionMonitoring(connection: Connection, name: string): void {
-    connection.on?.("connected", () => {
+    connection.on("connected", () => {
       console.log(`[${name}] MongoDB connected`);
       this.connectionLastUsedMap.set(connection, Date.now());
     });
 
-    connection.on?.("disconnected", () => {
+    connection.on("disconnected", () => {
       console.warn(`[${name}] MongoDB disconnected`);
     });
 
-    connection.on?.("error", (err) => {
+    connection.on("error", (err) => {
       console.error(`[${name}] MongoDB error:`, err);
     });
 
-    connection.on?.("reconnected", () => {
+    connection.on("reconnected", () => {
       console.log(`[${name}] MongoDB reconnected`);
       this.connectionLastUsedMap.set(connection, Date.now());
     });
 
-    connection.on?.("open", () => {
+    connection.on("open", () => {
       this.connectionLastUsedMap.set(connection, Date.now());
     });
   }
@@ -270,11 +249,27 @@ class MongooseDbManagement {
     console.log("All database connections closed");
   }
 
-  static getDbPanelConnectionString(): string {
-    return this.BASE_CONNECTION_STRING.replace("##CLUSTER##", "marzbansellerpanel.ghtzkr3")
-      .replace("##DB##", "MarzbanSellerPanel")
-      .replace("##USERNAME##", "marzbansellerpanel")
-      .replace("##PASSWORD##", "bwvOIYFifBShAtIj");
+  private static buildConnectionString(
+    cluster: string,
+    database: string,
+    username: string,
+    password: string,
+  ): string {
+    return this.BASE_CONNECTION_STRING.replace("##CLUSTER##", cluster)
+      .replace("##DB##", database)
+      .replace("##USERNAME##", username)
+      .replace("##PASSWORD##", password);
+  }
+
+  static async getDbPanelConnectionString(): Promise<string> {
+    const [cluster, database, username, password] = await Promise.all([
+      ConfigFile.GetPanelDbCluster(),
+      ConfigFile.GetPanelDbDatabase(),
+      ConfigFile.GetPanelDbUsername(),
+      ConfigFile.GetPanelDbPassword(),
+    ]);
+
+    return this.buildConnectionString(cluster, database, username, password);
   }
 
   static setDbWholeSalerConnectionString(
@@ -283,10 +278,12 @@ class MongooseDbManagement {
     username: string,
     password: string,
   ): void {
-    this.dbWholeSalerConnectionString = this.BASE_CONNECTION_STRING.replace("##CLUSTER##", cluster)
-      .replace("##DB##", database)
-      .replace("##USERNAME##", username)
-      .replace("##PASSWORD##", password);
+    this.dbWholeSalerConnectionString = this.buildConnectionString(
+      cluster,
+      database,
+      username,
+      password,
+    );
   }
 
   static getDbWholeSalerConnectionString(): string {
@@ -294,122 +291,21 @@ class MongooseDbManagement {
   }
 
   static async checkLicense(): Promise<boolean> {
-    const marzbanUrl = await ConfigFile.GetMarzbanURL();
-    const sn = await ConfigFile.GetSerialKey();
-    const connectionString = this.getDbPanelConnectionString();
-
-    try {
-      const connection = await this.getConnection(connectionString, "LicenseDB", 5);
-
-      const WholeSalerModel = connection.model("WholeSaler", WholeSalerSchema);
-      const wholeSaler = (await WholeSalerModel.findOne({
-        MarzbanUrl: marzbanUrl,
-        SN: sn,
-      })) as
-        | ({
-            ExpireDate?: Date;
-            Cluster?: string;
-            Database?: string;
-            DbUsername?: string;
-            DbPassword?: string;
-          } & Document)
-        | null;
-
-      await this.closeConnection(connectionString);
-
-      if (
-        wholeSaler &&
-        wholeSaler.ExpireDate &&
-        wholeSaler.Cluster &&
-        wholeSaler.Database &&
-        wholeSaler.DbUsername &&
-        wholeSaler.DbPassword &&
-        wholeSaler.ExpireDate >= new Date()
-      ) {
-        this.setDbWholeSalerConnectionString(
-          wholeSaler.Cluster,
-          wholeSaler.Database,
-          wholeSaler.DbUsername,
-          wholeSaler.DbPassword,
-        );
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error("License check failed:", error);
-      return false;
-    }
+    return checkLicenseWithDeps({
+      getConnection: (connectionString) => this.getConnection(connectionString, "LicenseDB", 5),
+      closeConnection: (connectionString) => this.closeConnection(connectionString),
+      getDbPanelConnectionString: () => this.getDbPanelConnectionString(),
+      setDbWholeSalerConnectionString: (cluster, database, username, password) =>
+        this.setDbWholeSalerConnectionString(cluster, database, username, password),
+    });
   }
 
   static async copyDatabase(destinationConnectionString: string): Promise<void> {
-    try {
-      if (!this.mainConnection) {
-        throw new Error("اتصال به دیتابیس اصلی برقرار نشده است");
-      }
-
-      const targetConnection = await this.getConnection(destinationConnectionString, "CopyDB", 5);
-
-      console.log("شروع فرآیند کپی دیتابیس...");
-
-      await this.copyCollection<IAccount>(
-        this.mainConnection.model<IAccount>("Account", AccountSchema),
-        targetConnection.model<IAccount>("Account", AccountSchema),
-        "Accounts",
-      );
-
-      await this.copyCollection<ISeller>(
-        this.mainConnection.model<ISeller>("Seller", SellerSchema),
-        targetConnection.model<ISeller>("Seller", SellerSchema),
-        "Sellers",
-      );
-
-      await this.copyCollection<ITariff>(
-        this.mainConnection.model<ITariff>("Tariff", TariffSchema),
-        targetConnection.model<ITariff>("Tariff", TariffSchema),
-        "Tariffs",
-      );
-
-      await this.copyCollection<ITariffInbound>(
-        this.mainConnection.model<ITariffInbound>("TariffInbound", TariffInboundSchema),
-        targetConnection.model<ITariffInbound>("TariffInbound", TariffInboundSchema),
-        "TariffInbounds",
-      );
-
-      await this.copyCollection<ITariffSeller>(
-        this.mainConnection.model<ITariffSeller>("TariffSeller", TariffSellerSchema),
-        targetConnection.model<ITariffSeller>("TariffSeller", TariffSellerSchema),
-        "TariffSellers",
-      );
-
-      console.log("کپی دیتابیس با موفقیت انجام شد");
-      await this.closeConnection(destinationConnectionString);
-    } catch (error) {
-      console.error("خطا در کپی دیتابیس:", error);
-      throw error;
-    }
-  }
-
-  private static async copyCollection<T extends Document>(
-    sourceModel: Model<T>,
-    targetModel: Model<T>,
-    collectionName: string,
-  ): Promise<void> {
-    console.log(`در حال کپی‌کردن ${collectionName}...`);
-
-    const documents = await sourceModel.find().lean();
-
-    if (documents.length === 0) {
-      console.log(`هیچ سندی در ${collectionName} یافت نشد`);
-      return;
-    }
-
-    try {
-      await targetModel.insertMany(documents, { ordered: false });
-      console.log(`تعداد ${documents.length} سند در ${collectionName} کپی شد`);
-    } catch (insertError) {
-      console.error(`خطا در کپی ${collectionName}:`, insertError);
-      throw new Error(`کپی ${collectionName} ناموفق بود`);
-    }
+    return copyDatabaseWithDeps(destinationConnectionString, {
+      mainConnection: this.mainConnection,
+      getConnection: (connectionString) => this.getConnection(connectionString, "CopyDB", 5),
+      closeConnection: (connectionString) => this.closeConnection(connectionString),
+    });
   }
 }
 

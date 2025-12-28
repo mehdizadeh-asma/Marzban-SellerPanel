@@ -1,8 +1,11 @@
 import { Router } from "express";
 
 import AccountController from "../controllers/AccountController";
+import { authenticate, requireAdmin } from "../middleware/auth";
 
 const router = Router();
+
+router.use(authenticate, requireAdmin);
 
 // router.get("/accounts", AccountController.GetAccountList);
 // router.get("/account/:id", AccountController.GetAccount);

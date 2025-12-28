@@ -1,3 +1,5 @@
+import crypto from "crypto";
+
 class Helper {
   static CalculateRemainDate(expire: number): string {
     if (expire != null) {
@@ -67,13 +69,14 @@ class Helper {
 
   static GenerateRandomPassword(length: number): string {
     const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789~!@#$%^&";
+    if (length <= 0) return "";
+
+    const randomBytes = crypto.randomBytes(length);
     let password = "";
-
     for (let i = 0; i < length; i++) {
-      const randomIndex = Math.floor(Math.random() * charset.length);
-      password += charset[randomIndex];
+      const index = randomBytes[i] % charset.length;
+      password += charset[index];
     }
-
     return password;
   }
 }

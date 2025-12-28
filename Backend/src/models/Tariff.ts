@@ -1,7 +1,7 @@
-import type { Document, Types } from "mongoose";
+import type { HydratedDocument, Types } from "mongoose";
 import { Schema } from "mongoose";
 
-export interface ITariff extends Document {
+export interface ITariff {
   _id: Types.ObjectId;
   Title: string;
   DataLimit: number;
@@ -11,7 +11,9 @@ export interface ITariff extends Document {
   IsVisible: boolean;
 }
 
-export const TariffSchema: Schema = new Schema({
+export type TariffDocument = HydratedDocument<ITariff>;
+
+export const TariffSchema = new Schema<ITariff>({
   Title: { type: String, required: [true, "Title is required"] },
   DataLimit: { type: Number, required: [true, "DataLimit is required"] },
   Duration: { type: Number, required: [true, "Duration is required"] },

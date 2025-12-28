@@ -1,7 +1,7 @@
-import type { Document, Types } from "mongoose";
+import type { HydratedDocument, Types } from "mongoose";
 import { Schema } from "mongoose";
 
-export interface ISeller extends Document {
+export interface ISeller {
   _id: Types.ObjectId;
   Title: string;
   Username: string;
@@ -13,7 +13,9 @@ export interface ISeller extends Document {
   Status: "Active" | "Deactive";
 }
 
-export const SellerSchema: Schema = new Schema({
+export type SellerDocument = HydratedDocument<ISeller>;
+
+export const SellerSchema = new Schema<ISeller>({
   Title: { type: String, unique: true, required: [true, "Title is required"] },
   Username: {
     type: String,
@@ -38,5 +40,3 @@ export const SellerSchema: Schema = new Schema({
     default: "Active",
   },
 });
-
-// فقط این دو را export کن، مدل را export نکن!

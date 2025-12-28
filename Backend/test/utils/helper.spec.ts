@@ -1,88 +1,91 @@
 import Helper from "../../src/utils/Helper";
 
-describe("Helper utils", () => {
-  it("should calculate remaining date as left/expired/never correctly", () => {
-    const nowSec = Math.floor(Date.now() / 1000);
-    const twoDaysLater = nowSec + 2 * 24 * 3600;
-    const twoDaysAgo = nowSec - 2 * 24 * 3600;
+describe("Helper utilities", () => {
+  const baseDate = new Date("2023-01-01T00:00:00Z");
+  const baseTimestamp = Math.floor(baseDate.getTime() / 1000);
 
-    expect(Helper.CalculateRemainDate(twoDaysLater)).toMatch(/Day Left$/);
-    expect(Helper.CalculateRemainDate(twoDaysAgo)).toMatch(/Day Expired$/);
+  beforeAll(() => {
+    jest.useFakeTimers();
+    jest.setSystemTime(baseDate);
+  });
+
+  afterAll(() => {
+    jest.useRealTimers();
+  });
+
+  it("calculates remaining date strings", () => {
+    const future = baseTimestamp + 2 * 24 * 60 * 60;
+    expect(Helper.CalculateRemainDate(future)).toBe("1 Day Left");
+
+    const past = baseTimestamp - 24 * 60 * 60;
+    expect(Helper.CalculateRemainDate(past)).toBe("2 Day Expired");
+
     expect(Helper.CalculateRemainDate(null as unknown as number)).toBe("Never");
   });
 
-  it("should compute online status and update subscription dates correctly", () => {
-    const recent = new Date(Date.now() - 60 * 1000).toISOString(); // 1 minute ago
-    const fiveMin = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-    const twoDays = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+  it("detects online state correctly", () => {
+    const twoMinutesAgo = new Date(baseDate.getTime() - 2 * 60 * 1000).toISOString();
+    expect(Helper.IsOnline(twoMinutesAgo)).toBe("Online");
 
-    expect(Helper.IsOnline(recent)).toBe("Online");
+    const tenMinutesAgo = new Date(baseDate.getTime() - 10 * 60 * 1000).toISOString();
+    expect(Helper.IsOnline(tenMinutesAgo)).toBe("Offline");
+
     expect(Helper.IsOnline(null as unknown as string)).toBe("Never");
-
-    expect(Helper.CalculateOnlineDate(recent)).toBe("Online");
-    expect(Helper.CalculateOnlineDate(fiveMin)).toMatch(/Minutes ago$/);
-    expect(Helper.CalculateOnlineDate(twoDays)).toMatch(/Days ago$/);
-
-    expect(Helper.CalculateUpdateSubscriptionDate(recent)).toMatch(/Minutes ago|Online/);
-    expect(Helper.CalculateUpdateSubscriptionDate(twoDays)).toMatch(/Days ago/);
   });
 
-  it("should format traffic bytes correctly", () => {
+  it("calculates last online date with various ranges", () => {
+    const threeDaysAgo = new Date(baseDate.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString();
+    expect(Helper.CalculateOnlineDate(threeDaysAgo)).toBe("2 Days ago");
+
+    const twoHoursThirtyAgo = new Date(
+      baseDate.getTime() - (2 * 60 + 30) * 60 * 1000,
+    ).toISOString();
+    expect(Helper.CalculateOnlineDate(twoHoursThirtyAgo)).toBe("2 Hours 29 Minutes ago");
+
+    const tenMinutesAgo = new Date(baseDate.getTime() - 10 * 60 * 1000).toISOString();
+    expect(Helper.CalculateOnlineDate(tenMinutesAgo)).toBe("9 Minutes ago");
+
+    const oneMinuteAgo = new Date(baseDate.getTime() - 60 * 1000).toISOString();
+    expect(Helper.CalculateOnlineDate(oneMinuteAgo)).toBe("Online");
+
+    expect(Helper.CalculateOnlineDate(null as unknown as string)).toBe("Never");
+  });
+
+  it("calculates subscription update dates", () => {
+    const twoDaysAgo = new Date(baseDate.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString();
+    expect(Helper.CalculateUpdateSubscriptionDate(twoDaysAgo)).toBe("1 Days ago");
+
+    const ninetyMinutesAgo = new Date(baseDate.getTime() - 90 * 60 * 1000).toISOString();
+    expect(Helper.CalculateUpdateSubscriptionDate(ninetyMinutesAgo)).toBe("1 Hours 29 Minutes ago");
+
+    const fifteenMinutesAgo = new Date(baseDate.getTime() - 15 * 60 * 1000).toISOString();
+    expect(Helper.CalculateUpdateSubscriptionDate(fifteenMinutesAgo)).toBe("14 Minutes ago");
+
+    expect(Helper.CalculateUpdateSubscriptionDate(null as unknown as string)).toBe("Never");
+  });
+
+  it("formats traffic units", () => {
     expect(Helper.CalculateTraffic(500)).toBe("500 B");
-    expect(Helper.CalculateTraffic(1500)).toMatch(/KB$/);
-    expect(Helper.CalculateTraffic(2 * 1024 * 1024)).toMatch(/MB$/);
+    expect(Helper.CalculateTraffic(1024)).toBe("1.00 KB");
+    expect(Helper.CalculateTraffic(1024 * 1024)).toBe("1.00 MB");
+    expect(Helper.CalculateTraffic(1024 * 1024 * 1024)).toBe("1.00 GB");
+    expect(Helper.CalculateTraffic(1024 * 1024 * 1024 * 1024)).toBe("1.00 TB");
+    expect(Helper.CalculateTraffic(1024 * 1024 * 1024 * 1024 * 5)).toBe("5.00 TB");
+    expect(Helper.CalculateTraffic(1024 ** 5)).toBe((1024 ** 5).toString());
   });
 
-  it("should generate a random password with correct length", () => {
-    const p = Helper.GenerateRandomPassword(12);
-    expect(typeof p).toBe("string");
-    expect(p).toHaveLength(12);
-  });
-});
+  it("generates random passwords with allowed characters", () => {
+    const password = Helper.GenerateRandomPassword(64);
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789~!@#$%^&";
 
-// --- merged from helpers.coverage.spec.ts ---
-const {
-  mockResponse,
-  mockNext,
-  createModelMock,
-  mockConfigDefaults,
-  resetAllMocks,
-} = require("../../jest.setup");
-
-describe("Helpers coverage", () => {
-  it("should return an Express-like mock response that supports chaining", () => {
-    const res = mockResponse();
-    expect(typeof res.status).toBe("function");
-    expect(typeof res.json).toBe("function");
-    expect(typeof res.send).toBe("function");
-
-    res.status(201).json({ ok: true });
-    expect(res.status).toHaveBeenCalledWith(201);
-    expect(res.json).toHaveBeenCalledWith({ ok: true });
+    expect(password).toHaveLength(64);
+    for (const ch of password) {
+      expect(charset.includes(ch)).toBe(true);
+    }
   });
 
-  it("should return a mock next function that records calls", () => {
-    const next = mockNext();
-    expect(typeof next).toBe("function");
-    next("err");
-    expect(next).toHaveBeenCalledWith("err");
-  });
-
-  it("should return model-like stubs and respect override values", async () => {
-    const model = createModelMock({ find: [{ a: 1 }], deleteMany: { deletedCount: 5 } });
-    expect(typeof model.find).toBe("function");
-    const found = await model.find();
-    expect(found).toEqual([{ a: 1 }]);
-    const deleted = await model.deleteMany();
-    expect(deleted).toEqual({ deletedCount: 5 });
-  });
-
-  it("should set or override default Config mock values", async () => {
-    const cf = mockConfigDefaults({ GetMarzbanFlow: jest.fn().mockResolvedValue("override") });
-    expect(typeof cf.GetMarzbanFlow).toBe("function");
-    const v = await cf.GetMarzbanFlow();
-    expect(v).toBe("override");
-
-    resetAllMocks();
+  it("returns empty password for non-positive lengths", () => {
+    expect(Helper.GenerateRandomPassword(0)).toBe("");
+    expect(Helper.GenerateRandomPassword(-1)).toBe("");
   });
 });
