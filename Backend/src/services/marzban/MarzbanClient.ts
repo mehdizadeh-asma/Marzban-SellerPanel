@@ -38,7 +38,7 @@ export const loginToMarzban = async (username: string, password: string): Promis
   const apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/admin/token";
 
   const config = {
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/x-www-form-urlencoded" },
   };
 
   const resultLogin = await axios.post(
@@ -59,7 +59,7 @@ export const validateMarzbanCredentials = async (
   try {
     const apiURL = (await ConfigFile.GetMarzbanURL()) + "/api/admin/token";
     const config = {
-      headers: { "content-type": "application/json" },
+      headers: { "content-type": "application/x-www-form-urlencoded" },
     };
     await axios.post(
       apiURL,
