@@ -1,4 +1,5 @@
 "use client";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
@@ -10,10 +11,11 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Tooltip from "@mui/material/Tooltip";
 
-import AccountManagment from "@/components/Accounts/AccountManagement";
-import SellerManagement from "@/components/Sellers/SellerManagement";
-import TariffManagement from "@/components/Tariffs/TariffManagement";
 import { useMyContext } from "@/context/MyContext";
+
+const AccountManagment = dynamic(() => import("@/components/Accounts/AccountManagement"));
+const TariffManagement = dynamic(() => import("@/components/Tariffs/TariffManagement"));
+const SellerManagement = dynamic(() => import("@/components/Sellers/SellerManagement"));
 
 export default function Dashboard(): React.ReactElement {
   const [activeComponent, setActiveComponent] = useState<string>("accounts");
@@ -25,12 +27,12 @@ export default function Dashboard(): React.ReactElement {
   const open = Boolean(anchorEl);
 
   useEffect(() => {
-    if (user.Token === "") router.push("/seller");
-  }, [user.Token, router]);
+    if (!user.accessToken) router.push("/seller");
+  }, [user.accessToken, router]);
 
   const BtnExit_Click = (): void => {
     setUser({
-      Token: "",
+      accessToken: "",
       IsAdmin: false,
       Username: "",
       Limit: 0,

@@ -1,83 +1,58 @@
-import axios from "axios";
 import type { ReactElement } from "react";
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from "react";
+import { forwardRef, useCallback, useImperativeHandle, useMemo } from "react";
 
 import ToggleOffIcon from "@mui/icons-material/ToggleOff";
 import ToggleOnIcon from "@mui/icons-material/ToggleOn";
+import type { AlertColor } from "@mui/material";
 import type { GridActionsCellItemProps, GridColDef } from "@mui/x-data-grid";
-import { DataGrid, GridActionsCellItem } from "@mui/x-data-grid";
+import { GridActionsCellItem } from "@mui/x-data-grid";
 
-import { useMyContext } from "@/context/MyContext";
+import { useSellerTariffAssignments } from "@/hooks/useSellerTariffAssignments";
 import type SellerType from "@/models/SellerType";
+import type TariffSellerAssignmentType from "@/models/TariffSellerAssignmentType";
+
+import DataGridShell from "../General/DataGridShell";
 
 interface PropsType {
   seller?: SellerType;
+  onMessage?: (severity: AlertColor, text: string) => void;
 }
 export interface ForwardRefHandle {
   SendBackList: () => string[];
 }
 
-interface TariffSellerGridType {
-  SellerId: string;
-  Title: string;
-  TariffId: string;
-  Price: string;
-}
 const PackagesGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref): ReactElement | null => {
-  const [tariffSellerList, setTariffSellerList] = useState<TariffSellerGridType[]>([]);
-  const [tariffListIds, setTariffListIds] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
-  const { user, config } = useMyContext();
   const sellerId = props.seller?._id;
+  const { assignments, setAssignments, selectedTariffIds, isFetching } = useSellerTariffAssignments(
+    sellerId,
+    props.onMessage,
+  );
 
-  useImperativeHandle(ref, () => ({
-    SendBackList: (): string[] => tariffListIds,
-  }));
+  useImperativeHandle(
+    ref,
+    () => ({
+      SendBackList: (): string[] => [...selectedTariffIds],
+    }),
+    [selectedTariffIds],
+  );
 
-  const LaodTariff = useCallback(async (): Promise<void> => {
-    setLoading(true);
-    const tarifflist: string[] = [];
-    try {
-      const url = new URL(`api/tariffSeller/${sellerId}`, config.BACKEND_URL);
+  const handleAssignToggle = useCallback(
+    (tariffId?: string): void => {
+      if (!tariffId || !sellerId) return;
 
-      const resultTariffSellers = await axios.get(url.toString(), {
-        headers: { Authorization: "Bearer " + user.Token },
-      });
-
-      setTariffSellerList(resultTariffSellers.data);
-
-      resultTariffSellers.data.map((item: TariffSellerGridType) => {
-        if (item.SellerId != "") tarifflist.push(item.TariffId);
-      });
-      setTariffListIds(tarifflist);
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setLoading(false);
-    }
-  }, [sellerId, config.BACKEND_URL, user.Token]);
-
-  useEffect(() => {
-    if (user.Token) LaodTariff();
-  }, [LaodTariff, user.Token]);
-
-  const handleAssignToggle = (tariffId?: string): void => {
-    if (!tariffId) return;
-
-    setTariffListIds((prevIds) =>
-      prevIds.includes(tariffId) ? prevIds.filter((id) => id !== tariffId) : [...prevIds, tariffId],
-    );
-    setTariffSellerList((prevList) =>
-      prevList.map((item) =>
-        item.TariffId.toString() === tariffId
-          ? {
-              ...item,
-              SellerId: item.SellerId === "" ? sellerId! : "",
-            }
-          : item,
-      ),
-    );
-  };
+      setAssignments((prevList) =>
+        prevList.map((item) =>
+          item.TariffId.toString() === tariffId
+            ? {
+                ...item,
+                SellerId: item.SellerId === "" ? sellerId : "",
+              }
+            : item,
+        ),
+      );
+    },
+    [sellerId, setAssignments],
+  );
 
   const changeIcon = (SellerId: string): ReactElement => {
     return SellerId != "" ? (
@@ -87,66 +62,56 @@ const PackagesGrid = forwardRef<ForwardRefHandle, PropsType>((props, ref): React
     );
   };
 
-  const columns = [
-    {
-      field: "Title",
-      headerName: "Title",
-      width: 250,
-      headerClassName: "MUIGridHeader",
-    },
-    {
-      field: "Price",
-      headerName: "Price",
-      width: 50,
-      headerClassName: "MUIGridHeader",
-    },
-    {
-      headerName: "Assign",
-      field: "active",
-      type: "actions",
-      width: 100,
-      headerClassName: "MUIGridHeader",
-      getActions: (params: {
-        row: TariffSellerGridType;
-      }): readonly ReactElement<GridActionsCellItemProps>[] => [
-        <GridActionsCellItem
-          key="assign"
-          label="Assign"
-          icon={changeIcon(params.row.SellerId)}
-          onClick={() => handleAssignToggle(params.row.TariffId)}
-        />,
-      ],
-    },
-  ] as GridColDef<TariffSellerGridType>[];
+  const columns = useMemo(
+    () =>
+      [
+        {
+          field: "Title",
+          headerName: "Title",
+          width: 250,
+          headerClassName: "MUIGridHeader",
+        },
+        {
+          field: "Price",
+          headerName: "Price",
+          width: 50,
+          headerClassName: "MUIGridHeader",
+        },
+        {
+          headerName: "Assign",
+          field: "active",
+          type: "actions",
+          width: 100,
+          headerClassName: "MUIGridHeader",
+          getActions: (params: {
+            row: TariffSellerAssignmentType;
+          }): readonly ReactElement<GridActionsCellItemProps>[] => [
+            <GridActionsCellItem
+              key="assign"
+              label="Assign"
+              icon={changeIcon(params.row.SellerId)}
+              onClick={() => handleAssignToggle(params.row.TariffId)}
+            />,
+          ],
+        },
+      ] as GridColDef<TariffSellerAssignmentType>[],
+    [handleAssignToggle],
+  );
 
   return (
     <div className="container  my-3">
-      <DataGrid
-        getRowId={(row) => row.TariffId || `temp-id-${Math.random()}`}
+      <DataGridShell
+        getRowId={(row) =>
+          row.TariffId || `${row.Title}-${row.Price}-${row.SellerId}-${row.TariffId || ""}`
+        }
         initialState={{
           pagination: { paginationModel: { pageSize: 10 } },
         }}
         pageSizeOptions={[10]}
         className="Grid"
-        rows={tariffSellerList}
+        rows={assignments}
         columns={columns}
-        loading={loading}
-        sx={{
-          boxShadow: 2,
-          border: 2,
-          borderColor: "purple",
-          "& .MuiDataGrid-row:hover": {
-            backgroundColor: "lightgray",
-            color: "purple",
-            fontWeight: "bold",
-          },
-          "& .MuiDataGrid-row": {
-            backgroundColor: "#f5f5f5",
-          },
-          "& .MuiDataGrid-cell": {
-            textAlign: "center",
-          },
-        }}
+        loading={isFetching}
       />
     </div>
   );

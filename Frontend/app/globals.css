@@ -338,6 +338,11 @@ a {
 }
 
 /* Force DataGrid header purple + white text for marzban-data-grid */
+.marzban-data-grid {
+  height: 70vh;
+  min-height: 420px;
+}
+
 .marzban-data-grid .MuiDataGrid-columnHeaders {
   background: linear-gradient(30deg, rgb(50, 1, 49), rgb(90, 49, 90), rgb(126, 74, 126)) !important;
   color: #fff !important;

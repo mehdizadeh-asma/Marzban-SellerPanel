@@ -1,10 +1,15 @@
-import { forwardRef, useImperativeHandle, useRef, useState, type ReactElement } from "react";
+import { forwardRef, useImperativeHandle, useState, type ReactElement } from "react";
 import { Button, Modal } from "react-bootstrap";
+import { useForm } from "react-hook-form";
 
-import AddAccount from "./AddAccount";
+import type { AlertColor } from "@mui/material";
+
+import { useSellerTariffs } from "@/hooks/useSellerTariffs";
+import type TariffType from "@/models/TariffType";
 
 interface PropsType {
-  RenewHandler: (username: string, tariffId: string) => void;
+  RenewHandler: (username: string, tariff: TariffType) => void;
+  onMessage?: (severity: AlertColor, text: string) => void;
 }
 
 interface ForwardRefHandle {
@@ -12,25 +17,51 @@ interface ForwardRefHandle {
   Hide: () => void;
 }
 
+type RenewFormValues = {
+  tariffId: string;
+};
+
 const RenewModal = forwardRef<ForwardRefHandle, PropsType>((props, ref): ReactElement | null => {
   const [username, setUsername] = useState("");
-  const selectTariff = useRef<HTMLSelectElement | null>(null);
+  const { tariffs } = useSellerTariffs(props.onMessage);
+
+  const { register, handleSubmit, setError, reset, clearErrors, formState } =
+    useForm<RenewFormValues>({
+      defaultValues: {
+        tariffId: "",
+      },
+    });
 
   useImperativeHandle(ref, () => ({
-    Show: (username: string): void => {
-      setUsername(username);
+    Show: (nextUsername: string): void => {
+      setUsername(nextUsername);
+      reset({ tariffId: "" });
+      clearErrors();
     },
     Hide: (): void => setUsername(""),
   }));
 
   const btnCancel_Click = (): void => {
     setUsername("");
+    reset({ tariffId: "" });
+    clearErrors();
   };
 
-  const btnRenew_Click = async (): Promise<void> => {
-    if (selectTariff.current) props.RenewHandler(username, selectTariff.current.value);
+  const onSubmit = (data: RenewFormValues): void => {
+    const tariff = tariffs.find((item) => item._id === data.tariffId);
+    if (!data.tariffId) {
+      setError("tariffId", { type: "validate", message: "Please select a package." });
+      return;
+    }
+    if (!tariff) {
+      setError("tariffId", { type: "validate", message: "Selected package not found." });
+      return;
+    }
+    props.RenewHandler(username, tariff);
     setUsername("");
   };
+
+  const handleFormSubmit = handleSubmit(onSubmit);
 
   return (
     <Modal
@@ -46,10 +77,31 @@ const RenewModal = forwardRef<ForwardRefHandle, PropsType>((props, ref): ReactEl
         </Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <AddAccount Mode="Renew" Loading={false} ref={selectTariff} />
+        <form
+          id="renew-form"
+          onSubmit={(event): void => {
+            void handleFormSubmit(event);
+          }}
+        >
+          <select
+            id="tariffList"
+            className="rounded-2 border-secondary border-1  p-2  tariffDrop w-100"
+            {...register("tariffId")}
+          >
+            <option value="">Select a package</option>
+            {tariffs.map((tariff) => (
+              <option key={tariff._id} value={tariff._id}>
+                {tariff.Title}
+              </option>
+            ))}
+          </select>
+          {formState.errors.tariffId ? (
+            <div className="text-danger mt-2">{formState.errors.tariffId.message}</div>
+          ) : null}
+        </form>
       </Modal.Body>
       <Modal.Footer className="justify-content-end">
-        <Button variant="success" className="w100px" onClick={btnRenew_Click}>
+        <Button variant="success" className="w100px" type="submit" form="renew-form">
           Renew
         </Button>
         <Button variant="dark" className="w100px" onClick={btnCancel_Click}>

@@ -2,6 +2,8 @@ import type { ReactElement } from "react";
 import { useRef } from "react";
 import { Button, Modal } from "react-bootstrap";
 
+import type { AlertColor } from "@mui/material";
+
 import type SellerType from "@/models/SellerType";
 
 import type { ForwardRefHandle } from "./PackagesGrid";
@@ -12,6 +14,7 @@ interface PropsType {
   isOpen: boolean;
   onClose: () => void;
   seller: SellerType | undefined;
+  onMessage?: (severity: AlertColor, text: string) => void;
 }
 
 const PackageSellerModal = (props: PropsType): ReactElement | null => {
@@ -28,6 +31,8 @@ const PackageSellerModal = (props: PropsType): ReactElement | null => {
     }
     props.onClose();
   };
+
+  const packagesGridProps = props.onMessage ? { onMessage: props.onMessage } : {};
   return (
     <Modal
       className="border border-1 shadow rounded-3  "
@@ -40,7 +45,7 @@ const PackageSellerModal = (props: PropsType): ReactElement | null => {
         <Modal.Title>Assigned Packages</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <PackagesGrid ref={gridRef} seller={props.seller!}></PackagesGrid>
+        <PackagesGrid ref={gridRef} seller={props.seller!} {...packagesGridProps} />
       </Modal.Body>
       <Modal.Footer className="justify-content-end">
         <Button variant="success" className="w100px" onClick={btnSave_Click}>

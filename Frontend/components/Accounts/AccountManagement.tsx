@@ -1,16 +1,17 @@
 "use client";
-import axios from "axios";
-import type { ComponentRef } from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import type { ComponentRef, ReactElement } from "react";
+import { useCallback, useDeferredValue, useMemo, useRef, useState } from "react";
 
 import Deselect from "@mui/icons-material/Deselect";
 import FilterAltOffIcon from "@mui/icons-material/FilterAltOff";
 import GridOnIcon from "@mui/icons-material/GridOn";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import SearchRounded from "@mui/icons-material/SearchRounded";
+import type { AlertColor } from "@mui/material";
 import { TextField } from "@mui/material";
 
 import { useMyContext } from "@/context/MyContext";
+import { useAccounts } from "@/hooks/useAccounts";
 import type AccountType from "@/models/AccountType";
 import type TariffType from "@/models/TariffType";
 
@@ -22,15 +23,14 @@ import ExpandableAccountGrid from "./ExpandableAccountGrid";
 import GeneralAccountGrid from "./GeneralAccountGrid";
 import RenewModal from "./RenewModal";
 
-export default function AccountManagement(): React.ReactElement {
-  const { user, config, setUser } = useMyContext();
+export default function AccountManagement(): ReactElement {
+  const { user, config } = useMyContext();
   const gridGeneralRef = useRef<BaseGridHandle>(null);
   const gridExpandableRef = useRef<BaseGridHandle>(null);
-  const [loading, setLoading] = useState(false);
-  const [accountList, setAccountList] = useState<AccountType[]>([]);
   const [selectedAccount, setSelectedAccount] = useState<AccountType>();
   const [searchText, setSearchText] = useState("");
   const [gridType, setgridType] = useState("Expandable");
+  const [showAll, setShowAll] = useState(false);
 
   type DeleteModalHandle = ComponentRef<typeof DeleteModal>;
   const refDeleteModal = useRef<DeleteModalHandle>(null);
@@ -43,18 +43,45 @@ export default function AccountManagement(): React.ReactElement {
 
   const txtSearch = useRef<HTMLInputElement | null>(null);
 
+  const notify = useCallback((severity: AlertColor, text: string): void => {
+    refMessages.current?.Show(severity, text);
+  }, []);
+
+  const {
+    accounts,
+    unpaidUsernames,
+    loading,
+    addAccount,
+    deleteAccount,
+    renewAccount,
+    disableAccount,
+    revokeSubscription,
+    togglePayment,
+    payAll,
+  } = useAccounts({ showAll, onMessage: notify });
+
+  const accountList = useMemo(() => accounts ?? [], [accounts]);
+  const deferredSearchText = useDeferredValue(searchText);
+  const filteredAccounts = useMemo(() => {
+    const text = deferredSearchText.trim().toLowerCase();
+    if (!text) {
+      return accountList;
+    }
+    return accountList.filter((account) => {
+      const username = String(account.username ?? "").toLowerCase();
+      const note = String(account.note ?? "").toLowerCase();
+      return username.includes(text) || note.includes(text);
+    });
+  }, [accountList, deferredSearchText]);
+
   const onRenewClick = (account: AccountType): void => {
-    const paid =
-      accountList.filter((acc) => acc.username == account.username && acc.payed === "Unpaid")
-        .length == 0;
+    const paid = !unpaidUsernames.has(account.username);
     if (
       (paid || config.RENEW_FORCE_TO_PAID?.toUpperCase() !== "YES") &&
-      (account.status == "expired" ||
-        account.status == "limited" ||
-        config.RENEW_FORCE_TO_LIMITED_AND_EXPIRED?.toUpperCase() !== "YES") &&
-      account.data_limit / (1024 * 1024 * 1024) <= user.Limit
+      (account.status === "expired" ||
+        account.status === "limited" ||
+        config.RENEW_FORCE_TO_LIMITED_AND_EXPIRED?.toUpperCase() !== "YES")
     ) {
-      setSelectedAccount(account);
       refRenewModal.current?.Show(account.username);
     }
   };
@@ -70,79 +97,24 @@ export default function AccountManagement(): React.ReactElement {
     }
   };
 
-  const onDisabledClick = async (account: AccountType): Promise<void> => {
-    if (account.status == "active" || account.status == "disabled")
-      try {
-        StartLoading();
-
-        const url = new URL("api/marzban/disableaccount/" + account.username, config.BACKEND_URL);
-        await axios.post(
-          url.toString(),
-          {
-            status: account.status == "active" ? "disabled" : "active",
-          },
-          {
-            headers: { Authorization: "Bearer " + user.Token },
-          },
-        );
-      } catch (error) {
-        console.log(error);
-      } finally {
-        LoadAccount();
-      }
-  };
-
-  const onRevokeClick = async (account: AccountType): Promise<void> => {
-    try {
-      const url = new URL("api/marzban/revokesub/" + account.username, config.BACKEND_URL);
-      await axios.post(
-        url.toString(),
-        {},
-        {
-          headers: { Authorization: "Bearer " + user.Token },
-        },
-      );
-      refMessages.current?.Show("success", "Subscription Revoked Successfully!");
-    } catch (error) {
-      refMessages.current?.Show("error", "Something went Wrong!" + error);
+  const onDisabledClick = (account: AccountType): void => {
+    if (account.status === "active" || account.status === "disabled") {
+      const nextStatus = account.status === "active" ? "disabled" : "active";
+      disableAccount({ account, nextStatus });
     }
   };
 
-  const onPaymentClick = async (accountId: string): Promise<void> => {
-    if (user.IsAdmin)
-      try {
-        StartLoading();
-        const url = new URL("api/payaccount/" + accountId, config.BACKEND_URL);
-        await axios.post(
-          url.toString(),
-          {},
-          {
-            headers: { Authorization: "Bearer " + user.Token },
-          },
-        );
-      } catch (error) {
-        console.log(error);
-      } finally {
-        LoadAccount();
-      }
+  const onRevokeClick = (account: AccountType): void => {
+    revokeSubscription(account);
   };
 
-  const onPayAllClick = async (): Promise<void> => {
+  const onPaymentClick = (accountId: string): void => {
+    togglePayment(accountId);
+  };
+
+  const onPayAllClick = (): void => {
     const accountIds = GetAccountIdToPay();
-    if (user.IsAdmin && accountIds.length > 0) {
-      try {
-        StartLoading();
-        const url = new URL("api/payaccounts/", config.BACKEND_URL);
-        await axios.post(url.toString(), accountIds, {
-          headers: { Authorization: "Bearer " + user.Token },
-        });
-        refMessages.current?.Show("success", "Payments Changed Successfully!");
-      } catch (error) {
-        console.log(error);
-      } finally {
-        LoadAccount();
-      }
-    }
+    payAll(accountIds);
   };
 
   const GetAccountIdToPay = useCallback(() => {
@@ -155,85 +127,9 @@ export default function AccountManagement(): React.ReactElement {
     return accountIds;
   }, [gridType]);
 
-  const OnAddClick = async (tariff: TariffType, note: string, onHold: boolean): Promise<void> => {
-    if (user.Limit >= tariff.DataLimit)
-      try {
-        StartLoading();
-        const url = new URL("api/marzban/account", config.BACKEND_URL);
-
-        await axios.post(
-          url.toString(),
-          {
-            username: user.Username,
-            note: note,
-            tariffId: tariff._id,
-            onhold: onHold,
-          },
-          {
-            headers: { Authorization: "Bearer " + user.Token },
-          },
-        );
-        if (!tariff.IsFree) {
-          user.Limit -= tariff.DataLimit;
-          user.TotalPrice += tariff.Price;
-        }
-        setUser({ ...user, Limit: user.Limit, TotalPrice: user.TotalPrice });
-        refMessages.current?.Show("success", "Account Added Successful!");
-      } catch (error) {
-        console.log(error);
-      }
-    else refMessages.current?.Show("error", "You are Limited!");
-    LoadAccount();
+  const OnAddClick = (tariff: TariffType, note: string, onHold: boolean): void => {
+    addAccount(tariff, note, onHold);
   };
-
-  const LoadAccount = useCallback(
-    async (IsAll: boolean = false) => {
-      try {
-        StartLoading();
-        GetAccountIdToPay();
-        setSearchText("");
-        const url = new URL(`api/marzban/accounts/${user.Username}/${IsAll}`, config.BACKEND_URL);
-        const resultAccounts = await axios.get(url.toString(), {
-          headers: { Authorization: "Bearer " + user.Token },
-        });
-        const accounts = resultAccounts.data;
-        setAccountList(accounts || []);
-      } catch (error) {
-        console.log(error);
-      } finally {
-        EndLoading();
-      }
-    },
-    [GetAccountIdToPay, config.BACKEND_URL, user.Token, user.Username],
-  );
-
-  useEffect(() => {
-    if (user.Token !== "") LoadAccount();
-  }, [LoadAccount, user.Token]);
-
-  useEffect(() => {
-    const LoadAccount = async (): Promise<void> => {
-      try {
-        StartLoading();
-        GetAccountIdToPay();
-
-        const url = new URL(
-          `api/marzban/account/${user.Username}/${searchText}`,
-          config.BACKEND_URL,
-        );
-        const resultAccounts = await axios.get(url.toString(), {
-          headers: { Authorization: "Bearer " + user.Token },
-        });
-        const accounts = resultAccounts.data;
-        setAccountList(accounts || []);
-      } catch (error) {
-        console.log(error);
-      } finally {
-        EndLoading();
-      }
-    };
-    if (user.Token !== "" && searchText != "") LoadAccount();
-  }, [GetAccountIdToPay, config.BACKEND_URL, searchText, user.Token, user.Username]);
 
   const GridTypeChoose_Click = (): void => {
     if (gridType === "Expandable") setgridType("General");
@@ -241,83 +137,33 @@ export default function AccountManagement(): React.ReactElement {
   };
 
   const UnFilter_Click = (): void => {
-    LoadAccount(true);
+    setShowAll(true);
+    setSearchText("");
   };
 
-  const DeleteAccount = async (): Promise<void> => {
-    if (selectedAccount)
-      try {
-        StartLoading();
-
-        const url = new URL("api/marzban/account/" + selectedAccount?.username, config.BACKEND_URL);
-
-        await axios.delete(url.toString(), {
-          headers: { Authorization: "Bearer " + user.Token },
-        });
-
-        user.Limit += selectedAccount?.data_limit / (1024 * 1024 * 1024);
-        user.TotalPrice -= selectedAccount?.price;
-        setUser({ ...user, Limit: user.Limit, TotalPrice: user.TotalPrice });
-      } catch (error) {
-        console.log(error);
-      } finally {
-        LoadAccount();
-      }
+  const DeleteAccount = (): void => {
+    if (selectedAccount) {
+      deleteAccount(selectedAccount);
+    }
   };
 
-  const RenewAccount = async (username: string, tariffId: string): Promise<void> => {
-    if (selectedAccount)
-      try {
-        StartLoading();
-
-        const url = new URL("api/marzban/renewaccount/" + user.Username, config.BACKEND_URL);
-
-        await axios.post(
-          url.toString(),
-          {
-            username: username,
-            tariffId: tariffId,
-          },
-          {
-            headers: { Authorization: "Bearer " + user.Token },
-          },
-        );
-
-        user.Limit -= selectedAccount?.data_limit / (1024 * 1024 * 1024);
-        user.TotalPrice += selectedAccount?.price;
-        setUser({ ...user, Limit: user.Limit, TotalPrice: user.TotalPrice });
-      } catch (error) {
-        console.log(error);
-      } finally {
-        LoadAccount();
-      }
-  };
-
-  const StartLoading = (): void => {
-    setLoading(true);
-  };
-
-  const EndLoading = (): void => {
-    setLoading(false);
+  const RenewAccount = (username: string, tariff: TariffType): void => {
+    renewAccount(username, tariff);
   };
 
   const Search_Click = (): void => {
-    if (txtSearch.current && txtSearch.current?.value != "") setSearchText(txtSearch.current.value);
-    else if (searchText != "") {
-      LoadAccount();
+    if (txtSearch.current && txtSearch.current?.value != "") {
+      setSearchText(txtSearch.current.value);
+    } else {
       setSearchText("");
-    } else setSearchText("");
+      setShowAll(false);
+    }
   };
 
   return (
     <div className="container-fluid bg-primery  ">
       {!user.IsAdmin ? (
-        <AddAccount
-          onAdding={OnAddClick}
-          Mode="Add"
-          Loading={loading}
-          StartLoading={StartLoading}
-        />
+        <AddAccount onAdding={OnAddClick} Loading={loading} onMessage={notify} />
       ) : (
         ""
       )}
@@ -371,10 +217,10 @@ export default function AccountManagement(): React.ReactElement {
         <div className="col-12">
           <Messages ref={refMessages}></Messages>
           <div className="ContainerGrid">
-            {gridType == "Expandable" ? (
+            {gridType === "Expandable" ? (
               <ExpandableAccountGrid
                 ref={gridExpandableRef}
-                Accounts={accountList}
+                Accounts={filteredAccounts}
                 Loading={loading}
                 onDeleting={onDeleteClick}
                 onDisabling={onDisabledClick}
@@ -385,7 +231,7 @@ export default function AccountManagement(): React.ReactElement {
             ) : (
               <GeneralAccountGrid
                 ref={gridGeneralRef}
-                Accounts={accountList}
+                Accounts={filteredAccounts}
                 Loading={loading}
                 onDeleting={onDeleteClick}
                 onDisabling={onDisabledClick}
@@ -398,7 +244,7 @@ export default function AccountManagement(): React.ReactElement {
         </div>
       </div>
       <DeleteModal DeletingHandler={DeleteAccount} ref={refDeleteModal}></DeleteModal>
-      <RenewModal RenewHandler={RenewAccount} ref={refRenewModal}></RenewModal>
+      <RenewModal RenewHandler={RenewAccount} ref={refRenewModal} onMessage={notify}></RenewModal>
       <div className="my-3">
         <br />
       </div>

@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "marzban-seller-panel",
   "version": "2.5.9",
   "description": "Marzban Seller Panel",
@@ -7,13 +8,15 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "jest",
     "test-coverage": "jest --coverage",
     "lint:fix": "eslint --fix .",
     "format": "prettier --write .",
-    "check": "npm run lint && npm run test"
+    "check": "npm run format && npm run lint && npm run typecheck && npm run test"
   },
   "dependencies": {
+    "@tanstack/react-query": "5.90.16",
     "@emotion/react": "11.14.0",
     "@emotion/styled": "11.14.1",
     "@mui/icons-material": "7.3.6",
@@ -25,6 +28,7 @@
     "react": "19.2.3",
     "react-bootstrap": "2.10.10",
     "react-dom": "19.2.3",
+    "react-hook-form": "7.62.0",
     "react-qr-code": "2.0.18"
   },
   "devDependencies": {

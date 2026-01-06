@@ -27,7 +27,7 @@ const Messages = forwardRef<ForwardRefHandle, object>((_props, ref) => {
     Show: (severity: AlertColor, text: string): void => {
       setMessage({ Severity: severity, Text: text, Open: true });
     },
-    Hide: (): void => setMessage({ ...message, Open: false }),
+    Hide: (): void => setMessage((prev) => ({ ...prev, Open: false })),
   }));
 
   return (
@@ -37,7 +37,7 @@ const Messages = forwardRef<ForwardRefHandle, object>((_props, ref) => {
         autoHideDuration={6000}
         open={message.Open}
         onClose={(): void => {
-          setMessage({ ...message, Open: false });
+          setMessage((prev) => ({ ...prev, Open: false }));
         }}
       >
         <Alert variant="filled" severity={message.Severity}>

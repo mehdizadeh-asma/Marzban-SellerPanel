@@ -1,22 +1,22 @@
 "use client";
-import type { AxiosError } from "axios";
-import axios from "axios";
 import type { ComponentRef, ReactElement } from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
-import { useMyContext } from "@/context/MyContext";
+import type { AlertColor } from "@mui/material";
+
+import dynamic from "next/dynamic";
+
+import { useSellers } from "@/hooks/useSellers";
 import type SellerType from "@/models/SellerType";
 
 import Messages from "../General/Messages";
-import AddSeller from "./AddSeller";
+import AddSeller, { type AddSellerHandle } from "./AddSeller";
 import EditModal from "./EditModal";
-import PackageSellerModal from "./PackageSellerModal";
 import SellerGrid from "./SellerGrid";
 
+const PackageSellerModal = dynamic(() => import("./PackageSellerModal"));
+
 const SellerManagement = (): ReactElement | null => {
-  const { user, config } = useMyContext();
-  const [sellerList, setSellerList] = useState<SellerType[]>([]);
-  const [loading, setLoading] = useState(false);
   const [selectedSeller, setSelectedSeller] = useState<SellerType | null>(null);
   const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [isAssignPackagesModalOpen, setAssignPackagesModalOpen] = useState(false);
@@ -24,45 +24,21 @@ const SellerManagement = (): ReactElement | null => {
   type MessagesHandle = ComponentRef<typeof Messages>;
   const refMessages = useRef<MessagesHandle>(null);
 
-  type AddSellerHandle = {
-    resetFields: () => void;
-  };
   const addSellerRef = useRef<AddSellerHandle | null>(null);
 
-  const LaodSeller = useCallback(async (): Promise<void> => {
-    setLoading(true);
-    try {
-      const url = new URL("api/sellers", config.BACKEND_URL);
-      const resultSellers = await axios.get(url.toString(), {
-        headers: { Authorization: "Bearer " + user.Token },
-      });
-      setSellerList(resultSellers.data);
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setLoading(false);
-    }
-  }, [config.BACKEND_URL, user.Token]);
+  const notify = useCallback((severity: AlertColor, text: string): void => {
+    refMessages.current?.Show(severity, text);
+  }, []);
 
-  useEffect(() => {
-    if (user.Token !== "") LaodSeller();
-  }, [LaodSeller, user.Token]);
-
-  const onDeleteClick = async (seller: SellerType): Promise<void> => {
-    setLoading(true);
-    try {
-      const url = new URL("api/seller/" + seller._id, config.BACKEND_URL);
-
-      await axios.delete(url.toString(), {
-        headers: { Authorization: "Bearer " + user.Token },
-      });
-      refMessages.current?.Show("success", "Agent Delete Successful!");
-    } catch (error) {
-      console.log(error);
-    } finally {
-      LaodSeller();
-    }
-  };
+  const { sellers, loading, addSeller, updateSeller, deleteSeller, disableSeller, assignPackages } =
+    useSellers({
+      onMessage: notify,
+      onAddSuccess: () => addSellerRef.current?.resetFields(),
+      onUpdateSettled: () => {
+        setSelectedSeller(null);
+        setEditModalOpen(false);
+      },
+    });
 
   const resetAddSellerFields = (): void => {
     addSellerRef.current?.resetFields();
@@ -74,142 +50,38 @@ const SellerManagement = (): ReactElement | null => {
     setEditModalOpen(true);
   };
 
-  const onUpdateClick = async (seller: SellerType): Promise<void> => {
-    setLoading(true);
-    try {
-      const url = new URL("api/seller/" + seller._id, config.BACKEND_URL);
-
-      await axios.put(url.toString(), seller, {
-        headers: { Authorization: "Bearer " + user.Token },
-      });
-      refMessages.current?.Show("success", "Agent Updated Successfully!");
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        const axiosError = error as AxiosError;
-        if (axiosError.response) {
-          const statusCode = axiosError.response.status;
-
-          if (statusCode === 404) {
-            refMessages.current?.Show("error", "Invalid Marzban Account Information");
-          }
-        } else {
-          const errorMessage =
-            error.response?.data?.message ||
-            error.response?.data?.error ||
-            "Update Failed, An error occurred";
-          refMessages.current?.Show("error", errorMessage);
-          refMessages.current?.Show("error", "No response from the server.");
-        }
-      } else {
-        refMessages.current?.Show("error", "An unknown error occurred.");
-      }
-    } finally {
-      setSelectedSeller(null);
-      setEditModalOpen(false);
-      LaodSeller();
-    }
+  const onUpdateClick = (seller: SellerType): void => {
+    updateSeller(seller);
   };
 
-  const onAddClick = async (seller: SellerType): Promise<void> => {
-    setLoading(true);
-    try {
-      const url = new URL("api/seller", config.BACKEND_URL);
-
-      await axios.post(url.toString(), seller, {
-        headers: { Authorization: "Bearer " + user.Token },
-      });
-      refMessages.current?.Show("success", "Agent Inserted Successfully!");
-      addSellerRef.current?.resetFields();
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const axiosError = error as AxiosError;
-
-        if (axiosError.response) {
-          const statusCode = axiosError.response.status;
-
-          if (statusCode === 404) {
-            refMessages.current?.Show("error", "Invalid Marzban Account Information");
-          } else {
-            refMessages.current?.Show("error", "Internal Server Error! Please try again later.");
-          }
-        } else {
-          refMessages.current?.Show("error", "No response from the server.");
-        }
-      } else {
-        refMessages.current?.Show("error", "An unknown error occurred.");
-      }
-    } finally {
-      LaodSeller();
-    }
-  };
-  const onDisableAccountClick = async (seller: SellerType): Promise<void> => {
-    setLoading(true);
-    try {
-      const url = new URL("api/disableseller/" + seller._id, config.BACKEND_URL);
-
-      await axios.post(
-        url.toString(),
-        {},
-        {
-          headers: { Authorization: "Bearer " + user.Token },
-        },
-      );
-      refMessages.current?.Show("success", "Agent Change Successful!");
-    } catch (error) {
-      console.log(error);
-    } finally {
-      LaodSeller();
-    }
+  const onAddClick = (seller: SellerType): void => {
+    addSeller(seller);
   };
 
-  // #region AssignPackages
-  const onAssignPackagesClick = async (seller: SellerType): Promise<void> => {
+  const onDeleteClick = (seller: SellerType): void => {
+    deleteSeller(seller);
+  };
+
+  const onDisableAccountClick = (seller: SellerType): void => {
+    disableSeller(seller);
+  };
+
+  const onAssignPackagesClick = (seller: SellerType): void => {
     setSelectedSeller(seller);
     setAssignPackagesModalOpen(true);
   };
 
-  const onSavePackageClick = async (
-    seller: SellerType,
-    packagesListIds: string[],
-  ): Promise<void> => {
-    setLoading(true);
-    try {
-      const url = new URL("api/tariffSeller/" + seller._id, config.BACKEND_URL);
-      await axios.put(
-        url.toString(),
-        { TariffIds: packagesListIds },
-        {
-          headers: { Authorization: "Bearer " + user.Token },
-        },
-      );
-
-      refMessages.current?.Show("success", "Packages Assigned to Seller Successfully!");
-    } catch (error) {
-      console.log(error);
-      refMessages.current?.Show(
-        "error",
-        "An error occurred while assigning packages to the seller ",
-      );
-    } finally {
-      setLoading(false);
-      LaodSeller();
-    }
+  const onSavePackageClick = (seller: SellerType, packagesListIds: string[]): void => {
+    assignPackages(seller, packagesListIds);
   };
-  //#endregion
 
   return (
     <div className="row w-100 border border-solid-1 border-secondary.light rounded py-2">
       <div className="col-12">
         <Messages ref={refMessages}></Messages>
-        <AddSeller
-          ref={addSellerRef}
-          onAdding={onAddClick}
-          onEditing={onEditClick}
-          mode={"Add"}
-          onFieldChange={() => {}}
-        ></AddSeller>
+        <AddSeller ref={addSellerRef} onAdding={onAddClick}></AddSeller>
         <SellerGrid
-          Sellers={sellerList}
+          Sellers={sellers}
           Loading={loading}
           onDeleting={onDeleteClick}
           onEditing={onEditClick}
@@ -219,7 +91,10 @@ const SellerManagement = (): ReactElement | null => {
       </div>
       <EditModal
         isOpen={isEditModalOpen}
-        onClose={() => setEditModalOpen(false)}
+        onClose={() => {
+          setEditModalOpen(false);
+          setSelectedSeller(null);
+        }}
         seller={selectedSeller}
         onEditing={onUpdateClick}
       />
@@ -229,6 +104,7 @@ const SellerManagement = (): ReactElement | null => {
           onClose={() => setAssignPackagesModalOpen(false)}
           seller={selectedSeller}
           onAssign={onSavePackageClick}
+          onMessage={notify}
         />
       ) : (
         ""

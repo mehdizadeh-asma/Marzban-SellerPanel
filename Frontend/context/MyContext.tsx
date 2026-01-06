@@ -2,10 +2,12 @@
 
 import React, { createContext, useContext } from "react";
 
+import { setApiAccessToken } from "@/utils/apiClient";
+
 type UserType = {
   Username: string;
   IsAdmin: boolean;
-  Token: string;
+  accessToken: string;
   Limit: number;
   TotalPrice: number;
 };
@@ -21,7 +23,7 @@ export interface JsonData {
 
 type MyContextType = {
   user: UserType;
-  setUser: (data: UserType) => void;
+  setUser: (data: UserType | ((prev: UserType) => UserType)) => void;
   config: JsonData;
   setConfig: (data: JsonData) => void;
 };
@@ -33,13 +35,20 @@ interface PropsType {
 }
 
 export const MyContextProvider: React.FC<PropsType> = (props): React.ReactElement => {
-  const [user, setUser] = React.useState({
+  const [user, setUserState] = React.useState<UserType>({
     Username: "",
     IsAdmin: false,
-    Token: "",
+    accessToken: "",
     Limit: 5,
     TotalPrice: 5,
   });
+  const setUser = React.useCallback((data: UserType | ((prev: UserType) => UserType)): void => {
+    setUserState((prev) => {
+      const nextUser = typeof data === "function" ? data(prev) : data;
+      setApiAccessToken(nextUser.accessToken);
+      return nextUser;
+    });
+  }, []);
   const [config, setConfig] = React.useState({});
 
   return (

@@ -1,11 +1,11 @@
-import type { ComponentRef, FC, ReactElement } from "react";
-import { useEffect, useRef, useState } from "react";
+import type { FC, ReactElement } from "react";
+import { useEffect } from "react";
 import { Button, Modal } from "react-bootstrap";
+import { FormProvider, useForm } from "react-hook-form";
 
 import type SellerType from "@/models/SellerType";
 
-import Messages from "../General/Messages";
-import AddSeller from "./AddSeller";
+import SellerFormFields, { type SellerFormValues } from "./SellerFormFields";
 
 interface PropsType {
   isOpen: boolean;
@@ -15,46 +15,45 @@ interface PropsType {
 }
 
 const EditModal: FC<PropsType> = ({ isOpen, onClose, seller, onEditing }): ReactElement | null => {
-  const [currentSeller, setCurrentSeller] = useState<SellerType | null>(seller);
-  type MessagesHandle = ComponentRef<typeof Messages>;
-  const refMessages = useRef<MessagesHandle>(null);
+  const form = useForm<SellerFormValues>({
+    defaultValues: {
+      Title: seller?.Title ?? "",
+      Limit: seller?.Limit ?? 0,
+      Username: seller?.Username ?? "",
+      Password: "",
+      MarzbanUsername: seller?.MarzbanUsername ?? "",
+      MarzbanPassword: "",
+    },
+  });
 
   useEffect(() => {
-    setCurrentSeller(seller);
-  }, [seller]);
+    form.reset({
+      Title: seller?.Title ?? "",
+      Limit: seller?.Limit ?? 0,
+      Username: seller?.Username ?? "",
+      Password: "",
+      MarzbanUsername: seller?.MarzbanUsername ?? "",
+      MarzbanPassword: "",
+    });
+  }, [form, seller]);
 
-  const handleSave = (): void => {
-    if (currentSeller) onEditing(currentSeller);
+  const onSubmit = (values: SellerFormValues): void => {
+    if (!seller) return;
+    const updatedSeller: SellerType = {
+      ...seller,
+      Title: values.Title,
+      Limit: values.Limit,
+      Username: values.Username,
+      MarzbanUsername: values.MarzbanUsername,
+      Password: values.Password ? values.Password : seller.Password,
+      MarzbanPassword: values.MarzbanPassword ? values.MarzbanPassword : seller.MarzbanPassword,
+    };
+    onEditing(updatedSeller);
   };
 
-  const handleFieldChange = (field: keyof SellerType, value: string | number): void => {
-    let errorMessage = "";
+  const handleFormSubmit = form.handleSubmit(onSubmit);
 
-    switch (field) {
-      case "Title":
-      case "Username":
-      case "Password":
-        if (typeof value === "string" && value.length < 8)
-          errorMessage = `${field} Must Be Greater Than 8 Characters.`;
-        break;
-
-      case "Limit":
-        if (Number(value) <= 0) errorMessage = "Limit is required and must be a positive number.";
-        break;
-    }
-
-    if (errorMessage) {
-      refMessages.current?.Show("error", errorMessage);
-      return;
-    }
-    if (currentSeller) {
-      setCurrentSeller({
-        ...currentSeller,
-        [field]: value,
-      });
-    }
-  };
-  if (!isOpen || !currentSeller) return null;
+  if (!isOpen || !seller) return null;
 
   return (
     <Modal
@@ -66,21 +65,23 @@ const EditModal: FC<PropsType> = ({ isOpen, onClose, seller, onEditing }): React
     >
       <Modal.Header closeButton className=" text-white bg-success">
         <Modal.Title>
-          Edit Agent :<label className="text-warning px-2">{currentSeller?.Username}</label>
+          Edit Agent :<label className="text-warning px-2">{seller?.Username}</label>
         </Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <Messages ref={refMessages}></Messages>
-        <AddSeller
-          onAdding={() => {}}
-          onEditing={onEditing}
-          mode="Edit"
-          seller={seller}
-          onFieldChange={handleFieldChange}
-        />
+        <FormProvider {...form}>
+          <form
+            id="seller-edit-form"
+            onSubmit={(event): void => {
+              void handleFormSubmit(event);
+            }}
+          >
+            <SellerFormFields mode="edit" />
+          </form>
+        </FormProvider>
       </Modal.Body>
       <Modal.Footer className="justify-content-end">
-        <Button variant="success" className="w100px" onClick={handleSave}>
+        <Button variant="success" className="w100px" type="submit" form="seller-edit-form">
           Save
         </Button>
         <Button variant="dark" className="w100px" onClick={onClose}>

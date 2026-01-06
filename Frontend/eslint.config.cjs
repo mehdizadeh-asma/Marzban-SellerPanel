@@ -50,9 +50,15 @@ try {
   htmlPlugin = require("eslint-plugin-html");
 } catch {}
 
+const typeCheckedRules =
+  tsPlugin.configs["recommended-type-checked"]?.rules ??
+  tsPlugin.configs.recommendedTypeChecked?.rules ??
+  {};
+
 const baseRecommendedRules = {
   ...js.configs.recommended.rules,
   ...tsPlugin.configs.recommended.rules,
+  ...typeCheckedRules,
   ...(nextPlugin && nextPlugin.configs && nextPlugin.configs.recommended
     ? nextPlugin.configs.recommended.rules
     : {}),

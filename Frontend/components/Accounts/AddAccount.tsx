@@ -1,150 +1,123 @@
 "use client";
-import axios from "axios";
-import { forwardRef, useEffect, useRef, useState } from "react";
+import { useMemo, type ReactElement } from "react";
 import Button from "react-bootstrap/Button";
 import Spinner from "react-bootstrap/Spinner";
+import { useForm } from "react-hook-form";
 
+import type { AlertColor } from "@mui/material";
 import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import TextField from "@mui/material/TextField";
 
-import { useMyContext } from "@/context/MyContext";
+import { useSellerTariffs } from "@/hooks/useSellerTariffs";
 import type TariffType from "@/models/TariffType";
 
 interface PropsType {
   onAdding?: (tariff: TariffType, note: string, onHold: boolean) => void;
-  StartLoading?: () => void;
-  EndLoading?: () => void;
-  ref?: React.Ref<HTMLSelectElement>;
-  Mode: string;
   Loading: boolean;
+  onMessage?: (severity: AlertColor, text: string) => void;
 }
 
-const AddAccount = forwardRef<HTMLSelectElement, PropsType>((props, ref) => {
-  const { user, config } = useMyContext();
+type AddAccountFormValues = {
+  tariffId: string;
+  note: string;
+  onHold: boolean;
+};
 
-  const [tariffList, setTariffList] = useState<TariffType[]>([]);
-  const selectTariff = useRef<HTMLSelectElement | null>(null);
-  const txtNote = useRef<HTMLInputElement | null>(null);
-  const chkOnHold = useRef<HTMLInputElement | null>(null);
+const AddAccount = (props: PropsType): ReactElement => {
+  const { tariffs } = useSellerTariffs(props.onMessage);
 
-  useEffect(() => {
-    const LaodTariff = async (): Promise<void> => {
-      try {
-        const url = new URL(`api/tariffs/false/${user.Username}`, config.BACKEND_URL);
-        const resultTariff = await axios.get(url.toString(), {
-          headers: { Authorization: "Bearer " + user.Token },
-        });
-        setTariffList(resultTariff.data);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    if (user.Token !== "") LaodTariff();
-  }, [config.BACKEND_URL, user.Token, user.Username]);
+  const { register, handleSubmit, setError, reset, formState } = useForm<AddAccountFormValues>({
+    defaultValues: {
+      tariffId: "",
+      note: "",
+      onHold: false,
+    },
+  });
 
-  const BtnAdd_Click = async (): Promise<void> => {
-    let note = "";
-    let onHold = false;
+  const { ref: noteRef, ...noteField } = register("note");
+  const { ref: onHoldRef, ...onHoldField } = register("onHold");
 
-    props.StartLoading?.();
+  const tariffOptions = useMemo(() => {
+    if (!tariffs.length) return null;
+    return tariffs.map((tariff) => (
+      <option key={tariff?._id} value={tariff?._id}>
+        {tariff?.Title}
+      </option>
+    ));
+  }, [tariffs]);
 
-    if (txtNote.current && txtNote.current.value) {
-      note = txtNote.current.value;
-      txtNote.current.value = "";
+  const onSubmit = (data: AddAccountFormValues): void => {
+    const tariff = tariffs.find((t) => t._id === data.tariffId);
+    if (!data.tariffId) {
+      setError("tariffId", { type: "validate", message: "Please select a tariff." });
+      return;
+    }
+    if (!tariff) {
+      setError("tariffId", { type: "validate", message: "Selected tariff not found." });
+      return;
     }
 
-    if (chkOnHold.current) {
-      onHold = chkOnHold.current.checked;
-    }
-
-    if (selectTariff.current) {
-      const tariffId = selectTariff.current?.value;
-
-      const tariff = tariffList.filter((t) => t._id == tariffId)[0];
-
-      if (props.onAdding) props.onAdding(tariff, note, onHold);
-    }
+    props.onAdding?.(tariff, data.note ?? "", data.onHold ?? false);
+    reset({ tariffId: data.tariffId, note: "", onHold: false });
   };
 
-  const FillTariffs = (): React.ReactNode => {
-    if (tariffList && tariffList.length > 0) {
-      return tariffList.map((tariff: TariffType) => {
-        return (
-          <option key={tariff?._id} value={tariff?._id}>
-            {tariff?.Title}
-          </option>
-        );
-      });
-    }
-    return null;
-  };
+  const handleFormSubmit = handleSubmit(onSubmit);
 
-  return props.Mode == "Add" ? (
-    <div className="row w-100 py-3 border BorderPurple">
-      <div className="col-sm-12 col-md-6 col-lg-6 col-xl-4 d-inline-flex ">
-        <select
-          name="tariffList"
-          id="tariffList"
-          className="rounded-2  border-1 p-2  tariffDrop w-100 mx-2"
-          ref={selectTariff}
-        >
-          {FillTariffs()}
-        </select>
-        <TextField id="outlined-basic" label="Note" variant="outlined" inputRef={txtNote} />
-        <FormControlLabel
-          control={<Checkbox inputRef={chkOnHold} />}
-          label="OnHold"
-          className="mx-2"
-        />
-      </div>
-      <div className="col-sm-12 col-md-6 col-lg-6 col-xl-4 divButton py-2">
-        <Button
-          onClick={BtnAdd_Click}
-          disabled={props.Loading}
-          className="btn btnAdd  BgGrdColorizePurple text-white border-1 BorderPurple h-75 "
-        >
-          <Spinner
-            as="span"
-            animation="border"
-            size="sm"
-            role="status"
-            aria-hidden="true"
-            className={props.Loading ? "mx-1" : "visually-hidden"}
-          />
-          {props.Loading ? "" : "Add"}
-        </Button>
-      </div>
-    </div>
-  ) : (
-    <div className="container-fluid">
-      <div className="row">
-        <div className="col-12  justify-content-start d-flex mt-1 mx-1" id="divDrop">
+  return (
+    <form
+      onSubmit={(event): void => {
+        void handleFormSubmit(event);
+      }}
+    >
+      <div className="row w-100 py-3 border BorderPurple">
+        <div className="col-sm-12 col-md-6 col-lg-6 col-xl-4 d-inline-flex ">
           <select
-            name="tariffList"
             id="tariffList"
-            className="rounded-2 border-secondary border-1  p-2  tariffDrop w-100"
-            ref={ref}
+            className="rounded-2  border-1 p-2  tariffDrop w-100 mx-2"
+            {...register("tariffId")}
           >
-            {FillTariffs()}
+            <option value="">Select a tariff</option>
+            {tariffOptions}
           </select>
-          {/*<TextField
+          <TextField
             id="outlined-basic"
             label="Note"
             variant="outlined"
-            className="mx-1"
+            inputRef={noteRef}
+            {...noteField}
+            error={Boolean(formState.errors.note)}
+            helperText={formState.errors.note?.message}
           />
           <FormControlLabel
-            control={<Checkbox inputRef={chkOnHold} />}
+            control={<Checkbox inputRef={onHoldRef} {...onHoldField} />}
             label="OnHold"
             className="mx-2"
-          /> */}
+          />
+        </div>
+        <div className="col-sm-12 col-md-6 col-lg-6 col-xl-4 divButton py-2">
+          <Button
+            type="submit"
+            disabled={props.Loading}
+            className="btn btnAdd  BgGrdColorizePurple text-white border-1 BorderPurple h-75 "
+          >
+            <Spinner
+              as="span"
+              animation="border"
+              size="sm"
+              role="status"
+              aria-hidden="true"
+              className={props.Loading ? "mx-1" : "visually-hidden"}
+            />
+            {props.Loading ? "" : "Add"}
+          </Button>
+          {formState.errors.tariffId ? (
+            <div className="text-danger mt-2">{formState.errors.tariffId.message}</div>
+          ) : null}
         </div>
       </div>
-    </div>
+    </form>
   );
-});
-
-AddAccount.displayName = "AddAccount";
+};
 
 export default AddAccount;

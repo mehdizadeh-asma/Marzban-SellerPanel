@@ -21,7 +21,9 @@ import Box from "@mui/material/Box";
 import Checkbox from "@mui/material/Checkbox";
 import LinearProgress from "@mui/material/LinearProgress";
 import type { SxProps, Theme } from "@mui/material/styles";
+import type { SystemStyleObject } from "@mui/system";
 import type {
+  DataGridProps,
   GridColDef,
   GridRowClassNameParams,
   GridRowHeightParams,
@@ -69,7 +71,7 @@ interface Props {
   onDisabling?: (account: AccountType) => void;
   onPaying?: (accountId: string) => void;
   onRevoke?: (account: AccountType) => void;
-  dataGridProps?: Partial<React.ComponentProps<typeof DataGrid>>;
+  dataGridProps?: Partial<DataGridProps<GridValidRowModel>>;
   hasDetailRows?: boolean;
 }
 
@@ -300,7 +302,10 @@ const BaseAccountGrid = forwardRef<BaseGridHandle, Props>((props, ref) => {
       const currentPageParentIds = pageIds
         .map((id) => {
           try {
-            const row = typeof api.getRow === "function" ? api.getRow(id) : undefined;
+            const row =
+              typeof api.getRow === "function"
+                ? (api.getRow(id) as GridValidRowModel | undefined)
+                : undefined;
             if (!row) return null;
             const r = row as GridValidRowModel & {
               isParent?: boolean;
@@ -345,7 +350,7 @@ const BaseAccountGrid = forwardRef<BaseGridHandle, Props>((props, ref) => {
     RenderPayment,
     RenderUsage,
     onCopyLink: (account: AccountType) => {
-      copyTextToClipboard(account.subscription_url);
+      void copyTextToClipboard(account.subscription_url);
       setSelectedLink(account.username);
     },
     onRenewClick: (account: AccountType) => onRenewing?.(account),
@@ -401,7 +406,7 @@ const BaseAccountGrid = forwardRef<BaseGridHandle, Props>((props, ref) => {
   };
 
   const existingSx: SxProps<Theme> | undefined = dataGridProps?.sx;
-  const customSx = {
+  const customSx: SxProps<Theme> = {
     "& .MuiDataGrid-cell": {
       display: "flex",
       alignItems: "center",
@@ -414,14 +419,19 @@ const BaseAccountGrid = forwardRef<BaseGridHandle, Props>((props, ref) => {
       textAlign: "center",
     },
   };
-  const mergedSx: SxProps<Theme> = (
-    Array.isArray(existingSx) ? [...existingSx, customSx] : [existingSx ?? {}, customSx]
-  ) as SxProps<Theme>;
+
+  type SxItem = SystemStyleObject<Theme> | ((theme: Theme) => SystemStyleObject<Theme>) | boolean;
+  type SxArray = ReadonlyArray<SxItem>;
+  const isSxArray = (value: SxProps<Theme> | undefined): value is SxArray => Array.isArray(value);
+
+  const mergedSx: SxProps<Theme> = isSxArray(existingSx)
+    ? [customSx, ...existingSx]
+    : [customSx, existingSx ?? {}];
 
   const { sx: _sx, ...dataGridPropsWithoutSx } = dataGridProps ?? {};
   void _sx;
 
-  const injectedRowHelpers: Partial<React.ComponentProps<typeof DataGrid>> = {};
+  const injectedRowHelpers: Partial<DataGridProps<GridValidRowModel>> = {};
   if (props.hasDetailRows) {
     const getRowIdTyped: GridRowIdGetter<GridValidRowModel> = (row) => String(row.id);
     const getRowClassNameTyped = (params: GridRowClassNameParams<GridValidRowModel>): string =>
@@ -446,6 +456,7 @@ const BaseAccountGrid = forwardRef<BaseGridHandle, Props>((props, ref) => {
         columns={columns}
         apiRef={apiRef}
         loading={loading}
+        disableRowSelectionOnClick
         pageSizeOptions={[10, 25, 50, 100]}
         paginationModel={{ page, pageSize }}
         onPaginationModelChange={(model) => {
@@ -456,10 +467,11 @@ const BaseAccountGrid = forwardRef<BaseGridHandle, Props>((props, ref) => {
           pagination: { paginationModel: { pageSize: pageSize } },
         }}
         sortingOrder={["asc", "desc"]}
+        rowBufferPx={120}
+        columnBufferPx={120}
         sx={mergedSx}
-        {...(injectedRowHelpers as Partial<React.ComponentProps<typeof DataGrid>>)}
-        {...(dataGridPropsWithoutSx as Partial<React.ComponentProps<typeof DataGrid>>)}
-        getRowHeight={(params) => (String(params.id).includes("-detail") ? 100 : undefined)}
+        {...injectedRowHelpers}
+        {...dataGridPropsWithoutSx}
       />
       <Footer></Footer>
     </>
