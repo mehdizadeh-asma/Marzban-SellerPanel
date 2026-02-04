@@ -2,7 +2,7 @@ import type { RequestHandler } from "express";
 import * as SellerService from "../services/SellerService";
 import { HttpError } from "../utils/HttpError";
 import { handleControllerError } from "../utils/handleError";
-import { isValidObjectId, parsePagination } from "../utils/validation";
+import { isValidObjectId, normalizeParamValue, parsePagination } from "../utils/validation";
 
 class SellerController {
   static GetSellerList: RequestHandler = async (req, res, next) => {
@@ -18,7 +18,7 @@ class SellerController {
 
   static GetSeller: RequestHandler = async (req, res, next) => {
     try {
-      const id: string = req.params.id;
+      const id = normalizeParamValue(req.params.id);
       if (!isValidObjectId(id)) {
         throw new HttpError(400, "Invalid seller id");
       }
@@ -73,7 +73,7 @@ class SellerController {
 
   static EditSeller: RequestHandler = async (req, res, next) => {
     try {
-      const id = req.params.id;
+      const id = normalizeParamValue(req.params.id);
       if (!isValidObjectId(id)) {
         throw new HttpError(400, "Invalid seller id");
       }
@@ -116,7 +116,7 @@ class SellerController {
 
   static RemoveSeller: RequestHandler = async (req, res, next) => {
     try {
-      const id: string = req.params.id;
+      const id = normalizeParamValue(req.params.id);
       if (!isValidObjectId(id)) {
         throw new HttpError(400, "Invalid seller id");
       }
@@ -129,7 +129,7 @@ class SellerController {
 
   static DisableSeller: RequestHandler = async (req, res, next) => {
     try {
-      const id = req.params.id;
+      const id = normalizeParamValue(req.params.id);
       if (!isValidObjectId(id)) {
         throw new HttpError(400, "Invalid seller id");
       }

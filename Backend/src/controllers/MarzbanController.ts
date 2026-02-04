@@ -3,6 +3,7 @@ import type { RequestHandler } from "express";
 import type { AuthenticatedRequest } from "../middleware/auth";
 import * as MarzbanService from "../services/MarzbanService";
 import { handleControllerError } from "../utils/handleError";
+import { normalizeParamValue } from "../utils/validation";
 
 class MarzbanController {
   static Login: RequestHandler = async (req, res, next) => {
@@ -18,10 +19,12 @@ class MarzbanController {
     const authReq = req as AuthenticatedRequest;
 
     try {
+      const sellerParam = normalizeParamValue(req.params.seller);
+      const isAllParam = normalizeParamValue(req.params.isall);
       const result = await MarzbanService.getAccounts({
         authReq,
-        sellerParam: req.params.seller,
-        isAllParam: req.params.isall,
+        sellerParam,
+        isAllParam,
         authorization: req.headers.authorization,
       });
       res.status(200).json(result);
@@ -34,10 +37,12 @@ class MarzbanController {
     const authReq = req as AuthenticatedRequest;
 
     try {
+      const sellerParam = normalizeParamValue(req.params.seller);
+      const search = normalizeParamValue(req.params.search) ?? "";
       const result = await MarzbanService.getAccount({
         authReq,
-        sellerParam: req.params.seller,
-        search: req.params.search,
+        sellerParam,
+        search,
         authorization: req.headers.authorization,
       });
       res.status(200).json(result);
@@ -63,9 +68,10 @@ class MarzbanController {
 
   static EditAccount: RequestHandler = async (req, res, next) => {
     try {
+      const username = normalizeParamValue(req.params.username) ?? "";
       const result = await MarzbanService.editAccount({
         authReq: req as AuthenticatedRequest,
-        username: req.params.username,
+        username,
         status: req.body?.status,
         authorization: req.headers.authorization,
       });
@@ -79,9 +85,10 @@ class MarzbanController {
     const authReq = req as AuthenticatedRequest;
 
     try {
+      const username = normalizeParamValue(req.params.username) ?? "";
       const result = await MarzbanService.disableAccount({
         authReq,
-        username: req.params.username,
+        username,
         status: req.body?.status,
         authorization: req.headers.authorization,
       });
@@ -95,10 +102,11 @@ class MarzbanController {
     const authReq = req as AuthenticatedRequest;
 
     try {
+      const paramsSeller = normalizeParamValue(req.params.seller);
       const result = await MarzbanService.renewAccount({
         authReq,
         body: req.body,
-        paramsSeller: req.params.seller,
+        paramsSeller,
         authorization: req.headers.authorization,
       });
       res.status(200).json(result);
@@ -111,9 +119,10 @@ class MarzbanController {
     const authReq = req as AuthenticatedRequest;
 
     try {
+      const username = normalizeParamValue(req.params.username) ?? "";
       await MarzbanService.removeAccount({
         authReq,
-        username: req.params.username,
+        username,
         authorization: req.headers.authorization,
       });
       res.status(200).json({ message: "Delete Success!" });
@@ -126,9 +135,10 @@ class MarzbanController {
     const authReq = req as AuthenticatedRequest;
 
     try {
+      const username = normalizeParamValue(req.params.username) ?? "";
       await MarzbanService.revokeSub({
         authReq,
-        username: req.params.username,
+        username,
         authorization: req.headers.authorization,
       });
       res.status(200).json({ message: "Revoke Success!" });

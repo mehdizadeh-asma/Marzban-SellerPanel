@@ -3,7 +3,7 @@ import type { RequestHandler } from "express";
 import * as AccountService from "../services/AccountService";
 import { HttpError } from "../utils/HttpError";
 import { handleControllerError } from "../utils/handleError";
-import { isValidObjectId, parsePagination } from "../utils/validation";
+import { isValidObjectId, normalizeParamValue, parsePagination } from "../utils/validation";
 
 class AccountController {
   static GetAccountList: RequestHandler = async (req, res, next) => {
@@ -19,7 +19,7 @@ class AccountController {
 
   static GetAccount: RequestHandler = async (req, res, next) => {
     try {
-      const id: string = req.params.id;
+      const id = normalizeParamValue(req.params.id);
       if (!isValidObjectId(id)) {
         throw new HttpError(400, "Invalid account id");
       }
@@ -54,7 +54,7 @@ class AccountController {
 
   static RemoveAccount: RequestHandler = async (req, res, next) => {
     try {
-      const id: string = req.params.id;
+      const id = normalizeParamValue(req.params.id);
       if (!isValidObjectId(id)) {
         throw new HttpError(400, "Invalid account id");
       }
@@ -89,7 +89,7 @@ class AccountController {
         throw new HttpError(400, "payed (boolean) is required");
       }
 
-      const id: string = req.params.id;
+      const id = normalizeParamValue(req.params.id);
       if (!isValidObjectId(id)) {
         throw new HttpError(400, "Invalid account id");
       }

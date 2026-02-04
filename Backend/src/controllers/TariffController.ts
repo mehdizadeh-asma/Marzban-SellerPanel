@@ -4,17 +4,19 @@ import type { AuthenticatedRequest } from "../middleware/auth";
 import * as TariffService from "../services/TariffService";
 import { HttpError } from "../utils/HttpError";
 import { handleControllerError } from "../utils/handleError";
-import { isValidObjectId } from "../utils/validation";
+import { isValidObjectId, normalizeParamValue } from "../utils/validation";
 
 class TariffController {
   static GetTariffList: RequestHandler = async (req, res, next) => {
     const authReq = req as AuthenticatedRequest;
 
     try {
+      const isAllParam = normalizeParamValue(req.params.isall);
+      const titleParam = normalizeParamValue(req.params.title);
       const result = await TariffService.getTariffList({
         user: authReq.user,
-        isAll: req.params.isall === "true",
-        title: req.params.title,
+        isAll: isAllParam === "true",
+        title: titleParam,
       });
       res.status(200).json(result);
     } catch (error) {
@@ -24,7 +26,7 @@ class TariffController {
 
   static GetTariff: RequestHandler = async (req, res, next) => {
     try {
-      const id = req.params.id;
+      const id = normalizeParamValue(req.params.id);
       if (!isValidObjectId(id)) {
         throw new HttpError(400, "Invalid Tariff Id");
       }
@@ -78,7 +80,7 @@ class TariffController {
 
   static EditTariff: RequestHandler = async (req, res, next) => {
     try {
-      const id = req.params.id;
+      const id = normalizeParamValue(req.params.id);
       if (!isValidObjectId(id)) {
         throw new HttpError(400, "Invalid Tariff Id");
       }
@@ -122,7 +124,7 @@ class TariffController {
 
   static RemoveTariff: RequestHandler = async (req, res, next) => {
     try {
-      const id = req.params.id;
+      const id = normalizeParamValue(req.params.id);
       if (!isValidObjectId(id)) {
         throw new HttpError(400, "Invalid Tariff Id");
       }
@@ -135,7 +137,7 @@ class TariffController {
 
   static DisableTariff: RequestHandler = async (req, res, next) => {
     try {
-      const id = req.params.id;
+      const id = normalizeParamValue(req.params.id);
       if (!isValidObjectId(id)) {
         throw new HttpError(400, "Invalid Tariff Id");
       }
@@ -148,7 +150,7 @@ class TariffController {
 
   static FreeChanged: RequestHandler = async (req, res, next) => {
     try {
-      const id = req.params.id;
+      const id = normalizeParamValue(req.params.id);
       if (!isValidObjectId(id)) {
         throw new HttpError(400, "Invalid Tariff Id");
       }

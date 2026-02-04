@@ -3,12 +3,12 @@ import type { RequestHandler } from "express";
 import * as TariffSellerService from "../services/TariffSellerService";
 import { HttpError } from "../utils/HttpError";
 import { handleControllerError } from "../utils/handleError";
-import { isValidObjectId } from "../utils/validation";
+import { isValidObjectId, normalizeParamValue } from "../utils/validation";
 
 class TariffSellerController {
   static GetTariffSellerListBySellerId: RequestHandler = async (req, res, next) => {
     try {
-      const sellerId: string = req.params.sellerId;
+      const sellerId = normalizeParamValue(req.params.sellerId);
       if (!isValidObjectId(sellerId)) {
         throw new HttpError(400, "Invalid sellerId");
       }
@@ -21,7 +21,7 @@ class TariffSellerController {
   };
   static GetTariffSeller: RequestHandler = async (req, res, next) => {
     try {
-      const id: string = req.params.id;
+      const id = normalizeParamValue(req.params.id);
       if (!isValidObjectId(id)) {
         throw new HttpError(400, "Invalid tariff seller id");
       }
@@ -48,7 +48,8 @@ class TariffSellerController {
   };
   static AssignTariffSeller: RequestHandler = async (req, res, next) => {
     try {
-      const sellerId: string = req.params.sellerId ?? req.params.sellerid;
+      const rawSellerId = req.params.sellerId ?? req.params.sellerid;
+      const sellerId = normalizeParamValue(rawSellerId);
       if (!isValidObjectId(sellerId)) {
         throw new HttpError(400, "Invalid sellerId");
       }
@@ -70,7 +71,8 @@ class TariffSellerController {
   };
   static RemoveTariffSellerBySellerId: RequestHandler = async (req, res, next) => {
     try {
-      const id: string = req.params.sellerId ?? req.params.sellerid;
+      const rawSellerId = req.params.sellerId ?? req.params.sellerid;
+      const id = normalizeParamValue(rawSellerId);
       if (!isValidObjectId(id)) {
         throw new HttpError(400, "Invalid sellerId");
       }
@@ -82,7 +84,7 @@ class TariffSellerController {
   };
   static ChangeStatusTariffSeller: RequestHandler = async (req, res, next) => {
     try {
-      const id = req.params.id;
+      const id = normalizeParamValue(req.params.id);
       if (!isValidObjectId(id)) {
         throw new HttpError(400, "Invalid tariff seller id");
       }

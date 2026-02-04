@@ -4,12 +4,12 @@ import type { ITariffInbound } from "../models/TariffInbound";
 import * as TariffInboundService from "../services/TariffInboundService";
 import { HttpError } from "../utils/HttpError";
 import { handleControllerError } from "../utils/handleError";
-import { isValidObjectId } from "../utils/validation";
+import { isValidObjectId, normalizeParamValue } from "../utils/validation";
 
 class TariffInboundController {
   static GetTariffInboundListByTariffId: RequestHandler = async (req, res, next) => {
     try {
-      const tariffId: string = req.params.tariffId;
+      const tariffId = normalizeParamValue(req.params.tariffId);
       if (!isValidObjectId(tariffId)) {
         throw new HttpError(400, "Invalid tariffId");
       }
@@ -25,7 +25,8 @@ class TariffInboundController {
 
   static AssignTariffInbound: RequestHandler = async (req, res, next) => {
     try {
-      const tariffId = req.params.tariffId ?? req.params.tariffid;
+      const rawTariffId = req.params.tariffId ?? req.params.tariffid;
+      const tariffId = normalizeParamValue(rawTariffId);
       if (!isValidObjectId(tariffId)) {
         throw new HttpError(400, "Invalid tariffId");
       }

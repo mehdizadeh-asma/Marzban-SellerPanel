@@ -2,6 +2,7 @@ import { Types } from "mongoose";
 import type { ParsedQs } from "qs";
 
 type QueryValue = string | ParsedQs | Array<string | ParsedQs> | undefined;
+type ParamValue = string | string[] | undefined;
 
 export const isValidObjectId = (value: string | undefined): value is string =>
   typeof value === "string" && Types.ObjectId.isValid(value);
@@ -10,6 +11,13 @@ export const normalizeQueryValue = (value: QueryValue): string | undefined => {
   if (Array.isArray(value)) {
     const first = value[0];
     return typeof first === "string" ? first : undefined;
+  }
+  return typeof value === "string" ? value : undefined;
+};
+
+export const normalizeParamValue = (value: ParamValue): string | undefined => {
+  if (Array.isArray(value)) {
+    return value[0];
   }
   return typeof value === "string" ? value : undefined;
 };
