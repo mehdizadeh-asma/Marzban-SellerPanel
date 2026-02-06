@@ -107,6 +107,13 @@ describe("Config utils", () => {
     expect(origins).toEqual(["*"]);
   });
 
+  it("returns wildcard when CORS_ALLOW_ALL is enabled", async () => {
+    process.env.CORS_ALLOW_ALL = "Yes";
+    process.env.ALLOWED_ORIGINS = "https://a.com,https://b.com";
+    const origins = await ConfigFile.GetAllowedOrigins();
+    expect(origins).toEqual(["*"]);
+  });
+
   it("ignores empty origin entries and whitespace backend url", async () => {
     process.env.ALLOWED_ORIGINS = " , https://a.com";
     process.env.BACKEND_URL = "   ";

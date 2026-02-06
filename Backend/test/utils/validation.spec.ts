@@ -1,7 +1,12 @@
 import { Types } from "mongoose";
 import type { ParsedQs } from "qs";
 
-import { isValidObjectId, normalizeQueryValue, parsePagination } from "../../src/utils/validation";
+import {
+  isValidObjectId,
+  normalizeParamValue,
+  normalizeQueryValue,
+  parsePagination,
+} from "../../src/utils/validation";
 
 describe("validation utils", () => {
   it("normalizes query value arrays", () => {
@@ -9,6 +14,12 @@ describe("validation utils", () => {
     expect(normalizeQueryValue([{} as ParsedQs])).toBeUndefined();
     expect(normalizeQueryValue("x")).toBe("x");
     expect(normalizeQueryValue(undefined)).toBeUndefined();
+  });
+
+  it("normalizes param values", () => {
+    expect(normalizeParamValue(["first", "second"])).toBe("first");
+    expect(normalizeParamValue("solo")).toBe("solo");
+    expect(normalizeParamValue(undefined)).toBeUndefined();
   });
 
   it("parses pagination when limit is valid", () => {
