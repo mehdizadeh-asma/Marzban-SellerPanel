@@ -1,6 +1,6 @@
 {
   "name": "marzban-seller-panel",
-  "version": "2.8.0",
+  "version": "2.8.1",
   "description": "Marzban Seller Panel",
   "scripts": {
     "dev": "next dev",
@@ -15,15 +15,15 @@
     "check": "npm run format && npm run lint && npm run typecheck && npm run test"
   },
   "dependencies": {
-    "@tanstack/react-query": "5.90.20",
     "@emotion/react": "11.14.0",
     "@emotion/styled": "11.14.1",
     "@mui/icons-material": "7.3.7",
     "@mui/material": "7.3.7",
     "@mui/x-data-grid": "8.27.0",
+    "@tanstack/react-query": "5.90.20",
     "axios": "1.13.4",
     "bootstrap": "5.3.8",
-    "next": "15.5.11",
+    "next": "15.5.12",
     "react": "19.2.4",
     "react-bootstrap": "2.10.10",
     "react-dom": "19.2.4",
@@ -38,8 +38,8 @@
     "@testing-library/react": "16.3.2",
     "@testing-library/user-event": "14.6.1",
     "@types/jest": "30.0.0",
-    "@types/node": "24.10.10",
-    "@types/react": "19.2.10",
+    "@types/node": "24.10.11",
+    "@types/react": "19.2.13",
     "@typescript-eslint/eslint-plugin": "8.54.0",
     "@typescript-eslint/parser": "8.54.0",
     "eslint": "9.39.2",
