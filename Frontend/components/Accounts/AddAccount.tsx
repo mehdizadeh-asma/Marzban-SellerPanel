@@ -70,11 +70,11 @@ const AddAccount = (props: PropsType): ReactElement => {
         void handleFormSubmit(event);
       }}
     >
-      <div className="row w-100 py-3 border BorderPurple">
-        <div className="col-sm-12 col-md-6 col-lg-6 col-xl-4 d-inline-flex ">
+      <div className="row w-100 py-3 border BorderPurple AddAccountRow">
+        <div className="col-sm-12 col-md-6 col-lg-6 col-xl-4 AddAccountFields">
           <select
             id="tariffList"
-            className="rounded-2  border-1 p-2  tariffDrop w-100 mx-2"
+            className="rounded-2 border-1 p-2 AddAccountSelect"
             {...register("tariffId")}
           >
             <option value="">Select a tariff</option>
@@ -84,6 +84,7 @@ const AddAccount = (props: PropsType): ReactElement => {
             id="outlined-basic"
             label="Note"
             variant="outlined"
+            className="AddAccountNote"
             inputRef={noteRef}
             {...noteField}
             error={Boolean(formState.errors.note)}
@@ -92,25 +93,27 @@ const AddAccount = (props: PropsType): ReactElement => {
           <FormControlLabel
             control={<Checkbox inputRef={onHoldRef} {...onHoldField} />}
             label="OnHold"
-            className="mx-2"
+            className="AddAccountHold"
           />
         </div>
         <div className="col-sm-12 col-md-6 col-lg-6 col-xl-4 divButton py-2">
-          <Button
-            type="submit"
-            disabled={props.Loading}
-            className="btn btnAdd  BgGrdColorizePurple text-white border-1 BorderPurple h-75 "
-          >
-            <Spinner
-              as="span"
-              animation="border"
-              size="sm"
-              role="status"
-              aria-hidden="true"
-              className={props.Loading ? "mx-1" : "visually-hidden"}
-            />
-            {props.Loading ? "" : "Add"}
-          </Button>
+          <div className="AddAccountActions">
+            <Button
+              type="submit"
+              disabled={props.Loading}
+              className="btn btnAdd AddAccountButton BgGrdColorizePurple text-white border-1 BorderPurple"
+            >
+              <Spinner
+                as="span"
+                animation="border"
+                size="sm"
+                role="status"
+                aria-hidden="true"
+                className={props.Loading ? "mx-1" : "visually-hidden"}
+              />
+              {props.Loading ? "" : "Add"}
+            </Button>
+          </div>
           {formState.errors.tariffId ? (
             <div className="text-danger mt-2">{formState.errors.tariffId.message}</div>
           ) : null}

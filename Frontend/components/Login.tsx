@@ -150,10 +150,11 @@ export default function Login(): ReactElement {
         width="120vw"
       />
 
-      <h4 className="HeadLine ExploreDiv HoverRescale mt-3 FullPurpleColor ">
+      <h4 className="HeadLine ExploreDiv HoverRescale mt-3 FullPurpleColor text-center w-100">
         {config.CHANNEL_NAME}
       </h4>
       <form
+        className="d-flex flex-column"
         onSubmit={(event): void => {
           void handleFormSubmit(event);
         }}
@@ -161,20 +162,20 @@ export default function Login(): ReactElement {
         <input
           type="text"
           id="txtusername"
-          className="rounded-1 border-1 BorderPurple mt-1 p-1 FullPurpleColor"
+          className="rounded-1 border-1 BorderPurple mt-1 p-1 FullPurpleColor d-block w-100"
           {...register("username", { required: "Username is required." })}
         />
         <input
           type="password"
           id="txtpassword"
-          className="rounded-1 border-1 BorderPurple mt-1 p-1 FullPurpleColor"
+          className="rounded-1 border-1 BorderPurple mt-1 p-1 FullPurpleColor d-block w-100"
           {...register("password", { required: "Password is required." })}
         />
 
         <Button
           variant="primary"
           type="submit"
-          className="rounded-1 border-1  BorderPurple btn-success  mt-1 text-dark  text-uppercase text-white BtnGrdPurple p-1"
+          className="rounded-1 border-1 BorderPurple btn-success mt-1 text-dark text-uppercase text-white BtnGrdPurple p-1 d-block w-100"
           disabled={loginMutation.isPending}
         >
           <Spinner

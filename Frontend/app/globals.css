@@ -322,6 +322,55 @@ a {
   background: linear-gradient(rgba(253, 183, 54, 0.471), rgb(246, 241, 215));
 }
 
+.AddAccountButton {
+  height: 56px;
+  min-height: 56px;
+  padding: 0 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.AddAccountRow {
+  align-items: center;
+}
+
+.AddAccountFields {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.AddAccountSelect {
+  height: 56px;
+  min-width: 220px;
+  flex: 1 1 260px;
+}
+
+.AddAccountNote {
+  min-width: 140px;
+  flex: 0 0 140px;
+}
+
+.AddAccountNote .MuiInputBase-root {
+  height: 56px;
+}
+
+.AddAccountHold {
+  margin: 0;
+}
+
+.AddAccountHold .MuiFormControlLabel-label {
+  margin-left: 4px;
+}
+
+.AddAccountActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 /* Icon Styles */
 .MenuIcon {
   /* renamed from MenuAwsomeIcon */
