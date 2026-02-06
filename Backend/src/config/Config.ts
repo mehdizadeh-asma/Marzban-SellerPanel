@@ -185,6 +185,11 @@ class ConfigFile {
   }
 
   static async GetAllowedOrigins(): Promise<string[]> {
+    const allowAllCors = this.getEnv("CORS_ALLOW_ALL", "No").toLowerCase() === "yes";
+    if (allowAllCors) {
+      return ["*"];
+    }
+
     const rawAllowed = this.getOptionalEnv("ALLOWED_ORIGINS");
     const backendUrl = this.getOptionalEnv("BACKEND_URL");
     const backendOrigin = backendUrl ? this.normalizeOrigin(backendUrl) : undefined;
