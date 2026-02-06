@@ -36,9 +36,7 @@ describe("MarzbanController param fallbacks", () => {
 
     await MarzbanController.GetAccount(createReq({ params: {} }), res as never, jest.fn());
 
-    expect(mockedMarzban.getAccount).toHaveBeenCalledWith(
-      expect.objectContaining({ search: "" }),
-    );
+    expect(mockedMarzban.getAccount).toHaveBeenCalledWith(expect.objectContaining({ search: "" }));
     expect(res.status).toHaveBeenCalledWith(200);
   });
 
@@ -88,9 +86,7 @@ describe("MarzbanController param fallbacks", () => {
 
     await MarzbanController.RevokeSub(createReq({ params: {} }), res as never, jest.fn());
 
-    expect(mockedMarzban.revokeSub).toHaveBeenCalledWith(
-      expect.objectContaining({ username: "" }),
-    );
+    expect(mockedMarzban.revokeSub).toHaveBeenCalledWith(expect.objectContaining({ username: "" }));
     expect(res.status).toHaveBeenCalledWith(200);
   });
 });
